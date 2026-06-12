@@ -1,14 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
-import { Zap, BatteryCharging, LineChart, Leaf, ArrowRight, Sparkles, ShieldCheck, Wallet } from "lucide-react";
+import {
+  FileText, Users, Calculator, ShieldCheck, ArrowRight, Sparkles,
+  FileSpreadsheet, Download, Building2,
+} from "lucide-react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Voltra — Pilotez votre énergie en temps réel" },
-      { name: "description", content: "Plateforme énergétique nouvelle génération : suivez, optimisez et économisez votre consommation grâce à l'IA." },
-      { property: "og:title", content: "Voltra — Énergie intelligente" },
-      { property: "og:description", content: "Suivez, optimisez et économisez votre consommation d'énergie en temps réel." },
+      { title: "mafiche.be — Fiches 281.20 & paie dirigeants" },
+      { name: "description", content: "Le logiciel des fiscalistes belges : générez vos fiches 281.20, gérez la paie des dirigeants et vos clients en quelques clics." },
+      { property: "og:title", content: "mafiche.be — L'app des fiscalistes" },
+      { property: "og:description", content: "Générez vos fiches 281.20 et la paie des dirigeants en quelques clics." },
     ],
   }),
   component: Landing,
@@ -25,21 +28,21 @@ function Landing() {
         <div className="absolute inset-0 bg-radial-cyan" />
         <div className="relative mx-auto max-w-7xl px-6 pt-24 pb-32 text-center">
           <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-cyan-400/30 bg-cyan-400/5 text-cyan-300 text-xs font-medium">
-            <Sparkles className="w-3.5 h-3.5" /> Nouveau · IA prédictive énergie
+            <Sparkles className="w-3.5 h-3.5" /> Nouveau · Import Belcotax 2026
           </span>
           <h1 className="mt-6 text-5xl md:text-7xl font-extrabold tracking-tight leading-[1.05]">
-            L'énergie devient <span className="text-cyan-400 text-glow-cyan">intelligente</span>.
+            Vos fiches <span className="text-cyan-400 text-glow-cyan">281.20</span>,<br/>en quelques clics.
           </h1>
           <p className="mt-6 text-lg text-zinc-400 max-w-2xl mx-auto">
-            Voltra connecte vos compteurs, batteries et panneaux solaires en une seule plateforme.
-            Visualisez, automatisez et réduisez votre facture jusqu'à <span className="text-white font-semibold">42%</span>.
+            mafiche.be est la plateforme tout-en-un pour les fiscalistes belges : génération de fiches 281.20,
+            paie des dirigeants, suivi des clients et export Belcotax conforme.
           </p>
           <div className="mt-10 flex items-center justify-center gap-3">
             <Link
               to="/dashboard"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-500 text-zinc-950 font-semibold hover:bg-cyan-400 transition-all shadow-[0_0_30px_rgba(6,182,212,0.5)] hover:shadow-[0_0_45px_rgba(6,182,212,0.75)]"
             >
-              Lancer le dashboard <ArrowRight className="w-4 h-4" />
+              Ouvrir le dashboard <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/pricing"
@@ -49,13 +52,12 @@ function Landing() {
             </Link>
           </div>
 
-          {/* hero metric strip */}
           <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-px bg-white/5 rounded-3xl overflow-hidden border border-white/10">
             {[
-              { k: "12 GWh", v: "Économisés en 2026" },
-              { k: "98k+", v: "Foyers connectés" },
-              { k: "−42%", v: "Facture moyenne" },
-              { k: "24/7", v: "Pilotage IA" },
+              { k: "12 400+", v: "Fiches générées" },
+              { k: "850", v: "Cabinets actifs" },
+              { k: "100%", v: "Conforme Belcotax" },
+              { k: "−87%", v: "Temps de saisie" },
             ].map((s) => (
               <div key={s.v} className="bg-zinc-950 px-6 py-6">
                 <div className="text-2xl md:text-3xl font-bold text-cyan-400 tracking-tight">{s.k}</div>
@@ -69,17 +71,17 @@ function Landing() {
       {/* FEATURES */}
       <section className="mx-auto max-w-7xl px-6 py-24">
         <div className="max-w-2xl">
-          <h2 className="text-4xl font-bold tracking-tight">Une plateforme. <span className="text-cyan-400">Tout votre écosystème.</span></h2>
-          <p className="mt-4 text-zinc-400">Du panneau solaire à la voiture électrique, Voltra orchestre chaque watt avec précision.</p>
+          <h2 className="text-4xl font-bold tracking-tight">Tout votre cabinet. <span className="text-cyan-400">Une seule app.</span></h2>
+          <p className="mt-4 text-zinc-400">De la fiche 281.20 à la déclaration UBO, mafiche.be couvre l'ensemble du cycle fiscal du dirigeant.</p>
         </div>
         <div className="mt-12 grid md:grid-cols-3 gap-6">
           {[
-            { i: BatteryCharging, t: "Pilotage batterie", d: "Charge intelligente au tarif le plus bas, restitution aux pics." },
-            { i: LineChart, t: "Analytics temps réel", d: "Granularité 1s, alertes anomalies, comparatifs voisinage." },
-            { i: Leaf, t: "Impact carbone", d: "Mesurez les kg CO₂ évités, exportez vos rapports ESG." },
-            { i: Wallet, t: "Wallet énergie", d: "Vendez votre surplus sur le marché spot en un clic." },
-            { i: ShieldCheck, t: "Sécurité bancaire", d: "Chiffrement AES-256, conformité RGPD & ISO 27001." },
-            { i: Zap, t: "Automations", d: "Programmez vos appareils selon la météo, prix, présence." },
+            { i: FileText, t: "Fiches 281.20", d: "Générez, validez et exportez vos fiches au format Belcotax officiel." },
+            { i: Calculator, t: "Paie dirigeants", d: "Calcul automatique rémunération, ATN, cotisations, précompte et net en poche." },
+            { i: Users, t: "Gestion clients", d: "Centralisez sociétés, dirigeants, NISS, parts, UBO et notes." },
+            { i: FileSpreadsheet, t: "Récap fiscal annuel", d: "Vue d'ensemble du revenu imposable net par dirigeant, prêt pour l'IPP." },
+            { i: ShieldCheck, t: "Conformité garantie", d: "Mises à jour automatiques des barèmes et formats SPF Finances." },
+            { i: Download, t: "Export PDF & XML", d: "Téléchargez fiches imprimables et déclarations Belcotax en un clic." },
           ].map(({ i: Icon, t, d }) => (
             <div
               key={t}
@@ -100,13 +102,14 @@ function Landing() {
         <div className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-gradient-to-br from-zinc-900 to-zinc-950 p-12 md:p-16 text-center">
           <div className="absolute inset-0 bg-radial-cyan opacity-80" />
           <div className="relative">
-            <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">Prêt à reprendre le contrôle ?</h2>
-            <p className="mt-4 text-zinc-400 max-w-xl mx-auto">Connectez votre compteur en 3 minutes. Sans engagement.</p>
+            <Building2 className="w-10 h-10 text-cyan-400 mx-auto" />
+            <h2 className="mt-4 text-3xl md:text-5xl font-extrabold tracking-tight">Conçu par et pour les fiscalistes.</h2>
+            <p className="mt-4 text-zinc-400 max-w-xl mx-auto">Testez gratuitement pendant 14 jours. Sans carte bancaire.</p>
             <Link
               to="/dashboard"
               className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-cyan-500 text-zinc-950 font-semibold hover:bg-cyan-400 transition-all shadow-[0_0_30px_rgba(6,182,212,0.5)]"
             >
-              Démarrer gratuitement <ArrowRight className="w-4 h-4" />
+              Démarrer l'essai gratuit <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
         </div>
