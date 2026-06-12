@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Zap } from "lucide-react";
+import { FileText } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Accueil" },
@@ -15,9 +15,10 @@ export function SiteHeader() {
       <div className="mx-auto max-w-7xl px-6 h-16 flex items-center gap-8">
         <Link to="/" className="flex items-center gap-2 group">
           <span className="grid place-items-center w-9 h-9 rounded-xl bg-cyan-500/10 border border-cyan-400/30 text-cyan-400 shadow-[0_0_20px_rgba(6,182,212,0.35)] group-hover:shadow-[0_0_28px_rgba(6,182,212,0.6)] transition-shadow">
-            <Zap className="w-4 h-4" strokeWidth={2.5} />
+            <FileText className="w-4 h-4" strokeWidth={2.5} />
           </span>
-          <span className="font-extrabold tracking-tight text-white text-lg">Voltra</span>
+          <span className="font-extrabold tracking-tight text-white text-lg">mafiche<span className="text-cyan-400">.be</span></span>
+          <span className="ml-1 text-[10px] font-semibold px-1.5 py-0.5 rounded bg-white/5 text-zinc-400 border border-white/10">281.20</span>
         </Link>
         <nav className="hidden md:flex items-center gap-1">
           {nav.map((n) => {
@@ -40,7 +41,7 @@ export function SiteHeader() {
             Se connecter
           </button>
           <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 text-zinc-950 font-semibold text-sm hover:bg-cyan-400 transition-all shadow-[0_0_20px_rgba(6,182,212,0.4)] hover:shadow-[0_0_30px_rgba(6,182,212,0.65)]">
-            Connecter
+            Essayer gratuitement
           </button>
         </div>
       </div>
@@ -53,8 +54,8 @@ export function SiteFooter() {
     <footer className="mt-24 border-t border-white/5">
       <div className="mx-auto max-w-7xl px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-zinc-500">
         <div className="flex items-center gap-2">
-          <Zap className="w-4 h-4 text-cyan-400" />
-          <span>© 2026 Voltra. Énergie intelligente.</span>
+          <FileText className="w-4 h-4 text-cyan-400" />
+          <span>© 2026 mafiche.be — Le logiciel des fiscalistes belges.</span>
         </div>
         <div className="flex gap-6">
           <a className="hover:text-white" href="#">Confidentialité</a>

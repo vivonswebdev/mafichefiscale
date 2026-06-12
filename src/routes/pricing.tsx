@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
-import { Check, Zap } from "lucide-react";
+import { Check, FileText } from "lucide-react";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({
     meta: [
-      { title: "Tarifs — Voltra" },
-      { name: "description", content: "Des offres transparentes pour piloter votre énergie. Sans engagement." },
+      { title: "Tarifs — mafiche.be" },
+      { name: "description", content: "Des offres claires pour les cabinets fiscalistes. Essai 14 jours gratuit." },
     ],
   }),
   component: Pricing,
@@ -14,26 +14,26 @@ export const Route = createFileRoute("/pricing")({
 
 const plans = [
   {
-    name: "Découverte",
-    price: "0",
-    desc: "Pour démarrer et visualiser votre consommation.",
-    features: ["1 compteur connecté", "Historique 30 jours", "Alertes basiques", "Support communautaire"],
+    name: "Solo",
+    price: "19",
+    desc: "Pour le fiscaliste indépendant.",
+    features: ["Jusqu'à 10 clients", "Fiches 281.20 illimitées", "Export Belcotax XML", "Mises à jour barèmes", "Support email"],
     cta: "Commencer",
     featured: false,
   },
   {
-    name: "Pilote",
-    price: "12",
-    desc: "L'essentiel pour optimiser votre foyer.",
-    features: ["Jusqu'à 5 appareils", "Historique illimité", "Automations IA", "Wallet énergie", "Support 7j/7"],
-    cta: "Choisir Pilote",
+    name: "Cabinet",
+    price: "49",
+    desc: "L'offre standard pour fiduciaires.",
+    features: ["Clients illimités", "Paie dirigeants complète", "Récap fiscal annuel", "Multi-utilisateurs (5)", "Support 7j/7", "API import comptabilité"],
+    cta: "Choisir Cabinet",
     featured: true,
   },
   {
     name: "Pro",
-    price: "39",
-    desc: "Pour les pros et installations complexes.",
-    features: ["Appareils illimités", "Multi-sites", "API & exports", "Rapports ESG", "Account manager dédié"],
+    price: "129",
+    desc: "Pour les grands cabinets et groupes.",
+    features: ["Utilisateurs illimités", "Multi-bureaux", "SSO & permissions fines", "Audit log & conformité", "Account manager dédié", "SLA 99,9%"],
     cta: "Contacter",
     featured: false,
   },
@@ -47,9 +47,9 @@ function Pricing() {
         <div className="absolute inset-0 bg-radial-cyan" />
         <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-12 text-center">
           <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight">
-            Des tarifs <span className="text-cyan-400 text-glow-cyan">simples</span>.
+            Des tarifs <span className="text-cyan-400 text-glow-cyan">transparents</span>.
           </h1>
-          <p className="mt-4 text-zinc-400 max-w-xl mx-auto">Sans engagement. Annulez quand vous voulez. Première économie garantie.</p>
+          <p className="mt-4 text-zinc-400 max-w-xl mx-auto">Essai 14 jours, sans carte. Annulez à tout moment.</p>
         </div>
       </section>
 
@@ -66,14 +66,14 @@ function Pricing() {
             >
               {p.featured && (
                 <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-cyan-500 text-zinc-950 text-xs font-bold">
-                  <Zap className="w-3 h-3" /> Le plus populaire
+                  <FileText className="w-3 h-3" /> Le plus choisi
                 </span>
               )}
               <h3 className="text-xl font-bold tracking-tight">{p.name}</h3>
               <p className="text-sm text-zinc-400 mt-2 min-h-[40px]">{p.desc}</p>
               <div className="mt-6 flex items-baseline gap-1">
                 <span className="text-5xl font-extrabold tracking-tight">€{p.price}</span>
-                <span className="text-zinc-500">/mois</span>
+                <span className="text-zinc-500">/mois HT</span>
               </div>
               <button className={`mt-6 w-full px-4 py-3 rounded-xl font-semibold transition-all ${
                 p.featured

@@ -1,55 +1,47 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { SiteHeader, SiteFooter } from "@/components/site-header";
 import {
-  Zap, BatteryCharging, Wallet, Leaf, TrendingUp, TrendingDown,
-  ArrowUpRight, ArrowDownRight, Sun, Home, Car, Cpu,
+  FileText, Users, Building2, Calculator, Download, Plus,
+  CheckCircle2, Clock, AlertCircle, TrendingUp,
 } from "lucide-react";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Voltra" },
-      { name: "description", content: "Visualisez votre consommation, production et économies en temps réel." },
+      { title: "Dashboard — mafiche.be" },
+      { name: "description", content: "Vue d'ensemble de vos clients, fiches 281.20 et déclarations en cours." },
     ],
   }),
   component: Dashboard,
 });
 
 const metrics = [
-  { label: "Énergie économisée", value: "248 kWh", delta: "+12.4%", up: true, icon: Leaf, hint: "Ce mois-ci" },
-  { label: "Consommation actuelle", value: "1.84 kW", delta: "−8.1%", up: false, icon: Zap, hint: "En direct" },
-  { label: "Solde wallet", value: "€ 142.60", delta: "+€18.20", up: true, icon: Wallet, hint: "Revenus surplus" },
-  { label: "Batterie", value: "87%", delta: "Charge", up: true, icon: BatteryCharging, hint: "Tesla Powerwall" },
+  { label: "Fiches 281.20 générées", value: "248", delta: "+18 ce mois", icon: FileText },
+  { label: "Clients actifs", value: "42", delta: "+3 ce mois", icon: Building2 },
+  { label: "Dirigeants suivis", value: "97", delta: "+5 ce mois", icon: Users },
+  { label: "Masse salariale", value: "€ 4.2M", delta: "Année 2025", icon: Calculator },
 ];
 
-const activities = [
-  { t: "08:42", src: "Panneaux solaires", amt: "+2.4 kWh", type: "Production", status: "ok", icon: Sun },
-  { t: "08:15", src: "Chauffe-eau", amt: "−1.2 kWh", type: "Consommation", status: "ok", icon: Home },
-  { t: "07:58", src: "Recharge Tesla", amt: "−7.8 kWh", type: "Véhicule", status: "warn", icon: Car },
-  { t: "07:30", src: "Vente au réseau", amt: "+€ 3.20", type: "Wallet", status: "ok", icon: Wallet },
-  { t: "06:12", src: "Box domotique", amt: "−0.4 kWh", type: "Système", status: "ok", icon: Cpu },
-  { t: "05:00", src: "Pic tarifaire évité", amt: "+€ 1.10", type: "Optimisation IA", status: "ok", icon: Zap },
+const fiches = [
+  { client: "SRL Lumière & Associés", dirigeant: "Marc Lefèvre", niss: "78.04.12-345.67", brut: "€ 124 500", statut: "validée", year: "2025" },
+  { client: "BV Maes Consulting", dirigeant: "Sophie Maes", niss: "82.11.03-128.42", brut: "€ 98 200", statut: "validée", year: "2025" },
+  { client: "SRL Architecture Nord", dirigeant: "Pierre Dubois", niss: "71.06.27-091.18", brut: "€ 152 000", statut: "en cours", year: "2025" },
+  { client: "SA Vandenberghe Notaires", dirigeant: "Lieve Vandenberghe", niss: "69.09.14-203.55", brut: "€ 187 400", statut: "à vérifier", year: "2025" },
+  { client: "SRL Studio Création", dirigeant: "Anaïs Petit", niss: "85.02.19-447.91", brut: "€ 76 800", statut: "validée", year: "2025" },
+  { client: "BV Janssen Médical", dirigeant: "Tom Janssen", niss: "74.12.08-312.04", brut: "€ 215 000", statut: "en cours", year: "2025" },
 ];
 
-function Sparkline() {
-  // simple SVG line
-  const pts = [10, 24, 18, 36, 28, 44, 32, 52, 40, 60, 48, 72, 58, 80, 70, 90];
-  const w = 600, h = 140;
-  const max = Math.max(...pts);
-  const path = pts.map((p, i) => `${i === 0 ? "M" : "L"} ${(i / (pts.length - 1)) * w} ${h - (p / max) * h}`).join(" ");
-  return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-40">
-      <defs>
-        <linearGradient id="g" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="rgb(6,182,212)" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="rgb(6,182,212)" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`${path} L ${w} ${h} L 0 ${h} Z`} fill="url(#g)" />
-      <path d={path} fill="none" stroke="rgb(34,211,238)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+const statutStyle: Record<string, string> = {
+  "validée": "text-emerald-300 bg-emerald-400/10 border-emerald-400/20",
+  "en cours": "text-cyan-300 bg-cyan-400/10 border-cyan-400/20",
+  "à vérifier": "text-amber-300 bg-amber-400/10 border-amber-400/20",
+};
+
+const statutIcon: Record<string, typeof CheckCircle2> = {
+  "validée": CheckCircle2,
+  "en cours": Clock,
+  "à vérifier": AlertCircle,
+};
 
 function Dashboard() {
   return (
@@ -57,19 +49,20 @@ function Dashboard() {
       <SiteHeader />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
-        {/* Welcome */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
-            <p className="text-sm text-zinc-500">Bonjour, Alex</p>
+            <p className="text-sm text-zinc-500">Bonjour, Maître Dupont</p>
             <h1 className="text-4xl font-extrabold tracking-tight mt-1">
-              Votre maison fonctionne à <span className="text-cyan-400 text-glow-cyan">74% en autoconsommation</span>
+              <span className="text-cyan-400 text-glow-cyan">12 fiches</span> à finaliser cette semaine
             </h1>
-            <p className="text-zinc-400 mt-2">Aujourd'hui, vous avez évité l'équivalent de 3.2 kg de CO₂.</p>
+            <p className="text-zinc-400 mt-2">Exercice fiscal 2025 — clôture Belcotax dans 47 jours.</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="px-4 py-2 rounded-xl border border-white/10 hover:border-white/30 text-sm hover:bg-white/5 transition-colors">Exporter</button>
-            <button className="px-4 py-2 rounded-xl bg-cyan-500 text-zinc-950 font-semibold text-sm hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(6,182,212,0.4)]">
-              + Ajouter un appareil
+            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 hover:border-white/30 text-sm hover:bg-white/5 transition-colors">
+              <Download className="w-4 h-4" /> Export Belcotax
+            </button>
+            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 text-zinc-950 font-semibold text-sm hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+              <Plus className="w-4 h-4" /> Nouvelle fiche
             </button>
           </div>
         </div>
@@ -85,122 +78,118 @@ function Dashboard() {
               >
                 <div className="flex items-start justify-between">
                   <div className="w-10 h-10 rounded-xl grid place-items-center bg-cyan-500/10 border border-cyan-400/20 text-cyan-400 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-shadow">
-                    <Icon className="w-4.5 h-4.5" />
+                    <Icon className="w-5 h-5" />
                   </div>
-                  <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg ${
-                    m.up ? "text-emerald-300 bg-emerald-400/10 border border-emerald-400/20"
-                         : "text-rose-300 bg-rose-400/10 border border-rose-400/20"
-                  }`}>
-                    {m.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                    {m.delta}
+                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg text-emerald-300 bg-emerald-400/10 border border-emerald-400/20">
+                    <TrendingUp className="w-3 h-3" /> {m.delta}
                   </span>
                 </div>
                 <div className="mt-5 text-3xl font-bold tracking-tight">{m.value}</div>
                 <div className="mt-1 text-sm text-zinc-400">{m.label}</div>
-                <div className="mt-3 text-xs text-zinc-500">{m.hint}</div>
               </div>
             );
           })}
         </div>
 
-        {/* Chart + sidebar */}
+        {/* Progress + sidebar */}
         <div className="mt-8 grid lg:grid-cols-3 gap-5">
           <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-zinc-900/50 p-6">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold tracking-tight">Production vs Consommation</h2>
-                <p className="text-sm text-zinc-500">Dernières 24 heures</p>
+                <h2 className="text-lg font-semibold tracking-tight">Progression Belcotax 2025</h2>
+                <p className="text-sm text-zinc-500">Fiches 281.20 par client</p>
               </div>
-              <div className="flex gap-1 text-xs">
-                {["24h", "7j", "30j", "1an"].map((p, i) => (
-                  <button key={p} className={`px-3 py-1.5 rounded-lg font-medium transition-colors ${
-                    i === 0 ? "bg-cyan-500/15 text-cyan-300 border border-cyan-400/30" : "text-zinc-400 hover:bg-white/5"
-                  }`}>{p}</button>
-                ))}
-              </div>
+              <span className="text-cyan-400 text-2xl font-bold tracking-tight">76%</span>
             </div>
-            <Sparkline />
-            <div className="flex gap-6 text-xs text-zinc-400 mt-2">
-              <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-cyan-400" /> Production solaire</span>
-              <span className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-zinc-500" /> Consommation foyer</span>
+            <div className="mt-6 space-y-4">
+              {[
+                { c: "SRL Lumière & Associés", pct: 100, n: "4/4" },
+                { c: "BV Maes Consulting", pct: 100, n: "2/2" },
+                { c: "SRL Architecture Nord", pct: 66, n: "2/3" },
+                { c: "SA Vandenberghe Notaires", pct: 50, n: "1/2" },
+                { c: "SRL Studio Création", pct: 100, n: "1/1" },
+                { c: "BV Janssen Médical", pct: 33, n: "1/3" },
+              ].map((r) => (
+                <div key={r.c}>
+                  <div className="flex items-center justify-between text-sm mb-1.5">
+                    <span className="text-zinc-300">{r.c}</span>
+                    <span className="text-zinc-500 font-mono text-xs">{r.n}</span>
+                  </div>
+                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.6)]"
+                      style={{ width: `${r.pct}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
           <div className="rounded-2xl border border-white/5 bg-zinc-900/50 p-6">
-            <h2 className="text-lg font-semibold tracking-tight">État du système</h2>
-            <ul className="mt-4 space-y-4 text-sm">
+            <h2 className="text-lg font-semibold tracking-tight">À faire</h2>
+            <ul className="mt-4 space-y-3 text-sm">
               {[
-                { l: "Onduleur Fronius", s: "Optimal", tone: "ok" },
-                { l: "Batterie Powerwall", s: "Charge 87%", tone: "ok" },
-                { l: "Compteur Linky", s: "Connecté", tone: "ok" },
-                { l: "Borne Wallbox", s: "Veille", tone: "warn" },
-              ].map((r) => (
-                <li key={r.l} className="flex items-center justify-between">
+                { l: "Valider fiche P. Dubois", tone: "warn" },
+                { l: "Importer paie SA Vandenberghe", tone: "warn" },
+                { l: "Vérifier ATN Tom Janssen", tone: "ok" },
+                { l: "Mettre à jour UBO Maes", tone: "ok" },
+                { l: "Préparer export Belcotax", tone: "ok" },
+              ].map((r, i) => (
+                <li key={i} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-colors">
+                  <span className={`w-1.5 h-1.5 rounded-full ${r.tone === "warn" ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"}`} />
                   <span className="text-zinc-300">{r.l}</span>
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
-                    r.tone === "ok" ? "text-emerald-300" : "text-amber-300"
-                  }`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${r.tone === "ok" ? "bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)]" : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]"}`} />
-                    {r.s}
-                  </span>
                 </li>
               ))}
             </ul>
             <button className="mt-6 w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm hover:bg-white/5 transition-colors">
-              Configurer →
+              Voir l'agenda →
             </button>
           </div>
         </div>
 
-        {/* Recent activity */}
+        {/* Fiches récentes */}
         <div className="mt-8 rounded-2xl border border-white/5 bg-zinc-900/50 overflow-hidden">
           <div className="px-6 py-5 flex items-center justify-between border-b border-white/5">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight">Activité récente</h2>
-              <p className="text-sm text-zinc-500">Flux énergétiques et transactions</p>
+              <h2 className="text-lg font-semibold tracking-tight">Fiches 281.20 récentes</h2>
+              <p className="text-sm text-zinc-500">Dernière mise à jour il y a 3 min</p>
             </div>
-            <button className="text-sm text-cyan-400 hover:text-cyan-300">Voir tout →</button>
+            <button className="text-sm text-cyan-400 hover:text-cyan-300">Voir toutes →</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase tracking-wider text-zinc-500 border-b border-white/5">
-                  <th className="px-6 py-3 font-medium">Heure</th>
-                  <th className="px-6 py-3 font-medium">Source</th>
-                  <th className="px-6 py-3 font-medium">Type</th>
-                  <th className="px-6 py-3 font-medium text-right">Montant</th>
-                  <th className="px-6 py-3 font-medium text-right">État</th>
+                  <th className="px-6 py-3 font-medium">Client</th>
+                  <th className="px-6 py-3 font-medium">Dirigeant</th>
+                  <th className="px-6 py-3 font-medium">NISS</th>
+                  <th className="px-6 py-3 font-medium">Année</th>
+                  <th className="px-6 py-3 font-medium text-right">Rém. brute</th>
+                  <th className="px-6 py-3 font-medium text-right">Statut</th>
                 </tr>
               </thead>
               <tbody>
-                {activities.map((a, i) => {
-                  const Icon = a.icon;
-                  const positive = a.amt.startsWith("+");
+                {fiches.map((f, i) => {
+                  const Icon = statutIcon[f.statut];
                   return (
                     <tr key={i} className="border-b border-white/5 last:border-none hover:bg-white/[0.02] transition-colors">
-                      <td className="px-6 py-4 text-zinc-400 font-mono text-xs">{a.t}</td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                           <span className="w-8 h-8 rounded-lg grid place-items-center bg-cyan-500/10 border border-cyan-400/20 text-cyan-400">
-                            <Icon className="w-4 h-4" />
+                            <Building2 className="w-4 h-4" />
                           </span>
-                          <span className="font-medium">{a.src}</span>
+                          <span className="font-medium">{f.client}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-zinc-400">{a.type}</td>
-                      <td className={`px-6 py-4 text-right font-semibold ${positive ? "text-emerald-300" : "text-zinc-200"}`}>
-                        <span className="inline-flex items-center gap-1">
-                          {positive ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5 text-zinc-500" />}
-                          {a.amt}
-                        </span>
-                      </td>
+                      <td className="px-6 py-4 text-zinc-300">{f.dirigeant}</td>
+                      <td className="px-6 py-4 text-zinc-500 font-mono text-xs">{f.niss}</td>
+                      <td className="px-6 py-4 text-zinc-400">{f.year}</td>
+                      <td className="px-6 py-4 text-right font-semibold text-zinc-200">{f.brut}</td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md ${
-                          a.status === "ok"
-                            ? "text-emerald-300 bg-emerald-400/10 border border-emerald-400/20"
-                            : "text-amber-300 bg-amber-400/10 border border-amber-400/20"
-                        }`}>
-                          {a.status === "ok" ? "Validé" : "À vérifier"}
+                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md border ${statutStyle[f.statut]}`}>
+                          <Icon className="w-3 h-3" />
+                          {f.statut}
                         </span>
                       </td>
                     </tr>
