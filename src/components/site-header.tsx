@@ -3,10 +3,11 @@ import { FileText } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Accueil" },
-  { to: "/dashboard", label: "Dashboard" },
+  { to: "/app", label: "Application" },
   { to: "/pricing", label: "Tarifs" },
   { to: "/about", label: "À propos" },
 ] as const;
+
 
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
