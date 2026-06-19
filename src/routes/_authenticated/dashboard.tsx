@@ -5,7 +5,7 @@ import {
   CheckCircle2, Clock, AlertCircle, TrendingUp,
 } from "lucide-react";
 
-export const Route = createFileRoute("/dashboard")({
+export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — mafiche.be" },
