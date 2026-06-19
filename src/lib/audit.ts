@@ -20,7 +20,7 @@ export async function logAudit(
       action,
       resource_type: resourceType ?? null,
       resource_id: resourceId ?? null,
-      details,
+      details: details as never,
     });
   } catch (err) {
     console.error("[audit] failed", err);
