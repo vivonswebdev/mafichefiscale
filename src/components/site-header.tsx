@@ -1,7 +1,8 @@
 import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut } from "lucide-react";
+import { LogOut, Shield } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const nav = [
   { to: "/", label: "Accueil" },
@@ -15,6 +16,14 @@ export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) { setIsAdmin(false); return; }
+    supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }).then(({ data }) => {
+      setIsAdmin(!!data);
+    });
+  }, [user]);
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -65,6 +74,14 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-3">
           {user ? (
             <>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-primary border border-gold-border-2 hover:bg-surface-2 transition-colors"
+                >
+                  <Shield className="w-3.5 h-3.5" /> Admin
+                </Link>
+              )}
               <span className="hidden sm:inline text-sm text-ink-2 font-mono">
                 {user.email}
               </span>

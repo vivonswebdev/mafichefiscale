@@ -5,6 +5,7 @@ import { SiteHeader, SiteFooter } from "@/components/site-header";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Building2, User, FileText, Trash2 } from "lucide-react";
+import { logAudit } from "@/lib/audit";
 
 export const Route = createFileRoute("/_authenticated/clients")({
   head: () => ({
@@ -94,8 +95,9 @@ function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryC
   const create = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      const { error } = await supabase.from("clients").insert({ ...form, user_id: u.user!.id });
+      const { data: row, error } = await supabase.from("clients").insert({ ...form, user_id: u.user!.id }).select().single();
       if (error) throw error;
+      await logAudit("client.create", "client", row?.id, { name: form.name, bce: form.bce });
     },
     onSuccess: () => {
       toast.success("Client ajouté");
@@ -109,6 +111,7 @@ function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryC
     mutationFn: async (id: string) => {
       const { error } = await supabase.from("clients").delete().eq("id", id);
       if (error) throw error;
+      await logAudit("client.delete", "client", id);
     },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["clients"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
   });
@@ -150,10 +153,11 @@ function DirigeantsTab({ data, clients, qc }: { data: any[]; clients: any[]; qc:
   const create = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      const { error } = await supabase.from("dirigeants").insert({
+      const { data: row, error } = await supabase.from("dirigeants").insert({
         ...form, client_id: form.client_id || null, user_id: u.user!.id,
-      });
+      }).select().single();
       if (error) throw error;
+      await logAudit("dirigeant.create", "dirigeant", row?.id, { name: `${form.first_name} ${form.last_name}` });
     },
     onSuccess: () => {
       toast.success("Dirigeant ajouté");
@@ -164,7 +168,7 @@ function DirigeantsTab({ data, clients, qc }: { data: any[]; clients: any[]; qc:
     onError: (e: any) => toast.error(e.message),
   });
   const del = useMutation({
-    mutationFn: async (id: string) => { await supabase.from("dirigeants").delete().eq("id", id); },
+    mutationFn: async (id: string) => { await supabase.from("dirigeants").delete().eq("id", id); await logAudit("dirigeant.delete", "dirigeant", id); },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["dirigeants"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
   });
 
@@ -208,15 +212,16 @@ function FichesTab({ data, clients, dirigeants, qc }: { data: any[]; clients: an
   const create = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      const { error } = await supabase.from("fiches").insert({
+      const { data: row, error } = await supabase.from("fiches").insert({
         client_id: form.client_id || null,
         dirigeant_id: form.dirigeant_id || null,
         year: Number(form.year),
         montant_brut: Number(form.montant_brut),
         status: form.status,
         user_id: u.user!.id,
-      });
+      }).select().single();
       if (error) throw error;
+      await logAudit("fiche.create", "fiche", row?.id, { year: form.year, montant_brut: form.montant_brut, status: form.status });
     },
     onSuccess: () => {
       toast.success("Fiche enregistrée");
@@ -227,7 +232,7 @@ function FichesTab({ data, clients, dirigeants, qc }: { data: any[]; clients: an
     onError: (e: any) => toast.error(e.message),
   });
   const del = useMutation({
-    mutationFn: async (id: string) => { await supabase.from("fiches").delete().eq("id", id); },
+    mutationFn: async (id: string) => { await supabase.from("fiches").delete().eq("id", id); await logAudit("fiche.delete", "fiche", id); },
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["fiches-list"] }); qc.invalidateQueries({ queryKey: ["dashboard"] }); },
   });
 
