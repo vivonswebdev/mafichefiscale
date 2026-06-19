@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { SiteHeader, SiteFooter } from "@/components/site-header";
+
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Plus, Building2, User, FileText, Trash2 } from "lucide-react";
@@ -32,41 +32,37 @@ function ClientsPage() {
   });
 
   return (
-    <div className="min-h-screen bg-bg text-ink">
-      <SiteHeader />
-      <main className="mx-auto max-w-7xl px-6 py-10">
-        <h1 className="font-serif text-4xl font-semibold tracking-tight">Gestion du cabinet</h1>
-        <p className="text-ink-2 mt-2">Vos clients, dirigeants et fiches 281.20 — sauvegardés automatiquement.</p>
+    <div className="px-6 py-8 max-w-7xl mx-auto">
+      <h1 className="font-serif text-3xl font-semibold tracking-tight">Gestion du cabinet</h1>
+      <p className="text-ink-2 mt-2">Vos clients, dirigeants et fiches 281.20 — sauvegardés automatiquement.</p>
 
-        <div className="mt-8 flex gap-1 border-b border-gold-border">
-          {([
-            { id: "clients", label: "Clients", icon: Building2 },
-            { id: "dirigeants", label: "Dirigeants", icon: User },
-            { id: "fiches", label: "Fiches 281.20", icon: FileText },
-          ] as const).map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
-                  active ? "text-primary border-primary" : "text-ink-3 border-transparent hover:text-ink"
-                }`}
-              >
-                <Icon className="w-4 h-4" /> {t.label}
-              </button>
-            );
-          })}
-        </div>
+      <div className="mt-8 flex gap-1 border-b border-gold-border">
+        {([
+          { id: "clients", label: "Clients", icon: Building2 },
+          { id: "dirigeants", label: "Dirigeants", icon: User },
+          { id: "fiches", label: "Fiches 281.20", icon: FileText },
+        ] as const).map((t) => {
+          const Icon = t.icon;
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`inline-flex items-center gap-2 px-4 py-2.5 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                active ? "text-primary border-primary" : "text-ink-3 border-transparent hover:text-ink"
+              }`}
+            >
+              <Icon className="w-4 h-4" /> {t.label}
+            </button>
+          );
+        })}
+      </div>
 
-        <div className="mt-8">
-          {tab === "clients" && <ClientsTab data={clients.data ?? []} qc={qc} />}
-          {tab === "dirigeants" && <DirigeantsTab data={dirigeants.data ?? []} clients={clients.data ?? []} qc={qc} />}
-          {tab === "fiches" && <FichesTab data={fiches.data ?? []} clients={clients.data ?? []} dirigeants={dirigeants.data ?? []} qc={qc} />}
-        </div>
-      </main>
-      <SiteFooter />
+      <div className="mt-8">
+        {tab === "clients" && <ClientsTab data={clients.data ?? []} qc={qc} />}
+        {tab === "dirigeants" && <DirigeantsTab data={dirigeants.data ?? []} clients={clients.data ?? []} qc={qc} />}
+        {tab === "fiches" && <FichesTab data={fiches.data ?? []} clients={clients.data ?? []} dirigeants={dirigeants.data ?? []} qc={qc} />}
+      </div>
     </div>
   );
 }
