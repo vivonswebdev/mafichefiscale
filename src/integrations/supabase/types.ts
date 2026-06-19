@@ -14,7 +14,200 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      app_data: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          key: string
+          section: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json
+          id?: string
+          key: string
+          section: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          key?: string
+          section?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      clients: {
+        Row: {
+          address: string | null
+          bce: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          bce?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          bce?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      dirigeants: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          first_name: string | null
+          fonction: string | null
+          id: string
+          last_name: string
+          niss: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          fonction?: string | null
+          id?: string
+          last_name: string
+          niss?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          first_name?: string | null
+          fonction?: string | null
+          id?: string
+          last_name?: string
+          niss?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dirigeants_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fiches: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          dirigeant_id: string | null
+          id: string
+          montant_brut: number | null
+          status: string
+          type: string
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          dirigeant_id?: string | null
+          id?: string
+          montant_brut?: number | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          dirigeant_id?: string | null
+          id?: string
+          montant_brut?: number | null
+          status?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fiches_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fiches_dirigeant_id_fkey"
+            columns: ["dirigeant_id"]
+            isOneToOne: false
+            referencedRelation: "dirigeants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          cabinet: string | null
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          cabinet?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          cabinet?: string | null
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
