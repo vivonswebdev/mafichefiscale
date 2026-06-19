@@ -5084,10 +5084,11 @@ window.onload=()=>{
 };
 
 // ══════════════════════════════════════════════
-// SYNC CLOUD (Supabase) — clients
+// SYNC CLOUD (Supabase) — clients + dirigeants
 // ══════════════════════════════════════════════
 (function(){
   let creds=null, pushTimer=null, pushing=false, pullInFlight=false;
+  const clientUuidByLocal={}; // local_id -> remote uuid
   const _origSave=window.save;
 
   function H(extra){return Object.assign({
@@ -5096,6 +5097,7 @@ window.onload=()=>{
     'Content-Type':'application/json'
   },extra||{});}
 
+  // ----- Clients mapping -----
   function clientToRow(c){return {
     user_id:creds.userId, local_id:c.id,
     name:c.nom||'(sans nom)',
@@ -5112,26 +5114,90 @@ window.onload=()=>{
     },m,{id:r.local_id||r.id});
   }
 
+  // ----- Dirigeants mapping -----
+  function dirigeantToRow(a, clientLocalId){
+    const clientUuid=clientUuidByLocal[clientLocalId]||null;
+    return {
+      user_id:creds.userId, local_id:a.id,
+      client_id:clientUuid,
+      first_name:a.prenom||null,
+      last_name:a.nom||'(sans nom)',
+      niss:a.niss||null,
+      fonction:a.fonction||null,
+      meta:Object.assign({},a,{_clientLocalId:clientLocalId})
+    };
+  }
+  function rowToDirigeant(r){
+    const m=(r.meta&&typeof r.meta==='object')?r.meta:{};
+    return Object.assign({
+      id:r.local_id||r.id,
+      prenom:r.first_name||'',
+      nom:r.last_name||'',
+      niss:r.niss||'',
+      fonction:r.fonction||'Gérant',
+      pays:'0', parts:0, valPart:0, pctControle:0,
+      adresse:'', cp:'', commune:'', dnaiss:'',
+      dateEntree:'', dateSortie:''
+    },m,{id:r.local_id||r.id});
+  }
+
+  async function pullClients(){
+    const res=await fetch(`${creds.url}/rest/v1/clients?select=*&order=created_at.asc`,{headers:H()});
+    if(!res.ok){console.warn('[sync] clients pull failed',res.status);return null;}
+    const rows=await res.json();
+    const needBackfill=rows.filter(r=>!r.local_id);
+    for(const r of needBackfill){
+      await fetch(`${creds.url}/rest/v1/clients?id=eq.${r.id}`,{
+        method:'PATCH',headers:H({'Prefer':'return=minimal'}),
+        body:JSON.stringify({local_id:r.id})
+      });
+      r.local_id=r.id;
+    }
+    rows.forEach(r=>{ clientUuidByLocal[r.local_id]=r.id; });
+    return rows;
+  }
+
+  async function pullDirigeants(){
+    const res=await fetch(`${creds.url}/rest/v1/dirigeants?select=*&order=created_at.asc`,{headers:H()});
+    if(!res.ok){console.warn('[sync] dirigeants pull failed',res.status);return null;}
+    const rows=await res.json();
+    const needBackfill=rows.filter(r=>!r.local_id);
+    for(const r of needBackfill){
+      await fetch(`${creds.url}/rest/v1/dirigeants?id=eq.${r.id}`,{
+        method:'PATCH',headers:H({'Prefer':'return=minimal'}),
+        body:JSON.stringify({local_id:r.id})
+      });
+      r.local_id=r.id;
+    }
+    return rows;
+  }
+
   async function cloudPull(){
     if(!creds||pullInFlight)return;
     pullInFlight=true;
     try{
-      const res=await fetch(`${creds.url}/rest/v1/clients?select=*&order=created_at.asc`,{headers:H()});
-      if(!res.ok){console.warn('[sync] pull failed',res.status);return;}
-      const rows=await res.json();
-      // Backfill local_id pour les clients créés via la page /clients
-      const needBackfill=rows.filter(r=>!r.local_id);
-      for(const r of needBackfill){
-        await fetch(`${creds.url}/rest/v1/clients?id=eq.${r.id}`,{
-          method:'PATCH',headers:H({'Prefer':'return=minimal'}),
-          body:JSON.stringify({local_id:r.id})
-        });
-        r.local_id=r.id;
-      }
-      const remote=rows.map(rowToClient);
-      const remoteIds=new Set(remote.map(c=>c.id));
+      const cRows=await pullClients();
+      if(!cRows)return;
+      const remoteClients=cRows.map(rowToClient);
+      const remoteIds=new Set(remoteClients.map(c=>c.id));
       const localOnly=(DB.clients||[]).filter(c=>!remoteIds.has(c.id));
-      DB.clients=remote.concat(localOnly);
+      DB.clients=remoteClients.concat(localOnly);
+
+      const dRows=await pullDirigeants();
+      if(dRows){
+        const uuidToLocal={};
+        Object.keys(clientUuidByLocal).forEach(l=>{uuidToLocal[clientUuidByLocal[l]]=l;});
+        const byClient={};
+        dRows.forEach(r=>{
+          const cl=(r.meta&&r.meta._clientLocalId)||uuidToLocal[r.client_id];
+          if(!cl)return;
+          (byClient[cl]=byClient[cl]||[]).push(rowToDirigeant(r));
+        });
+        DB.clients.forEach(c=>{
+          if(remoteIds.has(c.id)) c.actionnaires=byClient[c.id]||[];
+        });
+      }
+
       pushing=true;_origSave();pushing=false;
       renderSidebar();renderDashboard();
       window.__cloudReady=true;
@@ -5144,24 +5210,61 @@ window.onload=()=>{
     if(!creds||pushing)return;
     pushing=true;
     try{
-      const rows=(DB.clients||[]).map(clientToRow);
-      if(rows.length){
+      // --- Clients upsert ---
+      const cRows=(DB.clients||[]).map(clientToRow);
+      if(cRows.length){
         const res=await fetch(`${creds.url}/rest/v1/clients?on_conflict=user_id,local_id`,{
           method:'POST',
-          headers:H({'Prefer':'resolution=merge-duplicates,return=minimal'}),
-          body:JSON.stringify(rows)
+          headers:H({'Prefer':'resolution=merge-duplicates,return=representation'}),
+          body:JSON.stringify(cRows)
         });
-        if(!res.ok){console.warn('[sync] push failed',res.status,await res.text());}
+        if(!res.ok){console.warn('[sync] clients push failed',res.status,await res.text());}
+        else{
+          const out=await res.json();
+          out.forEach(r=>{ if(r.local_id) clientUuidByLocal[r.local_id]=r.id; });
+        }
       }
-      const localIds=new Set((DB.clients||[]).map(c=>c.id));
-      const remoteRes=await fetch(`${creds.url}/rest/v1/clients?select=local_id`,{headers:H()});
-      if(remoteRes.ok){
-        const remote=await remoteRes.json();
-        const toDelete=remote.map(r=>r.local_id).filter(id=>id&&!localIds.has(id));
-        for(const id of toDelete){
-          await fetch(`${creds.url}/rest/v1/clients?local_id=eq.${encodeURIComponent(id)}`,{
-            method:'DELETE',headers:H()
-          });
+      // --- Clients delete ---
+      const localCIds=new Set((DB.clients||[]).map(c=>c.id));
+      const remoteC=await fetch(`${creds.url}/rest/v1/clients?select=local_id`,{headers:H()});
+      if(remoteC.ok){
+        const rs=await remoteC.json();
+        for(const r of rs){
+          if(r.local_id&&!localCIds.has(r.local_id)){
+            await fetch(`${creds.url}/rest/v1/clients?local_id=eq.${encodeURIComponent(r.local_id)}`,{
+              method:'DELETE',headers:H()
+            });
+          }
+        }
+      }
+
+      // --- Dirigeants upsert (flatten) ---
+      const dRows=[];
+      (DB.clients||[]).forEach(c=>{
+        (c.actionnaires||[]).forEach(a=>{
+          if(!a.id) a.id='d_'+Math.random().toString(36).slice(2,10);
+          dRows.push(dirigeantToRow(a, c.id));
+        });
+      });
+      if(dRows.length){
+        const res=await fetch(`${creds.url}/rest/v1/dirigeants?on_conflict=user_id,local_id`,{
+          method:'POST',
+          headers:H({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+          body:JSON.stringify(dRows)
+        });
+        if(!res.ok){console.warn('[sync] dirigeants push failed',res.status,await res.text());}
+      }
+      // --- Dirigeants delete ---
+      const localDIds=new Set(dRows.map(r=>r.local_id));
+      const remoteD=await fetch(`${creds.url}/rest/v1/dirigeants?select=local_id`,{headers:H()});
+      if(remoteD.ok){
+        const rs=await remoteD.json();
+        for(const r of rs){
+          if(r.local_id&&!localDIds.has(r.local_id)){
+            await fetch(`${creds.url}/rest/v1/dirigeants?local_id=eq.${encodeURIComponent(r.local_id)}`,{
+              method:'DELETE',headers:H()
+            });
+          }
         }
       }
     }finally{pushing=false;}
