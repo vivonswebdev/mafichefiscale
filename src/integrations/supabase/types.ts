@@ -84,6 +84,8 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          local_id: string | null
+          meta: Json
           name: string
           phone: string | null
           updated_at: string
@@ -95,6 +97,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          local_id?: string | null
+          meta?: Json
           name: string
           phone?: string | null
           updated_at?: string
@@ -106,6 +110,8 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          local_id?: string | null
+          meta?: Json
           name?: string
           phone?: string | null
           updated_at?: string
@@ -121,6 +127,8 @@ export type Database = {
           fonction: string | null
           id: string
           last_name: string
+          local_id: string | null
+          meta: Json
           niss: string | null
           updated_at: string
           user_id: string
@@ -132,6 +140,8 @@ export type Database = {
           fonction?: string | null
           id?: string
           last_name: string
+          local_id?: string | null
+          meta?: Json
           niss?: string | null
           updated_at?: string
           user_id: string
@@ -143,6 +153,8 @@ export type Database = {
           fonction?: string | null
           id?: string
           last_name?: string
+          local_id?: string | null
+          meta?: Json
           niss?: string | null
           updated_at?: string
           user_id?: string
@@ -163,6 +175,8 @@ export type Database = {
           created_at: string
           dirigeant_id: string | null
           id: string
+          local_id: string | null
+          meta: Json
           montant_brut: number | null
           status: string
           type: string
@@ -175,6 +189,8 @@ export type Database = {
           created_at?: string
           dirigeant_id?: string | null
           id?: string
+          local_id?: string | null
+          meta?: Json
           montant_brut?: number | null
           status?: string
           type?: string
@@ -187,6 +203,8 @@ export type Database = {
           created_at?: string
           dirigeant_id?: string | null
           id?: string
+          local_id?: string | null
+          meta?: Json
           montant_brut?: number | null
           status?: string
           type?: string
