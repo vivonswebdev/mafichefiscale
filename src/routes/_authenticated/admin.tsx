@@ -134,8 +134,7 @@ function AdminPage() {
             </div>
           )}
         </div>
-      </main>
-      <SiteFooter />
+      </div>
     </div>
   );
 }
