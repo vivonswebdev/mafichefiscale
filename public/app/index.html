@@ -5096,6 +5096,7 @@ window.onload=()=>{
     'Authorization':'Bearer '+creds.accessToken,
     'Content-Type':'application/json'
   },extra||{});}
+  function F(url, opts){ return fetch(url, Object.assign({keepalive:true}, opts||{})); }
 
   // ----- Clients mapping -----
   function clientToRow(c){return {
