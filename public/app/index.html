@@ -5057,26 +5057,133 @@ document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
-window.onload=()=>{
+function _initLocalDB(){
   load();
-  // ── MIGRATION : recalcule f2063 et f2059 sur toutes les fiches stockées ──
-  // Les fiches créées avant la correction avaient f2063 = f2060+f2204 (faux)
-  // et f2059 = f2060+f2063 (double-compte). On recalcule automatiquement.
   let migrated=0;
   (DB.fiches||[]).forEach(f=>{
     const f2063_correct=(f.f2060||0)+(f.f2062||0)+(f.f2068||0);
     const f2059_correct=f2063_correct+(f.f2204||0);
     if(f.f2063!==f2063_correct||f.f2059!==f2059_correct){
-      f.f2063=f2063_correct;
-      f.f2059=f2059_correct;
-      migrated++;
+      f.f2063=f2063_correct;f.f2059=f2059_correct;migrated++;
     }
   });
-  if(migrated>0){save();console.log(`[migration] ${migrated} fiche(s) recalculée(s) — f2063/f2059 corrigés`);}
-  // ─────────────────────────────────────────────────────────────────────────
+  if(migrated>0){save();console.log(`[migration] ${migrated} fiche(s) recalculée(s)`);}
   renderAll();recalc();updateNextSeq();
-  if(DB.clients.length)selectClient(DB.clients[0].id);
+}
+
+window.onload=()=>{
+  _initLocalDB();
+  if(window.parent!==window){
+    try{window.parent.postMessage({type:'mafiche:ready'},'*');}catch(e){}
+    setTimeout(()=>{
+      if(!window.__cloudReady&&DB.clients.length)selectClient(DB.clients[0].id);
+    },2000);
+  } else {
+    if(DB.clients.length)selectClient(DB.clients[0].id);
+  }
 };
+
+// ══════════════════════════════════════════════
+// SYNC CLOUD (Supabase) — clients
+// ══════════════════════════════════════════════
+(function(){
+  let creds=null, pushTimer=null, pushing=false, pullInFlight=false;
+  const _origSave=window.save;
+
+  function H(extra){return Object.assign({
+    'apikey':creds.anonKey,
+    'Authorization':'Bearer '+creds.accessToken,
+    'Content-Type':'application/json'
+  },extra||{});}
+
+  function clientToRow(c){return {
+    user_id:creds.userId, local_id:c.id,
+    name:c.nom||'(sans nom)',
+    bce:c.bce||null, email:c.email||null, phone:c.gsm||null,
+    address:[c.adresse,c.cp,c.commune].filter(Boolean).join(', ')||null,
+    meta:c
+  };}
+  function rowToClient(r){
+    const m=(r.meta&&typeof r.meta==='object')?r.meta:{};
+    return Object.assign({
+      id:r.local_id||r.id, nom:r.name, bce:r.bce||'',
+      email:r.email||'', gsm:r.phone||'',
+      adresse:'', cp:'', commune:'', actionnaires:[]
+    },m,{id:r.local_id||r.id});
+  }
+
+  async function cloudPull(){
+    if(!creds||pullInFlight)return;
+    pullInFlight=true;
+    try{
+      const res=await fetch(`${creds.url}/rest/v1/clients?select=*&order=created_at.asc`,{headers:H()});
+      if(!res.ok){console.warn('[sync] pull failed',res.status);return;}
+      const rows=await res.json();
+      // Backfill local_id pour les clients créés via la page /clients
+      const needBackfill=rows.filter(r=>!r.local_id);
+      for(const r of needBackfill){
+        await fetch(`${creds.url}/rest/v1/clients?id=eq.${r.id}`,{
+          method:'PATCH',headers:H({'Prefer':'return=minimal'}),
+          body:JSON.stringify({local_id:r.id})
+        });
+        r.local_id=r.id;
+      }
+      const remote=rows.map(rowToClient);
+      const remoteIds=new Set(remote.map(c=>c.id));
+      const localOnly=(DB.clients||[]).filter(c=>!remoteIds.has(c.id));
+      DB.clients=remote.concat(localOnly);
+      pushing=true;_origSave();pushing=false;
+      renderSidebar();renderDashboard();
+      window.__cloudReady=true;
+      if(localOnly.length){cloudPush();}
+      if(DB.clients.length&&!currentClientId)selectClient(DB.clients[0].id);
+    }finally{pullInFlight=false;}
+  }
+
+  async function cloudPush(){
+    if(!creds||pushing)return;
+    pushing=true;
+    try{
+      const rows=(DB.clients||[]).map(clientToRow);
+      if(rows.length){
+        const res=await fetch(`${creds.url}/rest/v1/clients?on_conflict=user_id,local_id`,{
+          method:'POST',
+          headers:H({'Prefer':'resolution=merge-duplicates,return=minimal'}),
+          body:JSON.stringify(rows)
+        });
+        if(!res.ok){console.warn('[sync] push failed',res.status,await res.text());}
+      }
+      const localIds=new Set((DB.clients||[]).map(c=>c.id));
+      const remoteRes=await fetch(`${creds.url}/rest/v1/clients?select=local_id`,{headers:H()});
+      if(remoteRes.ok){
+        const remote=await remoteRes.json();
+        const toDelete=remote.map(r=>r.local_id).filter(id=>id&&!localIds.has(id));
+        for(const id of toDelete){
+          await fetch(`${creds.url}/rest/v1/clients?local_id=eq.${encodeURIComponent(id)}`,{
+            method:'DELETE',headers:H()
+          });
+        }
+      }
+    }finally{pushing=false;}
+  }
+
+  window.save=function(){
+    _origSave();
+    if(!creds||pushing)return;
+    clearTimeout(pushTimer);
+    pushTimer=setTimeout(cloudPush,600);
+  };
+
+  window.addEventListener('message',function(e){
+    const d=e.data;
+    if(!d||d.type!=='mafiche:supabase-creds')return;
+    const wasFirst=!creds;
+    creds={url:d.url,anonKey:d.anonKey,accessToken:d.accessToken,userId:d.userId};
+    if(wasFirst)cloudPull();
+  });
+
+  window.cloudSync={pull:cloudPull,push:cloudPush,getCreds:()=>creds};
+})();
 </script>
 </body>
 </html>
