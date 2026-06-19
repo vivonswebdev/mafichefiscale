@@ -5275,8 +5275,17 @@ window.onload=()=>{
     _origSave();
     if(!creds||pushing)return;
     clearTimeout(pushTimer);
-    pushTimer=setTimeout(cloudPush,600);
+    pushTimer=setTimeout(cloudPush,250);
   };
+
+  function flushNow(){
+    if(!creds)return;
+    if(pushTimer){clearTimeout(pushTimer);pushTimer=null;}
+    cloudPush();
+  }
+  window.addEventListener('pagehide', flushNow);
+  window.addEventListener('beforeunload', flushNow);
+  document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushNow(); });
 
   window.addEventListener('message',function(e){
     const d=e.data;
