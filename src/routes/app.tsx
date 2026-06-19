@@ -22,7 +22,7 @@ function AppPage() {
         height: "100vh",
         border: 0,
         zIndex: 100,
-        background: "#09090b",
+        background: "#0c1019",
       }}
     />
   );
