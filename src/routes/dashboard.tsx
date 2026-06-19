@@ -19,7 +19,7 @@ const metrics = [
   { label: "Fiches 281.20 générées", value: "248", delta: "+18 ce mois", icon: FileText },
   { label: "Clients actifs", value: "42", delta: "+3 ce mois", icon: Building2 },
   { label: "Dirigeants suivis", value: "97", delta: "+5 ce mois", icon: Users },
-  { label: "Masse salariale", value: "€ 4.2M", delta: "Année 2025", icon: Calculator },
+  { label: "Masse salariale", value: "€ 4 200 000", delta: "Année 2025", icon: Calculator },
 ];
 
 const fiches = [
@@ -31,10 +31,10 @@ const fiches = [
   { client: "BV Janssen Médical", dirigeant: "Tom Janssen", niss: "74.12.08-312.04", brut: "€ 215 000", statut: "en cours", year: "2025" },
 ];
 
-const statutStyle: Record<string, string> = {
-  "validée": "text-emerald-300 bg-emerald-400/10 border-emerald-400/20",
-  "en cours": "text-cyan-300 bg-cyan-400/10 border-cyan-400/20",
-  "à vérifier": "text-amber-300 bg-amber-400/10 border-amber-400/20",
+const statutStyle: Record<string, { color: string; bg: string; border: string }> = {
+  "validée":    { color: "#9ec5ad", bg: "rgba(107,156,124,0.12)", border: "rgba(107,156,124,0.28)" },
+  "en cours":   { color: "#9ed1c9", bg: "rgba(91,158,150,0.12)",  border: "rgba(91,158,150,0.28)" },
+  "à vérifier": { color: "#e4c382", bg: "rgba(214,162,74,0.12)",  border: "rgba(214,162,74,0.30)" },
 };
 
 const statutIcon: Record<string, typeof CheckCircle2> = {
@@ -45,23 +45,30 @@ const statutIcon: Record<string, typeof CheckCircle2> = {
 
 function Dashboard() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-white">
+    <div className="min-h-screen bg-bg text-ink">
       <SiteHeader />
 
       <main className="mx-auto max-w-7xl px-6 py-10">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
-            <p className="text-sm text-zinc-500">Bonjour, Maître Dupont</p>
-            <h1 className="text-4xl font-extrabold tracking-tight mt-1">
-              <span className="text-cyan-400 text-glow-cyan">12 fiches</span> à finaliser cette semaine
+            <p className="text-sm text-ink-3 font-mono uppercase tracking-wider">Bonjour, Maître Dupont</p>
+            <h1 className="font-serif text-4xl font-semibold tracking-tight mt-2">
+              <span className="text-primary">12 fiches</span> à finaliser cette semaine
             </h1>
-            <p className="text-zinc-400 mt-2">Exercice fiscal 2025 — clôture Belcotax dans 47 jours.</p>
+            <p className="text-ink-2 mt-2">Exercice fiscal 2025 — clôture Belcotax dans <span className="font-mono text-ink">47</span> jours.</p>
           </div>
           <div className="flex items-center gap-2">
-            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-white/10 hover:border-white/30 text-sm hover:bg-white/5 transition-colors">
+            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-md border border-gold-border-2 text-sm text-ink hover:bg-surface-2 transition-colors">
               <Download className="w-4 h-4" /> Export Belcotax
             </button>
-            <button className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-cyan-500 text-zinc-950 font-semibold text-sm hover:bg-cyan-400 transition-colors shadow-[0_0_20px_rgba(6,182,212,0.4)]">
+            <button
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm transition-all hover:brightness-110 hover:-translate-y-px"
+              style={{
+                background: "linear-gradient(160deg, #c9a45c, #a3823f)",
+                color: "#1a1408",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              }}
+            >
               <Plus className="w-4 h-4" /> Nouvelle fiche
             </button>
           </div>
@@ -74,18 +81,24 @@ function Dashboard() {
             return (
               <div
                 key={m.label}
-                className="group rounded-2xl border border-white/5 bg-zinc-900/50 p-5 hover:-translate-y-1 hover:border-cyan-400/30 hover:bg-zinc-900 transition-all duration-300"
+                className="rounded-lg border border-gold-border bg-surface p-[22px] shadow-notary"
               >
                 <div className="flex items-start justify-between">
-                  <div className="w-10 h-10 rounded-xl grid place-items-center bg-cyan-500/10 border border-cyan-400/20 text-cyan-400 group-hover:shadow-[0_0_20px_rgba(6,182,212,0.4)] transition-shadow">
+                  <div
+                    className="w-10 h-10 rounded-md grid place-items-center text-primary"
+                    style={{ backgroundColor: "rgba(201,164,92,0.10)", border: "1px solid rgba(201,164,92,0.22)" }}
+                  >
                     <Icon className="w-5 h-5" />
                   </div>
-                  <span className="inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded-lg text-emerald-300 bg-emerald-400/10 border border-emerald-400/20">
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-sm font-mono uppercase tracking-wider"
+                    style={{ color: "#9ec5ad", backgroundColor: "rgba(107,156,124,0.12)", border: "1px solid rgba(107,156,124,0.28)" }}
+                  >
                     <TrendingUp className="w-3 h-3" /> {m.delta}
                   </span>
                 </div>
-                <div className="mt-5 text-3xl font-bold tracking-tight">{m.value}</div>
-                <div className="mt-1 text-sm text-zinc-400">{m.label}</div>
+                <div className="mt-5 font-serif text-3xl font-semibold tracking-tight text-ink">{m.value}</div>
+                <div className="mt-1 text-sm text-ink-2">{m.label}</div>
               </div>
             );
           })}
@@ -93,13 +106,13 @@ function Dashboard() {
 
         {/* Progress + sidebar */}
         <div className="mt-8 grid lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 rounded-2xl border border-white/5 bg-zinc-900/50 p-6">
+          <div className="lg:col-span-2 rounded-lg border border-gold-border bg-surface p-6 shadow-notary">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold tracking-tight">Progression Belcotax 2025</h2>
-                <p className="text-sm text-zinc-500">Fiches 281.20 par client</p>
+                <h2 className="text-[13px] font-bold tracking-tight text-ink uppercase">Progression Belcotax 2025</h2>
+                <p className="text-sm text-ink-3 mt-1">Fiches 281.20 par client</p>
               </div>
-              <span className="text-cyan-400 text-2xl font-bold tracking-tight">76%</span>
+              <span className="font-serif text-primary text-2xl font-semibold tracking-tight">76%</span>
             </div>
             <div className="mt-6 space-y-4">
               {[
@@ -112,13 +125,16 @@ function Dashboard() {
               ].map((r) => (
                 <div key={r.c}>
                   <div className="flex items-center justify-between text-sm mb-1.5">
-                    <span className="text-zinc-300">{r.c}</span>
-                    <span className="text-zinc-500 font-mono text-xs">{r.n}</span>
+                    <span className="text-ink">{r.c}</span>
+                    <span className="text-ink-3 font-mono text-xs">{r.n}</span>
                   </div>
-                  <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                  <div className="h-1.5 rounded-sm bg-surface-3 overflow-hidden">
                     <div
-                      className="h-full bg-gradient-to-r from-cyan-500 to-cyan-300 rounded-full shadow-[0_0_10px_rgba(6,182,212,0.6)]"
-                      style={{ width: `${r.pct}%` }}
+                      className="h-full rounded-sm"
+                      style={{
+                        width: `${r.pct}%`,
+                        background: "linear-gradient(90deg, #a3823f, #c9a45c)",
+                      }}
                     />
                   </div>
                 </div>
@@ -126,9 +142,9 @@ function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-white/5 bg-zinc-900/50 p-6">
-            <h2 className="text-lg font-semibold tracking-tight">À faire</h2>
-            <ul className="mt-4 space-y-3 text-sm">
+          <div className="rounded-lg border border-gold-border bg-surface p-6 shadow-notary">
+            <h2 className="text-[13px] font-bold tracking-tight text-ink uppercase">À faire</h2>
+            <ul className="mt-4 space-y-2 text-sm">
               {[
                 { l: "Valider fiche P. Dubois", tone: "warn" },
                 { l: "Importer paie SA Vandenberghe", tone: "warn" },
@@ -136,31 +152,34 @@ function Dashboard() {
                 { l: "Mettre à jour UBO Maes", tone: "ok" },
                 { l: "Préparer export Belcotax", tone: "ok" },
               ].map((r, i) => (
-                <li key={i} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-white/5 transition-colors">
-                  <span className={`w-1.5 h-1.5 rounded-full ${r.tone === "warn" ? "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]" : "bg-cyan-400 shadow-[0_0_8px_rgba(34,211,238,0.8)]"}`} />
-                  <span className="text-zinc-300">{r.l}</span>
+                <li key={i} className="flex items-center gap-3 p-2.5 rounded-sm hover:bg-surface-2 transition-colors">
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: r.tone === "warn" ? "#d6a24a" : "#c9a45c" }}
+                  />
+                  <span className="text-ink">{r.l}</span>
                 </li>
               ))}
             </ul>
-            <button className="mt-6 w-full px-4 py-2.5 rounded-xl border border-white/10 text-sm hover:bg-white/5 transition-colors">
+            <button className="mt-6 w-full px-4 py-2.5 rounded-md border border-gold-border-2 text-sm text-ink hover:bg-surface-2 transition-colors">
               Voir l'agenda →
             </button>
           </div>
         </div>
 
         {/* Fiches récentes */}
-        <div className="mt-8 rounded-2xl border border-white/5 bg-zinc-900/50 overflow-hidden">
-          <div className="px-6 py-5 flex items-center justify-between border-b border-white/5">
+        <div className="mt-8 rounded-lg border border-gold-border bg-surface overflow-hidden shadow-notary">
+          <div className="px-6 py-5 flex items-center justify-between border-b border-gold-border">
             <div>
-              <h2 className="text-lg font-semibold tracking-tight">Fiches 281.20 récentes</h2>
-              <p className="text-sm text-zinc-500">Dernière mise à jour il y a 3 min</p>
+              <h2 className="text-[13px] font-bold tracking-tight text-ink uppercase">Fiches 281.20 récentes</h2>
+              <p className="text-sm text-ink-3 mt-1">Dernière mise à jour il y a 3 min</p>
             </div>
-            <button className="text-sm text-cyan-400 hover:text-cyan-300">Voir toutes →</button>
+            <button className="text-sm text-primary hover:text-primary-hover">Voir toutes →</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase tracking-wider text-zinc-500 border-b border-white/5">
+              <thead style={{ backgroundColor: "#182032" }}>
+                <tr className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-ink-3 border-b border-gold-border">
                   <th className="px-6 py-3 font-medium">Client</th>
                   <th className="px-6 py-3 font-medium">Dirigeant</th>
                   <th className="px-6 py-3 font-medium">NISS</th>
@@ -172,22 +191,29 @@ function Dashboard() {
               <tbody>
                 {fiches.map((f, i) => {
                   const Icon = statutIcon[f.statut];
+                  const s = statutStyle[f.statut];
                   return (
-                    <tr key={i} className="border-b border-white/5 last:border-none hover:bg-white/[0.02] transition-colors">
+                    <tr key={i} className="border-b border-gold-border last:border-none hover:bg-surface-2 transition-colors">
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
-                          <span className="w-8 h-8 rounded-lg grid place-items-center bg-cyan-500/10 border border-cyan-400/20 text-cyan-400">
+                          <span
+                            className="w-8 h-8 rounded-sm grid place-items-center text-primary"
+                            style={{ backgroundColor: "rgba(201,164,92,0.10)", border: "1px solid rgba(201,164,92,0.22)" }}
+                          >
                             <Building2 className="w-4 h-4" />
                           </span>
-                          <span className="font-medium">{f.client}</span>
+                          <span className="font-medium text-ink">{f.client}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-zinc-300">{f.dirigeant}</td>
-                      <td className="px-6 py-4 text-zinc-500 font-mono text-xs">{f.niss}</td>
-                      <td className="px-6 py-4 text-zinc-400">{f.year}</td>
-                      <td className="px-6 py-4 text-right font-semibold text-zinc-200">{f.brut}</td>
+                      <td className="px-6 py-4 text-ink-2">{f.dirigeant}</td>
+                      <td className="px-6 py-4 text-ink-3 font-mono text-xs">{f.niss}</td>
+                      <td className="px-6 py-4 text-ink-2 font-mono">{f.year}</td>
+                      <td className="px-6 py-4 text-right font-mono font-semibold text-ink">{f.brut}</td>
                       <td className="px-6 py-4 text-right">
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-md border ${statutStyle[f.statut]}`}>
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[11px] font-medium px-2 py-1 rounded-sm border"
+                          style={{ color: s.color, backgroundColor: s.bg, borderColor: s.border }}
+                        >
                           <Icon className="w-3 h-3" />
                           {f.statut}
                         </span>
