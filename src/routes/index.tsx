@@ -42,7 +42,7 @@ function Landing() {
           </p>
           <div className="mt-10 flex items-center justify-center gap-3">
             <Link
-              to="/dashboard"
+              to="/app"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-md font-bold transition-all hover:brightness-110 hover:-translate-y-px"
               style={{
                 background: "linear-gradient(160deg, #c9a45c, #a3823f)",
@@ -50,7 +50,7 @@ function Landing() {
                 boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
               }}
             >
-              Ouvrir le dashboard <ArrowRight className="w-4 h-4" />
+              Ouvrir l’application <ArrowRight className="w-4 h-4" />
             </Link>
             <Link
               to="/pricing"
@@ -117,7 +117,7 @@ function Landing() {
             <h2 className="mt-4 font-serif text-3xl md:text-5xl font-semibold tracking-tight">Conçu par et pour les fiscalistes.</h2>
             <p className="mt-4 text-ink-2 max-w-xl mx-auto">Testez gratuitement pendant 14 jours. Sans carte bancaire.</p>
             <Link
-              to="/dashboard"
+              to="/app"
               className="mt-8 inline-flex items-center gap-2 px-6 py-3 rounded-md font-bold transition-all hover:brightness-110 hover:-translate-y-px"
               style={{
                 background: "linear-gradient(160deg, #c9a45c, #a3823f)",
