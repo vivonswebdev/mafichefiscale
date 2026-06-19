@@ -10,24 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as AppRouteImport } from './routes/app'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
 
 const PricingRoute = PricingRouteImport.update({
   id: '/pricing',
   path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AppRoute = AppRouteImport.update({
-  id: '/app',
-  path: '/app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
@@ -40,43 +30,59 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/_authenticated/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
+  id: '/_authenticated/app',
+  path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/app': typeof AppRoute
-  '/dashboard': typeof DashboardRoute
   '/pricing': typeof PricingRoute
+  '/app': typeof AuthenticatedAppRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/app': typeof AppRoute
-  '/dashboard': typeof DashboardRoute
   '/pricing': typeof PricingRoute
+  '/app': typeof AuthenticatedAppRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
-  '/app': typeof AppRoute
-  '/dashboard': typeof DashboardRoute
   '/pricing': typeof PricingRoute
+  '/_authenticated/app': typeof AuthenticatedAppRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/app' | '/dashboard' | '/pricing'
+  fullPaths: '/' | '/about' | '/pricing' | '/app' | '/dashboard'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/app' | '/dashboard' | '/pricing'
-  id: '__root__' | '/' | '/about' | '/app' | '/dashboard' | '/pricing'
+  to: '/' | '/about' | '/pricing' | '/app' | '/dashboard'
+  id:
+    | '__root__'
+    | '/'
+    | '/about'
+    | '/pricing'
+    | '/_authenticated/app'
+    | '/_authenticated/dashboard'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
-  AppRoute: typeof AppRoute
-  DashboardRoute: typeof DashboardRoute
   PricingRoute: typeof PricingRoute
+  AuthenticatedAppRoute: typeof AuthenticatedAppRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -86,20 +92,6 @@ declare module '@tanstack/react-router' {
       path: '/pricing'
       fullPath: '/pricing'
       preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/app': {
-      id: '/app'
-      path: '/app'
-      fullPath: '/app'
-      preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/about': {
@@ -116,15 +108,29 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/app': {
+      id: '/_authenticated/app'
+      path: '/app'
+      fullPath: '/app'
+      preLoaderRoute: typeof AuthenticatedAppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
-  AppRoute: AppRoute,
-  DashboardRoute: DashboardRoute,
   PricingRoute: PricingRoute,
+  AuthenticatedAppRoute: AuthenticatedAppRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
