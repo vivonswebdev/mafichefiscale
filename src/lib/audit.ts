@@ -14,8 +14,8 @@ export async function logAudit(
   try {
     await supabase.rpc("log_admin_action", {
       _action: action,
-      _resource_type: resourceType ?? null,
-      _resource_id: resourceId ?? null,
+      _resource_type: resourceType,
+      _resource_id: resourceId,
       _details: details as never,
     });
   } catch (err) {
