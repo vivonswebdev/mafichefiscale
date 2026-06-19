@@ -5119,6 +5119,15 @@ window.onload=()=>{
       const res=await fetch(`${creds.url}/rest/v1/clients?select=*&order=created_at.asc`,{headers:H()});
       if(!res.ok){console.warn('[sync] pull failed',res.status);return;}
       const rows=await res.json();
+      // Backfill local_id pour les clients créés via la page /clients
+      const needBackfill=rows.filter(r=>!r.local_id);
+      for(const r of needBackfill){
+        await fetch(`${creds.url}/rest/v1/clients?id=eq.${r.id}`,{
+          method:'PATCH',headers:H({'Prefer':'return=minimal'}),
+          body:JSON.stringify({local_id:r.id})
+        });
+        r.local_id=r.id;
+      }
       const remote=rows.map(rowToClient);
       const remoteIds=new Set(remote.map(c=>c.id));
       const localOnly=(DB.clients||[]).filter(c=>!remoteIds.has(c.id));
