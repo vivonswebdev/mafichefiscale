@@ -182,8 +182,7 @@ function Dashboard() {
             </div>
           )}
         </div>
-      </main>
-      <SiteFooter />
+      </div>
     </div>
   );
 }
