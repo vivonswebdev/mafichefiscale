@@ -49,6 +49,8 @@ function AppPage() {
     });
 
     return () => {
+      // Ask iframe to flush pending writes before it unmounts (keepalive fetches survive)
+      try { iframeRef.current?.contentWindow?.postMessage({ type: "mafiche:flush" }, window.location.origin); } catch {}
       window.removeEventListener("message", onMessage);
       sub.subscription.unsubscribe();
     };
