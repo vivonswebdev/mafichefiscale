@@ -74,6 +74,14 @@ export function SiteHeader() {
         <div className="ml-auto flex items-center gap-3">
           {user ? (
             <>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-medium text-primary border border-gold-border-2 hover:bg-surface-2 transition-colors"
+                >
+                  <Shield className="w-3.5 h-3.5" /> Admin
+                </Link>
+              )}
               <span className="hidden sm:inline text-sm text-ink-2 font-mono">
                 {user.email}
               </span>
