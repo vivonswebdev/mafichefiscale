@@ -5143,12 +5143,12 @@ window.onload=()=>{
   }
 
   async function pullClients(){
-    const res=await fetch(`${creds.url}/rest/v1/clients?select=*&order=created_at.asc`,{headers:H()});
+    const res=await F(`${creds.url}/rest/v1/clients?select=*&order=created_at.asc`,{headers:H()});
     if(!res.ok){console.warn('[sync] clients pull failed',res.status);return null;}
     const rows=await res.json();
     const needBackfill=rows.filter(r=>!r.local_id);
     for(const r of needBackfill){
-      await fetch(`${creds.url}/rest/v1/clients?id=eq.${r.id}`,{
+      await F(`${creds.url}/rest/v1/clients?id=eq.${r.id}`,{
         method:'PATCH',headers:H({'Prefer':'return=minimal'}),
         body:JSON.stringify({local_id:r.id})
       });
@@ -5159,12 +5159,12 @@ window.onload=()=>{
   }
 
   async function pullDirigeants(){
-    const res=await fetch(`${creds.url}/rest/v1/dirigeants?select=*&order=created_at.asc`,{headers:H()});
+    const res=await F(`${creds.url}/rest/v1/dirigeants?select=*&order=created_at.asc`,{headers:H()});
     if(!res.ok){console.warn('[sync] dirigeants pull failed',res.status);return null;}
     const rows=await res.json();
     const needBackfill=rows.filter(r=>!r.local_id);
     for(const r of needBackfill){
-      await fetch(`${creds.url}/rest/v1/dirigeants?id=eq.${r.id}`,{
+      await F(`${creds.url}/rest/v1/dirigeants?id=eq.${r.id}`,{
         method:'PATCH',headers:H({'Prefer':'return=minimal'}),
         body:JSON.stringify({local_id:r.id})
       });
@@ -5214,7 +5214,7 @@ window.onload=()=>{
       // --- Clients upsert ---
       const cRows=(DB.clients||[]).map(clientToRow);
       if(cRows.length){
-        const res=await fetch(`${creds.url}/rest/v1/clients?on_conflict=user_id,local_id`,{
+        const res=await F(`${creds.url}/rest/v1/clients?on_conflict=user_id,local_id`,{
           method:'POST',
           headers:H({'Prefer':'resolution=merge-duplicates,return=representation'}),
           body:JSON.stringify(cRows)
@@ -5227,12 +5227,12 @@ window.onload=()=>{
       }
       // --- Clients delete ---
       const localCIds=new Set((DB.clients||[]).map(c=>c.id));
-      const remoteC=await fetch(`${creds.url}/rest/v1/clients?select=local_id`,{headers:H()});
+      const remoteC=await F(`${creds.url}/rest/v1/clients?select=local_id`,{headers:H()});
       if(remoteC.ok){
         const rs=await remoteC.json();
         for(const r of rs){
           if(r.local_id&&!localCIds.has(r.local_id)){
-            await fetch(`${creds.url}/rest/v1/clients?local_id=eq.${encodeURIComponent(r.local_id)}`,{
+            await F(`${creds.url}/rest/v1/clients?local_id=eq.${encodeURIComponent(r.local_id)}`,{
               method:'DELETE',headers:H()
             });
           }
@@ -5248,7 +5248,7 @@ window.onload=()=>{
         });
       });
       if(dRows.length){
-        const res=await fetch(`${creds.url}/rest/v1/dirigeants?on_conflict=user_id,local_id`,{
+        const res=await F(`${creds.url}/rest/v1/dirigeants?on_conflict=user_id,local_id`,{
           method:'POST',
           headers:H({'Prefer':'resolution=merge-duplicates,return=minimal'}),
           body:JSON.stringify(dRows)
@@ -5257,12 +5257,12 @@ window.onload=()=>{
       }
       // --- Dirigeants delete ---
       const localDIds=new Set(dRows.map(r=>r.local_id));
-      const remoteD=await fetch(`${creds.url}/rest/v1/dirigeants?select=local_id`,{headers:H()});
+      const remoteD=await F(`${creds.url}/rest/v1/dirigeants?select=local_id`,{headers:H()});
       if(remoteD.ok){
         const rs=await remoteD.json();
         for(const r of rs){
           if(r.local_id&&!localDIds.has(r.local_id)){
-            await fetch(`${creds.url}/rest/v1/dirigeants?local_id=eq.${encodeURIComponent(r.local_id)}`,{
+            await F(`${creds.url}/rest/v1/dirigeants?local_id=eq.${encodeURIComponent(r.local_id)}`,{
               method:'DELETE',headers:H()
             });
           }
