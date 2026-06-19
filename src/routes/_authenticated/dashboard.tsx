@@ -161,11 +161,11 @@ function Dashboard() {
           <p className="text-ink-2 mt-2">Exercice fiscal 2025 — données synchronisées en temps réel.</p>
         </div>
         <Link
-          to="/clients"
+          to="/app"
           className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm transition-all hover:brightness-110 hover:-translate-y-px"
           style={{ background: "linear-gradient(160deg, #c9a45c, #a3823f)", color: "#1a1408" }}
         >
-          <Plus className="w-4 h-4" /> Gérer mes clients
+          <Plus className="w-4 h-4" /> Ouvrir l’application
         </Link>
       </div>
 

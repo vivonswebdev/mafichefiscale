@@ -2319,7 +2319,8 @@ function saveActionnaire(){
   };
   if(editActId){const i=c.actionnaires.findIndex(x=>x.id===editActId);if(i>=0)c.actionnaires[i]=obj;}
   else c.actionnaires.push(obj);
-  save();closeModal('modalActionnaire');renderDashboard();renderFicheClientChips();
+  save();closeModal('modalActionnaire');renderSidebar();renderDashboard();renderActionnaires();renderFicheClientChips();
+  if(window.cloudSync&&window.cloudSync.flush)window.cloudSync.flush();
   notif('s',editActId?'✅ Modifié':'✅ '+prenom+' '+nom+' ajouté');
 }
 function deleteActionnaire(id){
@@ -5296,7 +5297,7 @@ window.onload=()=>{
     if(wasFirst)cloudPull();
   });
 
-  window.cloudSync={pull:cloudPull,push:cloudPush,getCreds:()=>creds};
+  window.cloudSync={pull:cloudPull,push:cloudPush,flush:flushNow,getCreds:()=>creds};
 })();
 </script>
 </body>
