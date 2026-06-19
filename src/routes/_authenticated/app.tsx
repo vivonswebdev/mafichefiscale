@@ -15,13 +15,10 @@ function AppPage() {
     <iframe
       src="/app/index.html"
       title="mafiche.be application"
+      className="w-full block"
       style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
+        height: "calc(100vh - 3.5rem)",
         border: 0,
-        zIndex: 100,
         background: "#0c1019",
       }}
     />

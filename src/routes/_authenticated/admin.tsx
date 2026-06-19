@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { SiteHeader, SiteFooter } from "@/components/site-header";
+
 import { supabase } from "@/integrations/supabase/client";
 import { Shield, ScrollText, Users, FileText } from "lucide-react";
 
@@ -44,9 +44,8 @@ function AdminPage() {
   const logs = data?.logs ?? [];
 
   return (
-    <div className="min-h-screen bg-bg text-ink">
-      <SiteHeader />
-      <main className="mx-auto max-w-7xl px-6 py-10">
+    <div className="px-6 py-8 max-w-7xl mx-auto">
+      <div>
         <div className="flex items-center gap-3">
           <span
             className="grid place-items-center w-11 h-11 rounded-md text-primary"
@@ -135,8 +134,7 @@ function AdminPage() {
             </div>
           )}
         </div>
-      </main>
-      <SiteFooter />
+      </div>
     </div>
   );
 }

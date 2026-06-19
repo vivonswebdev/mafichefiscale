@@ -1,5 +1,7 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, Link, useRouterState } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { WorkspaceSidebar } from "@/components/workspace-sidebar";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
@@ -10,5 +12,42 @@ export const Route = createFileRoute("/_authenticated")({
     }
     return { user: data.user };
   },
-  component: () => <Outlet />,
+  component: AuthenticatedLayout,
 });
+
+const titles: Record<string, string> = {
+  "/dashboard": "Tableau de bord",
+  "/app": "Application",
+  "/clients": "Clients & fiches",
+  "/admin": "Administration",
+};
+
+function AuthenticatedLayout() {
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const title =
+    Object.entries(titles).find(([k]) => pathname.startsWith(k))?.[1] ?? "Espace cabinet";
+
+  return (
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full bg-bg text-ink">
+        <WorkspaceSidebar />
+        <div className="flex-1 flex flex-col min-w-0">
+          <header
+            className="h-14 flex items-center gap-3 px-4 border-b border-gold-border sticky top-0 z-30 backdrop-blur-md"
+            style={{ backgroundColor: "rgba(19,25,41,0.92)" }}
+          >
+            <SidebarTrigger className="text-ink-2 hover:text-ink" />
+            <div className="h-5 w-px bg-gold-border" />
+            <Link to="/" className="text-xs font-mono uppercase tracking-wider text-ink-3 hover:text-ink">
+              ← Site public
+            </Link>
+            <div className="ml-auto font-serif text-sm text-ink-2">{title}</div>
+          </header>
+          <main className="flex-1 min-w-0">
+            <Outlet />
+          </main>
+        </div>
+      </div>
+    </SidebarProvider>
+  );
+}
