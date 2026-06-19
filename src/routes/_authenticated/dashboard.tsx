@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { SiteHeader, SiteFooter } from "@/components/site-header";
+
 import { supabase } from "@/integrations/supabase/client";
 import {
   FileText, Users, Building2, Calculator, Plus,
