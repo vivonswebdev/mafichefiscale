@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, AppWindow, Users, Shield, LogOut } from "lucide-react";
+import { LayoutDashboard, AppWindow, Shield, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   Sidebar,
@@ -21,7 +21,6 @@ import { useNavigate } from "@tanstack/react-router";
 const items = [
   { title: "Tableau de bord", url: "/dashboard", icon: LayoutDashboard },
   { title: "Application", url: "/app", icon: AppWindow },
-  { title: "Clients", url: "/clients", icon: Users },
 ] as const;
 
 export function WorkspaceSidebar() {
@@ -49,7 +48,7 @@ export function WorkspaceSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/dashboard" className="flex items-center gap-2.5 px-2 py-3">
+        <Link to="/app" className="flex items-center gap-2.5 px-2 py-3">
           <span
             className="grid place-items-center w-8 h-8 rounded-md font-serif font-bold shrink-0"
             style={{ background: "linear-gradient(160deg, #c9a45c, #a3823f)", color: "#1a1408" }}

@@ -17,7 +17,6 @@ export const Route = createFileRoute("/_authenticated")({
 const titles: Record<string, string> = {
   "/dashboard": "Tableau de bord",
   "/app": "Application",
-  "/clients": "Clients & fiches",
   "/admin": "Administration",
 };
 

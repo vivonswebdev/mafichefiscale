@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -8,6 +8,9 @@ import { Plus, Building2, User, FileText, Trash2 } from "lucide-react";
 import { logAudit } from "@/lib/audit";
 
 export const Route = createFileRoute("/_authenticated/clients")({
+  beforeLoad: () => {
+    throw redirect({ to: "/app", replace: true });
+  },
   head: () => ({
     meta: [{ title: "Clients — mafiche.be" }],
   }),
