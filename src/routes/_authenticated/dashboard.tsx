@@ -298,7 +298,7 @@ function Dashboard() {
         <section className="rounded-lg border border-gold-border bg-surface overflow-hidden shadow-notary">
           <div className="px-6 py-5 border-b border-gold-border flex items-center justify-between">
             <h2 className="text-[13px] font-bold tracking-tight text-ink uppercase">5 dernières fiches</h2>
-            <Link to="/clients" className="text-xs text-primary hover:text-primary-hover">Tout gérer →</Link>
+            <Link to="/app" className="text-xs text-primary hover:text-primary-hover">Ouvrir l’application →</Link>
           </div>
           {fiches.length === 0 ? (
             <div className="p-10 text-center text-ink-3">Aucune fiche.</div>
