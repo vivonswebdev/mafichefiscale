@@ -1,7 +1,11 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
+import { LogOut } from "lucide-react";
 
 const nav = [
   { to: "/", label: "Accueil" },
+  { to: "/dashboard", label: "Tableau de bord" },
   { to: "/app", label: "Application" },
   { to: "/pricing", label: "Tarifs" },
   { to: "/about", label: "À propos" },
@@ -9,6 +13,14 @@ const nav = [
 
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  }
+
   return (
     <header
       className="sticky top-0 z-50 backdrop-blur-md"
@@ -32,9 +44,6 @@ export function SiteHeader() {
           <span className="font-serif font-semibold tracking-tight text-ink text-lg">
             mafiche<span className="text-primary">.be</span>
           </span>
-          <span className="ml-1 font-mono text-[10px] font-semibold px-1.5 py-0.5 rounded-sm bg-surface-2 text-ink-3 border border-gold-border-2">
-            281.20
-          </span>
         </Link>
         <nav className="hidden md:flex items-center gap-1">
           {nav.map((n) => {
@@ -44,9 +53,7 @@ export function SiteHeader() {
                 key={n.to}
                 to={n.to}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-                  active
-                    ? "text-primary-hover"
-                    : "text-ink-2 hover:text-ink hover:bg-surface-2"
+                  active ? "text-primary-hover" : "text-ink-2 hover:text-ink hover:bg-surface-2"
                 }`}
                 style={active ? { backgroundColor: "rgba(201,164,92,0.14)" } : undefined}
               >
@@ -56,19 +63,36 @@ export function SiteHeader() {
           })}
         </nav>
         <div className="ml-auto flex items-center gap-3">
-          <button className="hidden sm:inline-flex text-sm text-ink-2 hover:text-ink transition-colors">
-            Se connecter
-          </button>
-          <button
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-sans font-bold text-sm transition-all hover:brightness-110 hover:-translate-y-px"
-            style={{
-              background: "linear-gradient(160deg, #c9a45c, #a3823f)",
-              color: "#1a1408",
-              boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-            }}
-          >
-            Essayer gratuitement
-          </button>
+          {user ? (
+            <>
+              <span className="hidden sm:inline text-sm text-ink-2 font-mono">
+                {user.email}
+              </span>
+              <button
+                onClick={signOut}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md border border-gold-border-2 text-sm text-ink hover:bg-surface-2 transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Déconnexion
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth" className="hidden sm:inline-flex text-sm text-ink-2 hover:text-ink transition-colors">
+                Se connecter
+              </Link>
+              <Link
+                to="/auth"
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-sans font-bold text-sm transition-all hover:brightness-110 hover:-translate-y-px"
+                style={{
+                  background: "linear-gradient(160deg, #c9a45c, #a3823f)",
+                  color: "#1a1408",
+                  boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+                }}
+              >
+                Essayer gratuitement
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
