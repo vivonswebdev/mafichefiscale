@@ -5286,6 +5286,7 @@ window.onload=()=>{
   window.addEventListener('pagehide', flushNow);
   window.addEventListener('beforeunload', flushNow);
   document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='hidden') flushNow(); });
+  window.addEventListener('message', (e)=>{ if(e.data&&e.data.type==='mafiche:flush') flushNow(); });
 
   window.addEventListener('message',function(e){
     const d=e.data;
