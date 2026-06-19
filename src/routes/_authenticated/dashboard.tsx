@@ -60,9 +60,8 @@ function Dashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-bg text-ink">
-      <SiteHeader />
-      <main className="mx-auto max-w-7xl px-6 py-10">
+    <div className="px-6 py-8 max-w-7xl mx-auto">
+      <div>
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div>
             <p className="text-sm text-ink-3 font-mono uppercase tracking-wider">Bonjour, {greeting}</p>
