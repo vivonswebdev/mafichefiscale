@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 
+/**
+ * Log an admin action. The Postgres function `log_admin_action` enforces
+ * that only authenticated admins can write — non-admin callers get a
+ * "Forbidden" error which we silently swallow.
+ */
 export async function logAudit(
   action: string,
   resourceType?: string,
@@ -7,22 +12,13 @@ export async function logAudit(
   details: Record<string, unknown> = {},
 ) {
   try {
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) return;
-    const { data: isAdmin } = await supabase.rpc("has_role", {
-      _user_id: data.user.id,
-      _role: "admin",
-    });
-    if (!isAdmin) return;
-    await supabase.from("audit_logs").insert({
-      actor_id: data.user.id,
-      actor_email: data.user.email,
-      action,
-      resource_type: resourceType ?? null,
-      resource_id: resourceId ?? null,
-      details: details as never,
+    await supabase.rpc("log_admin_action", {
+      _action: action,
+      _resource_type: resourceType ?? null,
+      _resource_id: resourceId ?? null,
+      _details: details as never,
     });
   } catch (err) {
-    console.error("[audit] failed", err);
+    console.warn("[audit] skipped", err);
   }
 }
