@@ -4,74 +4,78 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  /* Surfaces — deep navy */
+  --color-bg: #0c1019;
+  --color-surface: #131929;
+  --color-surface-2: #182032;
+  --color-surface-3: #212a40;
+
+  /* Copper / gold accent */
+  --color-primary: #c9a45c;
+  --color-primary-hover: #ddbd7e;
+  --color-primary-dark: #a3823f;
+
+  /* State */
+  --color-teal: #5b9e96;
+  --color-amber: #d6a24a;
+  --color-danger: #c2655a;
+  --color-success: #6b9c7c;
+
+  /* Text — warm ivory */
+  --color-ink: #ece7dc;
+  --color-ink-2: #a8a8b8;
+  --color-ink-3: #787890;
+
+  /* Gold-tinted translucent borders */
+  --color-gold-border: rgba(201, 164, 92, 0.10);
+  --color-gold-border-2: rgba(201, 164, 92, 0.18);
+
+  /* Type */
+  --font-serif: "Source Serif 4", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", Consolas, monospace;
+
+  /* Radius */
+  --radius-sm: 5px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 10px;
+  --radius-2xl: 12px;
+  --radius-3xl: 14px;
+}
+
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.4);
-  --shadow-glow-lg: 0 0 40px rgba(6, 182, 212, 0.35);
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-ink);
+  --color-card: var(--color-surface);
+  --color-card-foreground: var(--color-ink);
+  --color-popover: var(--color-surface);
+  --color-popover-foreground: var(--color-ink);
+  --color-primary-foreground: #1a1408;
+  --color-secondary: var(--color-surface-2);
+  --color-secondary-foreground: var(--color-ink);
+  --color-muted: var(--color-surface-2);
+  --color-muted-foreground: var(--color-ink-2);
+  --color-accent: var(--color-primary);
+  --color-accent-foreground: #1a1408;
+  --color-destructive: var(--color-danger);
+  --color-destructive-foreground: var(--color-ink);
+  --color-border: var(--color-gold-border);
+  --color-input: var(--color-gold-border-2);
+  --color-ring: var(--color-primary);
+  --color-sidebar: var(--color-surface);
+  --color-sidebar-foreground: var(--color-ink);
+  --color-sidebar-primary: var(--color-primary);
+  --color-sidebar-primary-foreground: #1a1408;
+  --color-sidebar-accent: var(--color-surface-2);
+  --color-sidebar-accent-foreground: var(--color-ink);
+  --color-sidebar-border: var(--color-gold-border);
+  --color-sidebar-ring: var(--color-primary);
 }
 
 :root {
-  --radius: 1rem;
-  /* Dark mode by default — Reevolt-inspired */
-  --background: oklch(0.145 0.01 250);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.19 0.012 250);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.19 0.012 250);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.78 0.16 200);
-  --primary-foreground: oklch(0.145 0.01 250);
-  --secondary: oklch(0.24 0.012 250);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.22 0.01 250);
-  --muted-foreground: oklch(0.7 0.015 250);
-  --accent: oklch(0.78 0.16 200);
-  --accent-foreground: oklch(0.145 0.01 250);
-  --destructive: oklch(0.65 0.22 15);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.78 0.16 200);
-  --sidebar: oklch(0.17 0.012 250);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.78 0.16 200);
-  --sidebar-primary-foreground: oklch(0.145 0.01 250);
-  --sidebar-accent: oklch(0.24 0.012 250);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.78 0.16 200);
+  --radius: 8px;
 }
 
 @layer base {
@@ -82,25 +86,25 @@
     color-scheme: dark;
   }
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
-    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
 }
 
-@utility glow-cyan {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.4);
-}
-@utility text-glow-cyan {
-  text-shadow: 0 0 24px rgba(6, 182, 212, 0.55);
-}
-@utility bg-grid {
+@utility bg-grain {
   background-image:
-    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
-  background-size: 48px 48px;
+    linear-gradient(rgba(201, 164, 92, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(201, 164, 92, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
 }
-@utility bg-radial-cyan {
-  background-image: radial-gradient(ellipse at top, rgba(6,182,212,0.18), transparent 60%);
+@utility bg-radial-gold {
+  background-image: radial-gradient(ellipse at top, rgba(201, 164, 92, 0.10), transparent 65%);
+}
+@utility shadow-notary {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
+}
+@utility border-gold {
+  border-color: rgba(201, 164, 92, 0.18);
 }
