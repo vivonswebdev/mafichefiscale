@@ -90,18 +90,49 @@ function Btn(props: React.ButtonHTMLAttributes<HTMLButtonElement>) {
   );
 }
 
+const EMPTY_CLIENT = {
+  name: "", bce: "", email: "", phone: "", gsm: "",
+  address: "", postal_code: "", city: "",
+  legal_form: "", capital: "" as string,
+  vat_subject: true, vat_periodicity: "trimestrielle",
+  fiscal_year_end: "31/12",
+  csam_date: "", csam_duration_months: "" as string,
+  monthly_fee: "" as string,
+  notes: "",
+};
+
 function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryClient> }) {
-  const [form, setForm] = useState({ name: "", bce: "", email: "", phone: "", address: "" });
+  const [form, setForm] = useState({ ...EMPTY_CLIENT });
   const create = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      const { data: row, error } = await supabase.from("clients").insert({ ...form, user_id: u.user!.id }).select().single();
+      const payload: Record<string, unknown> = {
+        user_id: u.user!.id,
+        name: form.name,
+        bce: form.bce || null,
+        email: form.email || null,
+        phone: form.phone || null,
+        gsm: form.gsm || null,
+        address: form.address || null,
+        postal_code: form.postal_code || null,
+        city: form.city || null,
+        legal_form: form.legal_form || null,
+        capital: form.capital === "" ? null : Number(form.capital),
+        vat_subject: form.vat_subject,
+        vat_periodicity: form.vat_periodicity || null,
+        fiscal_year_end: form.fiscal_year_end || null,
+        csam_date: form.csam_date || null,
+        csam_duration_months: form.csam_duration_months === "" ? null : Number(form.csam_duration_months),
+        monthly_fee: form.monthly_fee === "" ? null : Number(form.monthly_fee),
+        notes: form.notes || null,
+      };
+      const { data: row, error } = await supabase.from("clients").insert(payload as any).select().single();
       if (error) throw error;
       await logAudit("client.create", "client", row?.id, { name: form.name, bce: form.bce });
     },
     onSuccess: () => {
       toast.success("Client ajouté");
-      setForm({ name: "", bce: "", email: "", phone: "", address: "" });
+      setForm({ ...EMPTY_CLIENT });
       qc.invalidateQueries({ queryKey: ["clients"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
@@ -117,7 +148,7 @@ function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryC
   });
 
   return (
-    <div className="grid lg:grid-cols-[1fr_360px] gap-6">
+    <div className="grid lg:grid-cols-[1fr_420px] gap-6">
       <Card>
         <h2 className="text-[13px] font-bold uppercase tracking-tight">Vos clients ({data.length})</h2>
         <div className="mt-4 space-y-2">
@@ -125,8 +156,8 @@ function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryC
           {data.map((c) => (
             <div key={c.id} className="flex items-center justify-between p-3 rounded-md bg-surface-2 hover:bg-surface-3 transition-colors">
               <div>
-                <div className="font-medium text-ink">{c.name}</div>
-                <div className="text-xs text-ink-3 font-mono">{c.bce || "Pas de BCE"} · {c.email || "—"}</div>
+                <div className="font-medium text-ink">{c.name} {c.legal_form && <span className="text-xs text-ink-3 font-normal">· {c.legal_form}</span>}</div>
+                <div className="text-xs text-ink-3 font-mono">{c.bce || "Pas de BCE"} · {c.email || "—"} {c.monthly_fee ? `· € ${Number(c.monthly_fee).toFixed(2)}/mois` : ""}</div>
               </div>
               <button onClick={() => del.mutate(c.id)} className="text-ink-3 hover:text-red-400 p-2"><Trash2 className="w-4 h-4" /></button>
             </div>
@@ -136,11 +167,51 @@ function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryC
       <Card>
         <h3 className="text-[13px] font-bold uppercase tracking-tight">Nouveau client</h3>
         <form className="mt-4 space-y-3" onSubmit={(e) => { e.preventDefault(); create.mutate(); }}>
-          <Input placeholder="Nom du client *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
-          <Input placeholder="N° BCE (BE0...)" value={form.bce} onChange={(e) => setForm({ ...form, bce: e.target.value })} />
+          <Input placeholder="Nom / dénomination *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="N° BCE (BE0...)" value={form.bce} onChange={(e) => setForm({ ...form, bce: e.target.value })} />
+            <Select value={form.legal_form} onChange={(e) => setForm({ ...form, legal_form: e.target.value })}>
+              <option value="">Forme juridique</option>
+              <option value="SRL">SRL</option>
+              <option value="SA">SA</option>
+              <option value="SC">SC</option>
+              <option value="SNC">SNC</option>
+              <option value="SCS">SCS</option>
+              <option value="Indép.">Indépendant</option>
+              <option value="ASBL">ASBL</option>
+            </Select>
+          </div>
+          <Input placeholder="Capital (€)" type="number" step="0.01" value={form.capital} onChange={(e) => setForm({ ...form, capital: e.target.value })} />
           <Input placeholder="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
-          <Input placeholder="Téléphone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+          <div className="grid grid-cols-2 gap-2">
+            <Input placeholder="Téléphone" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            <Input placeholder="GSM" value={form.gsm} onChange={(e) => setForm({ ...form, gsm: e.target.value })} />
+          </div>
           <Input placeholder="Adresse" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          <div className="grid grid-cols-[110px_1fr] gap-2">
+            <Input placeholder="CP" value={form.postal_code} onChange={(e) => setForm({ ...form, postal_code: e.target.value })} />
+            <Input placeholder="Ville" value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
+          </div>
+          <div className="rounded-md border border-gold-border bg-surface-2 p-3 space-y-2">
+            <label className="flex items-center gap-2 text-sm text-ink-2">
+              <input type="checkbox" checked={form.vat_subject} onChange={(e) => setForm({ ...form, vat_subject: e.target.checked })} />
+              Assujetti TVA
+            </label>
+            <Select value={form.vat_periodicity} onChange={(e) => setForm({ ...form, vat_periodicity: e.target.value })} disabled={!form.vat_subject}>
+              <option value="mensuelle">Déclaration mensuelle</option>
+              <option value="trimestrielle">Déclaration trimestrielle</option>
+            </Select>
+            <Input placeholder="Clôture fiscale (ex: 31/12)" value={form.fiscal_year_end} onChange={(e) => setForm({ ...form, fiscal_year_end: e.target.value })} />
+          </div>
+          <div className="rounded-md border border-gold-border bg-surface-2 p-3 space-y-2">
+            <div className="text-[11px] font-bold uppercase tracking-tight text-ink-3">Mandat CSAM</div>
+            <div className="grid grid-cols-2 gap-2">
+              <Input type="date" value={form.csam_date} onChange={(e) => setForm({ ...form, csam_date: e.target.value })} />
+              <Input type="number" placeholder="Durée (mois)" value={form.csam_duration_months} onChange={(e) => setForm({ ...form, csam_duration_months: e.target.value })} />
+            </div>
+          </div>
+          <Input placeholder="Abonnement mensuel (€)" type="number" step="0.01" value={form.monthly_fee} onChange={(e) => setForm({ ...form, monthly_fee: e.target.value })} />
+          <textarea placeholder="Notes" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="w-full px-3 py-2 rounded-md bg-surface-2 border border-gold-border text-ink focus:outline-none focus:border-primary text-sm" />
           <Btn type="submit" disabled={create.isPending} className="w-full justify-center"><Plus className="w-4 h-4" />Ajouter</Btn>
         </form>
       </Card>
