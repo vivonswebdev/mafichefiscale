@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 
 const nav = [
   { to: "/", label: "Accueil" },
-  { to: "/dashboard", label: "Tableau de bord" },
+  { to: "/app", label: "Tableau de bord" },
   { to: "/app", label: "Application" },
   { to: "/pricing", label: "Tarifs" },
   { to: "/about", label: "À propos" },
