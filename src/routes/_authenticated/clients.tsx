@@ -103,6 +103,30 @@ const EMPTY_CLIENT = {
 
 function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryClient> }) {
   const [form, setForm] = useState({ ...EMPTY_CLIENT });
+
+  const invoicesQ = useQuery({
+    queryKey: ["invoices", "pending-by-client"],
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("invoices") as any)
+        .select("client_id,status,due_date")
+        .eq("status", "pending");
+      if (error) throw error;
+      return (data ?? []) as { client_id: string; status: string; due_date: string | null }[];
+    },
+  });
+
+  const badgeByClient = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const m = new Map<string, { count: number; overdue: boolean }>();
+    for (const inv of invoicesQ.data ?? []) {
+      const cur = m.get(inv.client_id) ?? { count: 0, overdue: false };
+      cur.count += 1;
+      if (inv.due_date && inv.due_date < today) cur.overdue = true;
+      m.set(inv.client_id, cur);
+    }
+    return m;
+  }, [invoicesQ.data]);
+
   const create = useMutation({
     mutationFn: async () => {
       const { data: u } = await supabase.auth.getUser();
