@@ -8,9 +8,11 @@ const nav = [
   { to: "/", label: "Accueil" },
   { to: "/dashboard", label: "Tableau de bord" },
   { to: "/app", label: "Application" },
+  { to: "/invoices", label: "Factures" },
   { to: "/pricing", label: "Tarifs" },
   { to: "/about", label: "À propos" },
 ] as const;
+
 
 export function SiteHeader() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
