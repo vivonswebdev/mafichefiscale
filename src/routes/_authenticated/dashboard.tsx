@@ -115,6 +115,45 @@ function Dashboard() {
           })}
         </div>
 
+        {/* Outstanding invoices widget */}
+        <div className="mt-6 rounded-lg border border-gold-border bg-surface p-5 shadow-notary flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div
+              className="w-11 h-11 rounded-md grid place-items-center"
+              style={{
+                color: overdueTotal > 0 ? "#e88a8a" : "#e4c382",
+                backgroundColor: overdueTotal > 0 ? "rgba(180,70,70,0.14)" : "rgba(214,162,74,0.12)",
+                border: `1px solid ${overdueTotal > 0 ? "rgba(180,70,70,0.32)" : "rgba(214,162,74,0.30)"}`,
+              }}
+            >
+              {overdueTotal > 0 ? <AlertCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+            </div>
+            <div>
+              <div className="text-xs font-mono uppercase tracking-wider text-ink-3">Encours non payés</div>
+              <div className="font-serif text-2xl font-semibold mt-1">
+                € {outstandingTotal.toLocaleString("fr-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="text-xs text-ink-3 mt-0.5">
+                {pendingInv.length} facture(s) en attente
+                {overdueTotal > 0 && (
+                  <span className="text-red-400 ml-2">
+                    · {overdueInv.length} en retard ({overdueTotal.toLocaleString("fr-BE")} €)
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/invoices"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm"
+            style={{ background: "linear-gradient(160deg, #c9a45c, #a3823f)", color: "#1a1408" }}
+          >
+            Gérer les factures →
+          </Link>
+        </div>
+
+
+
         <div className="mt-8 rounded-lg border border-gold-border bg-surface overflow-hidden shadow-notary">
           <div className="px-6 py-5 flex items-center justify-between border-b border-gold-border">
             <div>
