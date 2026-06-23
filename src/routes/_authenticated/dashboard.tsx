@@ -29,10 +29,11 @@ function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [fichesRes, clientsRes, dirigeantsRes, profileRes] = await Promise.all([
+      const [fichesRes, clientsRes, dirigeantsRes, invoicesRes, profileRes] = await Promise.all([
         supabase.from("fiches").select("*, clients(name), dirigeants(first_name,last_name,niss)").order("created_at", { ascending: false }),
         supabase.from("clients").select("id", { count: "exact", head: true }),
         supabase.from("dirigeants").select("id", { count: "exact", head: true }),
+        (supabase.from("invoices") as any).select("id, client_id, amount, status, due_date"),
         supabase.auth.getUser().then(async ({ data }) => {
           if (!data.user) return null;
           const { data: p } = await supabase.from("profiles").select("*").eq("id", data.user.id).maybeSingle();
@@ -43,13 +44,20 @@ function Dashboard() {
         fiches: fichesRes.data ?? [],
         clientsCount: clientsRes.count ?? 0,
         dirigeantsCount: dirigeantsRes.count ?? 0,
+        invoices: (invoicesRes.data ?? []) as Array<{ id: string; client_id: string; amount: number; status: string; due_date: string | null }>,
         profile: profileRes,
       };
     },
   });
 
   const fiches = data?.fiches ?? [];
+  const invoices = data?.invoices ?? [];
   const totalBrut = fiches.reduce((s, f: any) => s + Number(f.montant_brut || 0), 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const pendingInv = invoices.filter((i) => i.status === "pending");
+  const outstandingTotal = pendingInv.reduce((s, i) => s + Number(i.amount || 0), 0);
+  const overdueInv = pendingInv.filter((i) => i.due_date && i.due_date < today);
+  const overdueTotal = overdueInv.reduce((s, i) => s + Number(i.amount || 0), 0);
   const greeting = data?.profile?.full_name ? `Maître ${data.profile.full_name}` : "Bienvenue";
 
   const metrics = [
@@ -58,6 +66,7 @@ function Dashboard() {
     { label: "Dirigeants suivis", value: String(data?.dirigeantsCount ?? 0), icon: Users },
     { label: "Masse salariale", value: `€ ${totalBrut.toLocaleString("fr-BE")}`, icon: Calculator },
   ];
+
 
   return (
     <div className="min-h-screen bg-bg text-ink">
