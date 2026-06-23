@@ -14,7 +14,7 @@ function createQueryClient() {
 }
 
 let browserQueryClient: QueryClient | undefined;
-let browserRouter: ReturnType<typeof createRouter> | undefined;
+let browserRouter: ReturnType<typeof createRouter<typeof routeTree>> | undefined;
 
 export const getRouter = () => {
   const queryClient =
