@@ -177,15 +177,30 @@ function ClientsTab({ data, qc }: { data: any[]; qc: ReturnType<typeof useQueryC
         <h2 className="text-[13px] font-bold uppercase tracking-tight">Vos clients ({data.length})</h2>
         <div className="mt-4 space-y-2">
           {data.length === 0 && <p className="text-ink-3 text-sm py-6 text-center">Aucun client. Ajoutez-en un →</p>}
-          {data.map((c) => (
+          {data.map((c) => {
+            const b = badgeByClient.get(c.id);
+            return (
             <div key={c.id} className="flex items-center justify-between p-3 rounded-md bg-surface-2 hover:bg-surface-3 transition-colors">
               <div>
                 <div className="font-medium text-ink">{c.name} {c.legal_form && <span className="text-xs text-ink-3 font-normal">· {c.legal_form}</span>}</div>
                 <div className="text-xs text-ink-3 font-mono">{c.bce || "Pas de BCE"} · {c.email || "—"} {c.monthly_fee ? `· € ${Number(c.monthly_fee).toFixed(2)}/mois` : ""}</div>
               </div>
-              <button onClick={() => del.mutate(c.id)} className="text-ink-3 hover:text-red-400 p-2"><Trash2 className="w-4 h-4" /></button>
+              <div className="flex items-center gap-2">
+                {b && b.count > 0 && (
+                  <Link
+                    to="/invoices"
+                    search={{ client: c.id, status: b.overdue ? "overdue" : "pending" } as any}
+                    title={b.overdue ? `${b.count} facture(s) en retard` : `${b.count} facture(s) en attente`}
+                    className={`inline-flex items-center justify-center min-w-[24px] h-6 px-2 rounded-full text-xs font-bold text-white bg-red-600 hover:bg-red-500 ${b.overdue ? "animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.7)]" : ""}`}
+                  >
+                    {b.count}
+                  </Link>
+                )}
+                <button onClick={() => del.mutate(c.id)} className="text-ink-3 hover:text-red-400 p-2"><Trash2 className="w-4 h-4" /></button>
+              </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       </Card>
       <Card>
