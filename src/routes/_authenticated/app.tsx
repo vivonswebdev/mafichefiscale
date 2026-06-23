@@ -218,9 +218,11 @@ function AppPage() {
         }
 
         queryClient.invalidateQueries({ queryKey: ["clients"] });
+        queryClient.invalidateQueries({ queryKey: ["dirigeants"] });
         queryClient.invalidateQueries({ queryKey: ["fiches"] });
         queryClient.invalidateQueries({ queryKey: ["fiches-list"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        queryClient.invalidateQueries({ queryKey: ["invoices"] });
       } catch (err) {
         console.error("Sync error", err);
       }
