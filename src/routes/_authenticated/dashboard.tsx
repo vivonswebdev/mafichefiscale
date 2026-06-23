@@ -29,10 +29,11 @@ function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
-      const [fichesRes, clientsRes, dirigeantsRes, profileRes] = await Promise.all([
+      const [fichesRes, clientsRes, dirigeantsRes, invoicesRes, profileRes] = await Promise.all([
         supabase.from("fiches").select("*, clients(name), dirigeants(first_name,last_name,niss)").order("created_at", { ascending: false }),
         supabase.from("clients").select("id", { count: "exact", head: true }),
         supabase.from("dirigeants").select("id", { count: "exact", head: true }),
+        (supabase.from("invoices") as any).select("id, client_id, amount, status, due_date"),
         supabase.auth.getUser().then(async ({ data }) => {
           if (!data.user) return null;
           const { data: p } = await supabase.from("profiles").select("*").eq("id", data.user.id).maybeSingle();
@@ -43,13 +44,20 @@ function Dashboard() {
         fiches: fichesRes.data ?? [],
         clientsCount: clientsRes.count ?? 0,
         dirigeantsCount: dirigeantsRes.count ?? 0,
+        invoices: (invoicesRes.data ?? []) as Array<{ id: string; client_id: string; amount: number; status: string; due_date: string | null }>,
         profile: profileRes,
       };
     },
   });
 
   const fiches = data?.fiches ?? [];
+  const invoices = data?.invoices ?? [];
   const totalBrut = fiches.reduce((s, f: any) => s + Number(f.montant_brut || 0), 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const pendingInv = invoices.filter((i) => i.status === "pending");
+  const outstandingTotal = pendingInv.reduce((s, i) => s + Number(i.amount || 0), 0);
+  const overdueInv = pendingInv.filter((i) => i.due_date && i.due_date < today);
+  const overdueTotal = overdueInv.reduce((s, i) => s + Number(i.amount || 0), 0);
   const greeting = data?.profile?.full_name ? `Maître ${data.profile.full_name}` : "Bienvenue";
 
   const metrics = [
@@ -58,6 +66,7 @@ function Dashboard() {
     { label: "Dirigeants suivis", value: String(data?.dirigeantsCount ?? 0), icon: Users },
     { label: "Masse salariale", value: `€ ${totalBrut.toLocaleString("fr-BE")}`, icon: Calculator },
   ];
+
 
   return (
     <div className="min-h-screen bg-bg text-ink">
@@ -105,6 +114,45 @@ function Dashboard() {
             );
           })}
         </div>
+
+        {/* Outstanding invoices widget */}
+        <div className="mt-6 rounded-lg border border-gold-border bg-surface p-5 shadow-notary flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div
+              className="w-11 h-11 rounded-md grid place-items-center"
+              style={{
+                color: overdueTotal > 0 ? "#e88a8a" : "#e4c382",
+                backgroundColor: overdueTotal > 0 ? "rgba(180,70,70,0.14)" : "rgba(214,162,74,0.12)",
+                border: `1px solid ${overdueTotal > 0 ? "rgba(180,70,70,0.32)" : "rgba(214,162,74,0.30)"}`,
+              }}
+            >
+              {overdueTotal > 0 ? <AlertCircle className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
+            </div>
+            <div>
+              <div className="text-xs font-mono uppercase tracking-wider text-ink-3">Encours non payés</div>
+              <div className="font-serif text-2xl font-semibold mt-1">
+                € {outstandingTotal.toLocaleString("fr-BE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </div>
+              <div className="text-xs text-ink-3 mt-0.5">
+                {pendingInv.length} facture(s) en attente
+                {overdueTotal > 0 && (
+                  <span className="text-red-400 ml-2">
+                    · {overdueInv.length} en retard ({overdueTotal.toLocaleString("fr-BE")} €)
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <Link
+            to="/invoices"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm"
+            style={{ background: "linear-gradient(160deg, #c9a45c, #a3823f)", color: "#1a1408" }}
+          >
+            Gérer les factures →
+          </Link>
+        </div>
+
+
 
         <div className="mt-8 rounded-lg border border-gold-border bg-surface overflow-hidden shadow-notary">
           <div className="px-6 py-5 flex items-center justify-between border-b border-gold-border">
