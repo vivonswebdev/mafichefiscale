@@ -56,9 +56,10 @@ const emptyForm = {
 
 function InvoicesPage() {
   const queryClient = useQueryClient();
+  const search = Route.useSearch();
   const [form, setForm] = useState(emptyForm);
-  const [filterClient, setFilterClient] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "paid" | "overdue" | "cancelled">("all");
+  const [filterClient, setFilterClient] = useState<string>(search.client ?? "all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "paid" | "overdue" | "cancelled">(search.status ?? "all");
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients-lite"],
