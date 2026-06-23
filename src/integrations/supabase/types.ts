@@ -81,41 +81,77 @@ export type Database = {
         Row: {
           address: string | null
           bce: string | null
+          capital: number | null
+          city: string | null
           created_at: string
+          csam_date: string | null
+          csam_duration_months: number | null
           email: string | null
+          fiscal_year_end: string | null
+          gsm: string | null
           id: string
+          legal_form: string | null
           local_id: string | null
           meta: Json
+          monthly_fee: number | null
           name: string
+          notes: string | null
           phone: string | null
+          postal_code: string | null
           updated_at: string
           user_id: string
+          vat_periodicity: string | null
+          vat_subject: boolean | null
         }
         Insert: {
           address?: string | null
           bce?: string | null
+          capital?: number | null
+          city?: string | null
           created_at?: string
+          csam_date?: string | null
+          csam_duration_months?: number | null
           email?: string | null
+          fiscal_year_end?: string | null
+          gsm?: string | null
           id?: string
+          legal_form?: string | null
           local_id?: string | null
           meta?: Json
+          monthly_fee?: number | null
           name: string
+          notes?: string | null
           phone?: string | null
+          postal_code?: string | null
           updated_at?: string
           user_id: string
+          vat_periodicity?: string | null
+          vat_subject?: boolean | null
         }
         Update: {
           address?: string | null
           bce?: string | null
+          capital?: number | null
+          city?: string | null
           created_at?: string
+          csam_date?: string | null
+          csam_duration_months?: number | null
           email?: string | null
+          fiscal_year_end?: string | null
+          gsm?: string | null
           id?: string
+          legal_form?: string | null
           local_id?: string | null
           meta?: Json
+          monthly_fee?: number | null
           name?: string
+          notes?: string | null
           phone?: string | null
+          postal_code?: string | null
           updated_at?: string
           user_id?: string
+          vat_periodicity?: string | null
+          vat_subject?: boolean | null
         }
         Relationships: []
       }
