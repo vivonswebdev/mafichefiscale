@@ -1692,7 +1692,7 @@ let selectedFicheClientId=null,selectedFicheDirId=null;
 let selectedGlobalDirId=null;
 let editFicheIdx=-1,currFicheIdx=-1,currXml='';
 
-function save(){localStorage.setItem('btxpro_db',JSON.stringify(DB));}
+function save(){localStorage.setItem('btxpro_db',JSON.stringify(DB));try{window.parent&&window.parent.postMessage({type:'DB_SYNC',db:DB},'*');}catch(e){}}
 function load(){
   try{const r=localStorage.getItem('btxpro_db');if(r)DB=JSON.parse(r);}catch(e){}
   DB.clients=DB.clients||[];DB.fiches=DB.fiches||[];DB.exp=DB.exp||{};
