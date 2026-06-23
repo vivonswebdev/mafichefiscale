@@ -26,7 +26,7 @@ function AuthPage() {
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) navigate({ to: "/app" });
     });
   }, [navigate]);
 
@@ -50,7 +50,7 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Connecté");
       }
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/app" });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -69,7 +69,7 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    navigate({ to: "/app" });
   }
 
   return (

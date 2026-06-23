@@ -26,7 +26,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
       _user_id: userData.user.id,
       _role: "admin",
     });
-    if (!isAdmin) throw redirect({ to: "/dashboard" });
+    if (!isAdmin) throw redirect({ to: "/app" });
   },
   head: () => ({
     meta: [
