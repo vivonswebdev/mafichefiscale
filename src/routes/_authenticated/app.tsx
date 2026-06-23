@@ -131,6 +131,50 @@ function AppPage() {
           });
         }
 
+        // ----- Dirigeants (actionnaires) -----
+        if (Array.isArray(db?.clients) && db.clients.length) {
+          const nowIso = new Date().toISOString();
+          const incomingDirs = db.clients.flatMap((c: any) =>
+            (Array.isArray(c.actionnaires) ? c.actionnaires : []).map((a: any) => {
+              const clientUuid = localToClientId.get(String(c.id ?? "")) ?? null;
+              return compact({
+                user_id: user.id,
+                client_id: clientUuid,
+                local_id: String(a.id ?? ""),
+                first_name: a.prenom ?? a.first_name ?? null,
+                last_name: a.nom ?? a.last_name ?? null,
+                niss: a.niss ?? null,
+                fonction: a.fonction ?? a.function ?? null,
+                updated_at: nowIso,
+              });
+            })
+          ).filter((d: any) => d.local_id && d.client_id);
+
+          if (incomingDirs.length) {
+            const { data: existingD } = await (supabase.from("dirigeants") as any)
+              .select("id, local_id")
+              .eq("user_id", user.id);
+            const dByLocal = new Map<string, string>();
+            (existingD ?? []).forEach((r: any) => { if (r.local_id) dByLocal.set(String(r.local_id), r.id); });
+
+            const dInsert: any[] = [];
+            const dUpdate: { id: string; patch: any }[] = [];
+            for (const row of incomingDirs) {
+              const prevId = dByLocal.get(String(row.local_id));
+              if (prevId) dUpdate.push({ id: prevId, patch: row });
+              else dInsert.push(row);
+            }
+            if (dInsert.length) {
+              const { error } = await (supabase.from("dirigeants") as any).insert(dInsert);
+              if (error) throw error;
+            }
+            for (const { id, patch } of dUpdate) {
+              const { error } = await (supabase.from("dirigeants") as any).update(patch).eq("id", id);
+              if (error) throw error;
+            }
+          }
+        }
+
         // ----- Fiches 281.20 -----
         if (Array.isArray(db?.fiches) && db.fiches.length) {
           const nowIso = new Date().toISOString();
