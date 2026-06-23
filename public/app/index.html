@@ -5077,6 +5077,7 @@ window.onload=()=>{
   // ─────────────────────────────────────────────────────────────────────────
   renderAll();recalc();updateNextSeq();
   if(DB.clients.length)selectClient(DB.clients[0].id);
+  try{window.parent&&window.parent.postMessage({type:'MAFICHE_SYNC',payload:DB},'*');window.parent&&window.parent.postMessage({type:'DB_SYNC',db:DB},'*');}catch(_){}
 };
 </script>
 </body>
