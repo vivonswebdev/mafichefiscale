@@ -75,54 +75,113 @@ function AppPage() {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
-        if (!Array.isArray(db?.clients) || !db.clients.length) return;
 
-        const incoming = db.clients
-          .map((c: any) => mapClient(c, user.id))
-          .filter((r: any) => r.local_id);
+        // ----- Clients -----
+        const localToClientId = new Map<string, string>();
+        if (Array.isArray(db?.clients) && db.clients.length) {
+          const incoming = db.clients
+            .map((c: any) => mapClient(c, user.id))
+            .filter((r: any) => r.local_id);
 
-        // Load existing rows for this user to merge by local_id without
-        // erasing fields that aren't present in the incoming payload.
-        const { data: existing, error: selErr } = await (supabase.from("clients") as any)
-          .select("*")
-          .eq("user_id", user.id);
-        if (selErr) throw selErr;
+          const { data: existing, error: selErr } = await (supabase.from("clients") as any)
+            .select("*")
+            .eq("user_id", user.id);
+          if (selErr) throw selErr;
 
-        const byLocal = new Map<string, any>();
-        (existing ?? []).forEach((row: any) => {
-          if (row.local_id) byLocal.set(String(row.local_id), row);
-        });
+          const byLocal = new Map<string, any>();
+          (existing ?? []).forEach((row: any) => {
+            if (row.local_id) byLocal.set(String(row.local_id), row);
+          });
 
-        const toInsert: any[] = [];
-        const toUpdate: any[] = [];
-        for (const row of incoming) {
-          const prev = byLocal.get(String(row.local_id));
-          if (prev) {
-            // Merge: keep previous values for missing keys.
-            toUpdate.push({ id: prev.id, ...prev, ...row });
-          } else {
-            toInsert.push(row);
+          const toInsert: any[] = [];
+          const toUpdate: any[] = [];
+          for (const row of incoming) {
+            const prev = byLocal.get(String(row.local_id));
+            if (prev) {
+              toUpdate.push({ id: prev.id, ...prev, ...row });
+              localToClientId.set(String(row.local_id), prev.id);
+            } else {
+              toInsert.push(row);
+            }
+          }
+
+          if (toInsert.length) {
+            const { data: inserted, error } = await (supabase.from("clients") as any)
+              .insert(toInsert)
+              .select("id, local_id");
+            if (error) throw error;
+            (inserted ?? []).forEach((r: any) => {
+              if (r.local_id) localToClientId.set(String(r.local_id), r.id);
+            });
+          }
+          for (const row of toUpdate) {
+            const { id, ...patch } = row;
+            const { error } = await (supabase.from("clients") as any)
+              .update(patch)
+              .eq("id", id);
+            if (error) throw error;
+          }
+        } else {
+          // still build mapping from existing rows for fiches sync
+          const { data: existing } = await (supabase.from("clients") as any)
+            .select("id, local_id")
+            .eq("user_id", user.id);
+          (existing ?? []).forEach((r: any) => {
+            if (r.local_id) localToClientId.set(String(r.local_id), r.id);
+          });
+        }
+
+        // ----- Fiches 281.20 -----
+        if (Array.isArray(db?.fiches) && db.fiches.length) {
+          const nowIso = new Date().toISOString();
+          const incomingFiches = db.fiches
+            .map((f: any) => {
+              const localId = String(f.id ?? "");
+              const clientUuid = localToClientId.get(String(f.clientId ?? f.client_id ?? "")) ?? null;
+              return compact({
+                user_id: user.id,
+                local_id: localId,
+                client_id: clientUuid,
+                year: Number(f.annee ?? f.year) || new Date().getFullYear(),
+                montant_brut: Number(f.montantBrut ?? f.montant_brut) || 0,
+                status: f.statut ?? f.status ?? "brouillon",
+                updated_at: nowIso,
+              });
+            })
+            .filter((r: any) => r.local_id);
+
+          const { data: existingF } = await (supabase.from("fiches") as any)
+            .select("id, local_id")
+            .eq("user_id", user.id);
+          const fByLocal = new Map<string, string>();
+          (existingF ?? []).forEach((r: any) => { if (r.local_id) fByLocal.set(String(r.local_id), r.id); });
+
+          const fInsert: any[] = [];
+          const fUpdate: { id: string; patch: any }[] = [];
+          for (const row of incomingFiches) {
+            const prevId = fByLocal.get(String(row.local_id));
+            if (prevId) fUpdate.push({ id: prevId, patch: row });
+            else fInsert.push(row);
+          }
+          if (fInsert.length) {
+            const { error } = await (supabase.from("fiches") as any).insert(fInsert);
+            if (error) throw error;
+          }
+          for (const { id, patch } of fUpdate) {
+            const { error } = await (supabase.from("fiches") as any).update(patch).eq("id", id);
+            if (error) throw error;
           }
         }
 
-        if (toInsert.length) {
-          const { error } = await (supabase.from("clients") as any).insert(toInsert);
-          if (error) throw error;
-        }
-        for (const row of toUpdate) {
-          const { id, ...patch } = row;
-          const { error } = await (supabase.from("clients") as any)
-            .update(patch)
-            .eq("id", id);
-          if (error) throw error;
-        }
-
         queryClient.invalidateQueries({ queryKey: ["clients"] });
+        queryClient.invalidateQueries({ queryKey: ["fiches"] });
+        queryClient.invalidateQueries({ queryKey: ["fiches-list"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       } catch (err) {
         console.error("Sync error", err);
       }
     };
+
 
     const onStorage = (e: StorageEvent) => {
       if (e.key !== "btxpro_db" || !e.newValue) return;
