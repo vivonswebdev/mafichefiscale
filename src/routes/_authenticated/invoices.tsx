@@ -12,6 +12,12 @@ export const Route = createFileRoute("/_authenticated/invoices")({
       { name: "description", content: "Suivi des factures émises et des encours non payés par client." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    client: typeof search.client === "string" ? search.client : undefined,
+    status: (["pending", "paid", "overdue", "cancelled", "all"] as const).includes(search.status as any)
+      ? (search.status as "pending" | "paid" | "overdue" | "cancelled" | "all")
+      : undefined,
+  }),
   component: InvoicesPage,
 });
 
@@ -50,9 +56,10 @@ const emptyForm = {
 
 function InvoicesPage() {
   const queryClient = useQueryClient();
+  const search = Route.useSearch();
   const [form, setForm] = useState(emptyForm);
-  const [filterClient, setFilterClient] = useState<string>("all");
-  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "paid" | "overdue" | "cancelled">("all");
+  const [filterClient, setFilterClient] = useState<string>(search.client ?? "all");
+  const [filterStatus, setFilterStatus] = useState<"all" | "pending" | "paid" | "overdue" | "cancelled">(search.status ?? "all");
 
   const { data: clients = [] } = useQuery({
     queryKey: ["clients-lite"],
