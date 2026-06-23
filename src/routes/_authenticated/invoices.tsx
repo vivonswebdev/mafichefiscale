@@ -12,6 +12,12 @@ export const Route = createFileRoute("/_authenticated/invoices")({
       { name: "description", content: "Suivi des factures émises et des encours non payés par client." },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    client: typeof search.client === "string" ? search.client : undefined,
+    status: (["pending", "paid", "overdue", "cancelled", "all"] as const).includes(search.status as any)
+      ? (search.status as "pending" | "paid" | "overdue" | "cancelled" | "all")
+      : undefined,
+  }),
   component: InvoicesPage,
 });
 
