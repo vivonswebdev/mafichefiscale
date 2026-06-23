@@ -189,7 +189,10 @@ function AppPage() {
     };
 
     const onMessage = (e: MessageEvent) => {
-      if (e.data?.type === "DB_SYNC" && e.data.db) syncDb(e.data.db);
+      const d: any = e.data;
+      if (!d) return;
+      if (d.type === "DB_SYNC" && d.db) syncDb(d.db);
+      else if (d.type === "MAFICHE_SYNC" && d.payload) syncDb(d.payload);
     };
 
     window.addEventListener("storage", onStorage);
@@ -200,11 +203,18 @@ function AppPage() {
     };
   }, [queryClient]);
 
+  const handleIframeLoad = () => {
+    try {
+      iframeRef.current?.contentWindow?.postMessage({ type: "MAFICHE_REQUEST_SYNC" }, "*");
+    } catch {}
+  };
 
   return (
     <iframe
+      ref={iframeRef}
       src="/app/index.html"
       title="mafiche.be application"
+      onLoad={handleIframeLoad}
       style={{
         position: "fixed",
         inset: 0,
