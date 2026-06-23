@@ -239,6 +239,7 @@ function AppPage() {
       if (!d) return;
       if (d.type === "DB_SYNC" && d.db) syncDb(d.db);
       else if (d.type === "MAFICHE_SYNC" && d.payload) syncDb(d.payload);
+      else if (d.type === "MAFICHE_REQUEST_SYNC") pushSupabaseToIframe();
     };
 
     window.addEventListener("storage", onStorage);
@@ -249,11 +250,76 @@ function AppPage() {
     };
   }, [queryClient]);
 
+  const pushSupabaseToIframe = async () => {
+    try {
+      const win = iframeRef.current?.contentWindow;
+      if (!win) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const [clientsRes, dirsRes, fichesRes] = await Promise.all([
+        (supabase.from("clients") as any).select("*").eq("user_id", user.id),
+        (supabase.from("dirigeants") as any).select("*").eq("user_id", user.id),
+        (supabase.from("fiches") as any).select("*").eq("user_id", user.id),
+      ]);
+      const clients = clientsRes.data ?? [];
+      const dirigeants = dirsRes.data ?? [];
+      const fiches = fichesRes.data ?? [];
+
+      const htmlClients = clients.map((c: any) => ({
+        id: c.local_id || c.id,
+        nom: c.name,
+        bce: c.bce ?? "",
+        email: c.email ?? "",
+        tel: c.phone ?? "",
+        gsm: c.gsm ?? "",
+        adresse: c.address ?? "",
+        cp: c.postal_code ?? "",
+        commune: c.city ?? "",
+        forme: c.legal_form ?? "",
+        capital: c.capital ?? 0,
+        tva: c.vat_subject ? "oui" : "non",
+        tvaPeriode: c.vat_periodicity ?? "trimestrielle",
+        cloture: c.fiscal_year_end ?? "31/12",
+        abonnement: c.monthly_fee ?? 0,
+        note: c.notes ?? "",
+        mandatDate: c.csam_date ?? "",
+        mandatDureeMois: c.csam_duration_months ?? 24,
+        actionnaires: dirigeants
+          .filter((d: any) => d.client_id === c.id)
+          .map((d: any) => ({
+            id: d.local_id || d.id,
+            prenom: d.first_name ?? "",
+            nom: d.last_name ?? "",
+            niss: d.niss ?? "",
+            fonction: d.fonction ?? "",
+          })),
+      }));
+
+      const htmlFiches = fiches.map((f: any) => ({
+        id: f.local_id || f.id,
+        clientId: clients.find((c: any) => c.id === f.client_id)?.local_id ?? f.client_id,
+        annee: f.year,
+        montantBrut: Number(f.montant_brut || 0),
+        statut: f.status ?? "brouillon",
+      }));
+
+      win.postMessage({
+        type: "SUPABASE_INJECT",
+        payload: { clients: htmlClients, fiches: htmlFiches },
+      }, "*");
+    } catch (err) {
+      console.error("pushSupabaseToIframe", err);
+    }
+  };
+
   const handleIframeLoad = () => {
     try {
       iframeRef.current?.contentWindow?.postMessage({ type: "MAFICHE_REQUEST_SYNC" }, "*");
     } catch {}
+    // Also push Supabase state into the iframe right after load.
+    setTimeout(() => { pushSupabaseToIframe(); }, 300);
   };
+
 
   return (
     <iframe

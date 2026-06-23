@@ -1693,7 +1693,38 @@ let selectedGlobalDirId=null;
 let editFicheIdx=-1,currFicheIdx=-1,currXml='';
 
 function save(){localStorage.setItem('btxpro_db',JSON.stringify(DB));try{window.parent&&window.parent.postMessage({type:'DB_SYNC',db:DB},'*');window.parent&&window.parent.postMessage({type:'MAFICHE_SYNC',payload:DB},'*');}catch(e){}}
-try{window.addEventListener('message',function(e){if(e&&e.data&&(e.data.type==='MAFICHE_REQUEST_SYNC'||e.data.type==='DB_REQUEST_SYNC')){try{window.parent&&window.parent.postMessage({type:'DB_SYNC',db:DB},'*');window.parent&&window.parent.postMessage({type:'MAFICHE_SYNC',payload:DB},'*');}catch(_){}}});}catch(_){}
+try{window.addEventListener('message',function(e){
+  if(!e||!e.data)return;
+  var t=e.data.type;
+  if(t==='MAFICHE_REQUEST_SYNC'||t==='DB_REQUEST_SYNC'){
+    try{window.parent&&window.parent.postMessage({type:'DB_SYNC',db:DB},'*');window.parent&&window.parent.postMessage({type:'MAFICHE_SYNC',payload:DB},'*');}catch(_){}
+  } else if(t==='SUPABASE_INJECT' && e.data.payload){
+    var p=e.data.payload, changed=false;
+    if(Array.isArray(p.clients)){
+      DB.clients=DB.clients||[];
+      p.clients.forEach(function(sc){
+        if(!sc||!sc.nom)return;
+        var existing=DB.clients.find(function(c){return c.id===sc.id || (sc.bce && c.bce && c.bce===sc.bce);});
+        if(!existing){ DB.clients.push(sc); changed=true; }
+        else { Object.assign(existing, sc); changed=true; }
+      });
+    }
+    if(Array.isArray(p.fiches)){
+      DB.fiches=DB.fiches||[];
+      p.fiches.forEach(function(sf){
+        if(!sf||!sf.id)return;
+        var existing=DB.fiches.find(function(f){return f.id===sf.id;});
+        if(!existing){ DB.fiches.push(sf); changed=true; }
+        else { Object.assign(existing, sf); changed=true; }
+      });
+    }
+    if(changed){
+      try{localStorage.setItem('btxpro_db',JSON.stringify(DB));}catch(_){}
+      try{typeof renderAll==='function' && renderAll();}catch(_){}
+      try{typeof notif==='function' && notif('s','Données synchronisées depuis le dashboard');}catch(_){}
+    }
+  }
+});}catch(_){}
 function load(){
   try{const r=localStorage.getItem('btxpro_db');if(r)DB=JSON.parse(r);}catch(e){}
   DB.clients=DB.clients||[];DB.fiches=DB.fiches||[];DB.exp=DB.exp||{};
