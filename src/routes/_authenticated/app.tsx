@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 function AppPage() {
   const queryClient = useQueryClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const pushRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     // Strip null/undefined/empty-string values so we never overwrite
