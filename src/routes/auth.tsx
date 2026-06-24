@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { toast } from "sonner";
+import { isPasswordPwned } from "@/lib/hibp";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -35,6 +36,12 @@ function AuthPage() {
     setLoading(true);
     try {
       if (mode === "signup") {
+        const pwned = await isPasswordPwned(password);
+        if (pwned) {
+          toast.error("Ce mot de passe a été retrouvé dans une fuite de données. Choisissez-en un autre.");
+          setLoading(false);
+          return;
+        }
         const { error } = await supabase.auth.signUp({
           email,
           password,
@@ -153,7 +160,17 @@ function AuthPage() {
               />
             </div>
             <div>
-              <label className="text-xs font-mono uppercase tracking-wider text-ink-3">Mot de passe</label>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono uppercase tracking-wider text-ink-3">Mot de passe</label>
+                {mode === "signin" && (
+                  <Link
+                    to="/forgot-password"
+                    className="text-xs text-primary hover:text-primary-hover"
+                  >
+                    Oublié ?
+                  </Link>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}
