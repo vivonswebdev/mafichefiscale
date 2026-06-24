@@ -219,8 +219,15 @@ function AppPage() {
         queryClient.invalidateQueries({ queryKey: ["fiches-list"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         queryClient.invalidateQueries({ queryKey: ["invoices"] });
+
+        try {
+          iframeRef.current?.contentWindow?.postMessage({ type: "SYNC_STATUS", ok: true }, window.location.origin);
+        } catch {}
       } catch (err) {
         console.error("Sync error", err);
+        try {
+          iframeRef.current?.contentWindow?.postMessage({ type: "SYNC_STATUS", ok: false, error: String(err) }, window.location.origin);
+        } catch {}
       }
     };
 
