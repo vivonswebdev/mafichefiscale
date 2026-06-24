@@ -322,6 +322,10 @@ function AppPage() {
     }
   }, []);
 
+  useEffect(() => {
+    pushRef.current = pushSupabaseToIframe;
+  }, [pushSupabaseToIframe]);
+
   const handleIframeLoad = () => {
     try {
       iframeRef.current?.contentWindow?.postMessage({ type: "MAFICHE_REQUEST_SYNC" }, window.location.origin);
