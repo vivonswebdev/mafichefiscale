@@ -1723,6 +1723,8 @@ try{window.addEventListener('message',function(e){
       try{typeof renderAll==='function' && renderAll();}catch(_){}
       try{typeof notif==='function' && notif('s','Données synchronisées depuis le dashboard');}catch(_){}
     }
+  } else if(t==='SYNC_STATUS'){
+    try{typeof notif==='function' && notif(e.data.ok?'s':'e', e.data.ok?'☁️ Sauvegardé dans le cloud':'⚠️ Sync cloud échouée');}catch(_){}
   }
 });}catch(_){}
 function load(){

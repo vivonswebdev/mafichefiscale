@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SiteHeader } from "@/components/site-header";
@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_authenticated/app")({
 function AppPage() {
   const queryClient = useQueryClient();
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const pushRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     // Strip null/undefined/empty-string values so we never overwrite
@@ -219,8 +220,15 @@ function AppPage() {
         queryClient.invalidateQueries({ queryKey: ["fiches-list"] });
         queryClient.invalidateQueries({ queryKey: ["dashboard"] });
         queryClient.invalidateQueries({ queryKey: ["invoices"] });
+
+        try {
+          iframeRef.current?.contentWindow?.postMessage({ type: "SYNC_STATUS", ok: true }, window.location.origin);
+        } catch {}
       } catch (err) {
         console.error("Sync error", err);
+        try {
+          iframeRef.current?.contentWindow?.postMessage({ type: "SYNC_STATUS", ok: false, error: String(err) }, window.location.origin);
+        } catch {}
       }
     };
 
@@ -235,7 +243,7 @@ function AppPage() {
       if (!d) return;
       if (d.type === "DB_SYNC" && d.db) syncDb(d.db);
       else if (d.type === "MAFICHE_SYNC" && d.payload) syncDb(d.payload);
-      else if (d.type === "MAFICHE_REQUEST_SYNC") pushSupabaseToIframe();
+      else if (d.type === "MAFICHE_REQUEST_SYNC") pushRef.current();
     };
 
     window.addEventListener("storage", onStorage);
@@ -246,7 +254,7 @@ function AppPage() {
     };
   }, [queryClient]);
 
-  const pushSupabaseToIframe = async () => {
+  const pushSupabaseToIframe = useCallback(async () => {
     try {
       const win = iframeRef.current?.contentWindow;
       if (!win) return;
@@ -261,8 +269,14 @@ function AppPage() {
       const dirigeants = dirsRes.data ?? [];
       const fiches = fichesRes.data ?? [];
 
+      // Map Supabase UUID → HTML id (local_id si dispo, sinon UUID).
+      // Garantit que client.id côté HTML et fiche.clientId pointent vers la même valeur.
+      const clientUuidToHtmlId = new Map<string, string>(
+        clients.map((c: any) => [c.id, c.local_id || c.id])
+      );
+
       const htmlClients = clients.map((c: any) => ({
-        id: c.local_id || c.id,
+        id: clientUuidToHtmlId.get(c.id) ?? c.id,
         nom: c.name,
         bce: c.bce ?? "",
         email: c.email ?? "",
@@ -293,7 +307,7 @@ function AppPage() {
 
       const htmlFiches = fiches.map((f: any) => ({
         id: f.local_id || f.id,
-        clientId: clients.find((c: any) => c.id === f.client_id)?.local_id ?? f.client_id,
+        clientId: clientUuidToHtmlId.get(f.client_id) ?? f.client_id,
         annee: f.year,
         montantBrut: Number(f.montant_brut || 0),
         statut: f.status ?? "brouillon",
@@ -306,7 +320,11 @@ function AppPage() {
     } catch (err) {
       console.error("pushSupabaseToIframe", err);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    pushRef.current = pushSupabaseToIframe;
+  }, [pushSupabaseToIframe]);
 
   const handleIframeLoad = () => {
     try {
