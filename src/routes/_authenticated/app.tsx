@@ -243,7 +243,7 @@ function AppPage() {
       if (!d) return;
       if (d.type === "DB_SYNC" && d.db) syncDb(d.db);
       else if (d.type === "MAFICHE_SYNC" && d.payload) syncDb(d.payload);
-      else if (d.type === "MAFICHE_REQUEST_SYNC") pushSupabaseToIframe();
+      else if (d.type === "MAFICHE_REQUEST_SYNC") pushRef.current();
     };
 
     window.addEventListener("storage", onStorage);
@@ -252,7 +252,7 @@ function AppPage() {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("message", onMessage);
     };
-  }, [queryClient, pushSupabaseToIframe]);
+  }, [queryClient]);
 
   const pushSupabaseToIframe = useCallback(async () => {
     try {
