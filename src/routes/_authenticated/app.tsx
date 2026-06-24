@@ -251,9 +251,9 @@ function AppPage() {
       window.removeEventListener("storage", onStorage);
       window.removeEventListener("message", onMessage);
     };
-  }, [queryClient]);
+  }, [queryClient, pushSupabaseToIframe]);
 
-  const pushSupabaseToIframe = async () => {
+  const pushSupabaseToIframe = useCallback(async () => {
     try {
       const win = iframeRef.current?.contentWindow;
       if (!win) return;
@@ -268,8 +268,14 @@ function AppPage() {
       const dirigeants = dirsRes.data ?? [];
       const fiches = fichesRes.data ?? [];
 
+      // Map Supabase UUID → HTML id (local_id si dispo, sinon UUID).
+      // Garantit que client.id côté HTML et fiche.clientId pointent vers la même valeur.
+      const clientUuidToHtmlId = new Map<string, string>(
+        clients.map((c: any) => [c.id, c.local_id || c.id])
+      );
+
       const htmlClients = clients.map((c: any) => ({
-        id: c.local_id || c.id,
+        id: clientUuidToHtmlId.get(c.id) ?? c.id,
         nom: c.name,
         bce: c.bce ?? "",
         email: c.email ?? "",
@@ -300,7 +306,7 @@ function AppPage() {
 
       const htmlFiches = fiches.map((f: any) => ({
         id: f.local_id || f.id,
-        clientId: clients.find((c: any) => c.id === f.client_id)?.local_id ?? f.client_id,
+        clientId: clientUuidToHtmlId.get(f.client_id) ?? f.client_id,
         annee: f.year,
         montantBrut: Number(f.montant_brut || 0),
         statut: f.status ?? "brouillon",
@@ -313,7 +319,7 @@ function AppPage() {
     } catch (err) {
       console.error("pushSupabaseToIframe", err);
     }
-  };
+  }, []);
 
   const handleIframeLoad = () => {
     try {
