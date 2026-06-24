@@ -24,10 +24,29 @@ import {
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
+  const [authed, setAuthed] = useState(false);
   const navigate = useNavigate();
 
-  // Global Cmd/Ctrl+K to toggle.
+  // Track auth state so the palette is only active for signed-in users.
   useEffect(() => {
+    let mounted = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (mounted) setAuthed(!!data.session);
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      setAuthed(!!session);
+      if (!session) setOpen(false);
+    });
+    return () => {
+      mounted = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  // Cmd/Ctrl+K to toggle — only when authenticated.
+  useEffect(() => {
+    if (!authed) return;
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
@@ -38,9 +57,9 @@ export function CommandPalette() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [authed]);
 
-  const enabled = open;
+  const enabled = open && authed;
 
   const clientsQ = useQuery({
     queryKey: ["palette", "clients"],

@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { SiteHeader } from "@/components/site-header";
 
 export const Route = createFileRoute("/_authenticated/app")({
   head: () => ({
@@ -32,7 +33,6 @@ function AppPage() {
 
     const toDateOrNull = (s: any): string | null => {
       if (!s || typeof s !== "string") return null;
-      // Accept ISO yyyy-mm-dd or fr dd/mm/yyyy
       if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
       const m = s.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
       if (m) return `${m[3]}-${m[2]}-${m[1]}`;
@@ -76,7 +76,6 @@ function AppPage() {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // ----- Clients -----
         const localToClientId = new Map<string, string>();
         if (Array.isArray(db?.clients) && db.clients.length) {
           const incoming = db.clients
@@ -122,7 +121,6 @@ function AppPage() {
             if (error) throw error;
           }
         } else {
-          // still build mapping from existing rows for fiches sync
           const { data: existing } = await (supabase.from("clients") as any)
             .select("id, local_id")
             .eq("user_id", user.id);
@@ -131,7 +129,6 @@ function AppPage() {
           });
         }
 
-        // ----- Dirigeants (actionnaires) -----
         if (Array.isArray(db?.clients) && db.clients.length) {
           const nowIso = new Date().toISOString();
           const incomingDirs = db.clients.flatMap((c: any) =>
@@ -175,7 +172,6 @@ function AppPage() {
           }
         }
 
-        // ----- Fiches 281.20 -----
         if (Array.isArray(db?.fiches) && db.fiches.length) {
           const nowIso = new Date().toISOString();
           const incomingFiches = db.fiches
@@ -306,7 +302,7 @@ function AppPage() {
       win.postMessage({
         type: "SUPABASE_INJECT",
         payload: { clients: htmlClients, fiches: htmlFiches },
-      }, "*");
+      }, window.location.origin);
     } catch (err) {
       console.error("pushSupabaseToIframe", err);
     }
@@ -314,28 +310,26 @@ function AppPage() {
 
   const handleIframeLoad = () => {
     try {
-      iframeRef.current?.contentWindow?.postMessage({ type: "MAFICHE_REQUEST_SYNC" }, "*");
+      iframeRef.current?.contentWindow?.postMessage({ type: "MAFICHE_REQUEST_SYNC" }, window.location.origin);
     } catch {}
-    // Also push Supabase state into the iframe right after load.
     setTimeout(() => { pushSupabaseToIframe(); }, 300);
   };
 
 
   return (
-    <iframe
-      ref={iframeRef}
-      src="/app/index.html"
-      title="mafiche.be application"
-      onLoad={handleIframeLoad}
-      style={{
-        position: "fixed",
-        inset: 0,
-        width: "100vw",
-        height: "100vh",
-        border: 0,
-        zIndex: 100,
-        background: "#0c1019",
-      }}
-    />
+    <div className="flex min-h-screen flex-col bg-bg">
+      <SiteHeader />
+      <iframe
+        ref={iframeRef}
+        src="/app/index.html"
+        title="mafiche.be application"
+        onLoad={handleIframeLoad}
+        className="flex-1 w-full border-0"
+        style={{
+          minHeight: "calc(100vh - 64px)",
+          background: "#0c1019",
+        }}
+      />
+    </div>
   );
 }
