@@ -79,14 +79,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "mafiche.be — Logiciel fiscal pour cabinets comptables" },
+      { name: "description", content: "mafiche.be : fiches 281.20, paie, attestations, échéances. Le logiciel fiscal des cabinets belges." },
+      { property: "og:title", content: "mafiche.be" },
+      { property: "og:description", content: "Logiciel fiscal complet pour cabinets comptables belges." },
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "mafiche.be" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "mafiche.be" },
+      { name: "twitter:description", content: "Logiciel fiscal complet pour cabinets comptables belges." },
     ],
     links: [
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -106,7 +107,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fr">
       <head>
         <HeadContent />
       </head>
