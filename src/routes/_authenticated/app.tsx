@@ -143,10 +143,14 @@ function AppPage() {
                 last_name: a.nom ?? a.last_name ?? null,
                 niss: a.niss ?? null,
                 fonction: a.fonction ?? a.function ?? null,
+                // Store the full actionnaire (address, paie monthly data,
+                // civil status, IBAN, etc.) so nothing is lost on round-trip.
+                meta: a && typeof a === "object" ? a : {},
                 updated_at: nowIso,
               });
             })
           ).filter((d: any) => d.local_id && d.client_id);
+
 
           if (incomingDirs.length) {
             const { data: existingD } = await (supabase.from("dirigeants") as any)
