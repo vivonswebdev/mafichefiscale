@@ -1709,10 +1709,27 @@ try{window.addEventListener('message',function(e){
       p.clients.forEach(function(sc){
         if(!sc||!sc.nom)return;
         var existing=DB.clients.find(function(c){return c.id===sc.id || (sc.bce && c.bce && c.bce===sc.bce);});
-        if(!existing){ DB.clients.push(sc); changed=true; }
-        else { Object.assign(existing, sc); changed=true; }
+        // Merge actionnaires by id to preserve local rich data (paie mensuelle,
+        // adresse, état civil, IBAN…) when the incoming payload is partial.
+        var incomingActs=Array.isArray(sc.actionnaires)?sc.actionnaires:[];
+        var prevActs=existing&&Array.isArray(existing.actionnaires)?existing.actionnaires:[];
+        var mergedActs=incomingActs.map(function(ia){
+          var pa=prevActs.find(function(x){return x&&ia&&x.id===ia.id;})||{};
+          var m=Object.assign({},pa,ia);
+          // Never let an incoming actionnaire without paie wipe local paie data
+          if(pa.paie && (!ia.paie || (typeof ia.paie==='object' && !Object.keys(ia.paie).length))) m.paie=pa.paie;
+          return m;
+        });
+        // Keep local-only actionnaires that the server doesn't know yet
+        prevActs.forEach(function(pa){
+          if(pa&&pa.id&&!mergedActs.some(function(x){return x.id===pa.id;})) mergedActs.push(pa);
+        });
+        var scMerged=Object.assign({},sc,{actionnaires:mergedActs});
+        if(!existing){ DB.clients.push(scMerged); changed=true; }
+        else { Object.assign(existing, scMerged); changed=true; }
       });
     }
+
     if(Array.isArray(p.fiches)){
       DB.fiches=DB.fiches||[];
       p.fiches.forEach(function(sf){
