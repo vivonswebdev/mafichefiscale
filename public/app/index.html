@@ -385,6 +385,31 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
       <div class="fld"><label>Date d'entrée</label><input id="ma_date_entree" type="date"></div>
       <div class="fld"><label>Date de sortie</label><input id="ma_date_sortie" type="date"></div>
     </div>
+    <hr class="section-sep">
+    <div class="g3" style="margin-bottom:12px">
+      <div class="fld"><label>Sexe</label>
+        <select id="ma_sexe">
+          <option value="">—</option>
+          <option value="Masculin">Masculin</option>
+          <option value="Féminin">Féminin</option>
+        </select>
+      </div>
+      <div class="fld"><label>État civil</label>
+        <select id="ma_etat_civil">
+          <option value="">—</option>
+          <option value="Célibataire">Célibataire</option>
+          <option value="Marié(e)">Marié(e)</option>
+          <option value="Cohabitant légal">Cohabitant légal</option>
+          <option value="Divorcé(e)">Divorcé(e)</option>
+          <option value="Veuf(ve)">Veuf(ve)</option>
+          <option value="Séparé(e)">Séparé(e)</option>
+        </select>
+      </div>
+      <div class="fld"><label>Personnes à charge</label><input id="ma_pers_charge" type="number" min="0" placeholder="0"></div>
+    </div>
+    <div class="g1" style="margin-bottom:12px">
+      <div class="fld"><label>Compte (IBAN)</label><input id="ma_iban" placeholder="BE00 0000 0000 0000"></div>
+    </div>
     <div class="acts">
       <button class="btn btn-primary" onclick="saveActionnaire()">💾 Sauvegarder</button>
       <button class="btn btn-ghost" onclick="closeModal('modalActionnaire')">Annuler</button>
