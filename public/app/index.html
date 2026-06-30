@@ -2484,8 +2484,9 @@ function renderActionnaires(){
         </div>
       </td>
       <td>${isUBO?'<span class="tag tag-amber">🔒 UBO</span>':'<span class="tag tag-gray">—</span>'}</td>
-      <td>
+      <td style="white-space:nowrap">
         <button class="btn btn-teal btn-xs" onclick="goToFiche('${a.id}')">📄 Fiche</button>
+        <button class="btn btn-primary btn-xs" onclick="goToPaie('${a.id}')" title="Fiche de paie">💰 Paie</button>
       </td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-xs" onclick="editActionnaire('${a.id}')">✏️</button>
@@ -2527,6 +2528,7 @@ function renderLivreParts(){
       </div>
       <div class="part-actions">
         <button class="btn btn-teal btn-xs" onclick="goToFiche('${a.id}')">📄 Fiche</button>
+        <button class="btn btn-primary btn-xs" onclick="goToPaie('${a.id}')" title="Fiche de paie">💰 Paie</button>
         <button class="btn btn-ghost btn-xs" onclick="editActionnaire('${a.id}')">✏️</button>
       </div>
     </div>`;
@@ -2690,6 +2692,16 @@ function goToFiche(actId){
   selectedFicheDirId=actId;
   showMain('fiches');
 }
+function goToPaie(actId){
+  if(!currentClientId)return;
+  selectClient(currentClientId);
+  selectedGlobalDirId=actId;
+  selectedFicheClientId=currentClientId;
+  selectedFicheDirId=actId;
+  renderSidebar();
+  showMain('paie');
+}
+
 
 // ══════════════════════════════════════════════
 // PAGE FICHES — SÉLECTION CLIENT & DIRIGEANT
