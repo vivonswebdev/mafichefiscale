@@ -2691,6 +2691,16 @@ function goToFiche(actId){
   selectedFicheDirId=actId;
   showMain('fiches');
 }
+function goToPaie(actId){
+  if(!currentClientId)return;
+  selectClient(currentClientId);
+  selectedGlobalDirId=actId;
+  selectedFicheClientId=currentClientId;
+  selectedFicheDirId=actId;
+  renderSidebar();
+  showMain('paie');
+}
+
 
 // ══════════════════════════════════════════════
 // PAGE FICHES — SÉLECTION CLIENT & DIRIGEANT
