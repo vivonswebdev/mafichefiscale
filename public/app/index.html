@@ -385,6 +385,31 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
       <div class="fld"><label>Date d'entrée</label><input id="ma_date_entree" type="date"></div>
       <div class="fld"><label>Date de sortie</label><input id="ma_date_sortie" type="date"></div>
     </div>
+    <hr class="section-sep">
+    <div class="g3" style="margin-bottom:12px">
+      <div class="fld"><label>Sexe</label>
+        <select id="ma_sexe">
+          <option value="">—</option>
+          <option value="Masculin">Masculin</option>
+          <option value="Féminin">Féminin</option>
+        </select>
+      </div>
+      <div class="fld"><label>État civil</label>
+        <select id="ma_etat_civil">
+          <option value="">—</option>
+          <option value="Célibataire">Célibataire</option>
+          <option value="Marié(e)">Marié(e)</option>
+          <option value="Cohabitant légal">Cohabitant légal</option>
+          <option value="Divorcé(e)">Divorcé(e)</option>
+          <option value="Veuf(ve)">Veuf(ve)</option>
+          <option value="Séparé(e)">Séparé(e)</option>
+        </select>
+      </div>
+      <div class="fld"><label>Personnes à charge</label><input id="ma_pers_charge" type="number" min="0" placeholder="0"></div>
+    </div>
+    <div class="g1" style="margin-bottom:12px">
+      <div class="fld"><label>Compte (IBAN)</label><input id="ma_iban" placeholder="BE00 0000 0000 0000"></div>
+    </div>
     <div class="acts">
       <button class="btn btn-primary" onclick="saveActionnaire()">💾 Sauvegarder</button>
       <button class="btn btn-ghost" onclick="closeModal('modalActionnaire')">Annuler</button>
@@ -2321,12 +2346,14 @@ function renderDashboard(){
 function openNewActionnaire(){
   editActId=null;
   document.getElementById('modalActTitle').textContent='Nouvel actionnaire / dirigeant';
-  ['ma_prenom','ma_nom','ma_niss','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie'].forEach(id=>document.getElementById(id).value='');
+  ['ma_prenom','ma_nom','ma_niss','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie','ma_pers_charge','ma_iban'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ma_fonction').value='Gérant';
   document.getElementById('ma_pays').value='0';
   document.getElementById('ma_parts').value='';
   document.getElementById('ma_val_part').value='';
   document.getElementById('ma_pct_controle').value='';
+  document.getElementById('ma_sexe').value='';
+  document.getElementById('ma_etat_civil').value='';
   document.getElementById('ma_niss_hint').textContent='';
   openModal('modalActionnaire');
 }
@@ -2349,6 +2376,36 @@ function editActionnaire(id){
   document.getElementById('ma_pct_controle').value=a.pctControle||'';
   document.getElementById('ma_date_entree').value=a.dateEntree||'';
   document.getElementById('ma_date_sortie').value=a.dateSortie||'';
+  document.getElementById('ma_sexe').value=a.sexe||'';
+  document.getElementById('ma_etat_civil').value=a.etatCivil||'';
+  document.getElementById('ma_pers_charge').value=a.personnesCharge||'';
+  document.getElementById('ma_iban').value=a.iban||'';
+  document.getElementById('ma_niss_hint').textContent='';
+  openModal('modalActionnaire');
+}
+function editActionnaire(id){
+  const c=DB.clients.find(x=>x.id===currentClientId);if(!c)return;
+  const a=c.actionnaires.find(x=>x.id===id);if(!a)return;
+  editActId=id;
+  document.getElementById('modalActTitle').textContent='Modifier';
+  document.getElementById('ma_prenom').value=a.prenom;
+  document.getElementById('ma_nom').value=a.nom;
+  document.getElementById('ma_niss').value=fmtNiss(a.niss||'');
+  document.getElementById('ma_adresse').value=a.adresse||'';
+  document.getElementById('ma_cp').value=a.cp||'';
+  document.getElementById('ma_commune').value=a.commune||'';
+  document.getElementById('ma_dnaiss').value=a.dnaiss||'';
+  document.getElementById('ma_fonction').value=a.fonction||'Gérant';
+  document.getElementById('ma_pays').value=a.pays||'0';
+  document.getElementById('ma_parts').value=a.parts||'';
+  document.getElementById('ma_val_part').value=a.valPart||'';
+  document.getElementById('ma_pct_controle').value=a.pctControle||'';
+  document.getElementById('ma_date_entree').value=a.dateEntree||'';
+  document.getElementById('ma_date_sortie').value=a.dateSortie||'';
+  document.getElementById('ma_sexe').value=a.sexe||'';
+  document.getElementById('ma_etat_civil').value=a.etatCivil||'';
+  document.getElementById('ma_pers_charge').value=a.personnesCharge||'';
+  document.getElementById('ma_iban').value=a.iban||'';
   document.getElementById('ma_niss_hint').textContent='';
   openModal('modalActionnaire');
 }
@@ -2371,8 +2428,13 @@ function saveActionnaire(){
     pctControle:parseFloat(document.getElementById('ma_pct_controle').value)||0,
     dateEntree:document.getElementById('ma_date_entree').value,
     dateSortie:document.getElementById('ma_date_sortie').value,
+    sexe:document.getElementById('ma_sexe').value,
+    etatCivil:document.getElementById('ma_etat_civil').value,
+    personnesCharge:parseInt(document.getElementById('ma_pers_charge').value)||0,
+    iban:document.getElementById('ma_iban').value.trim(),
   };
-  if(editActId){const i=c.actionnaires.findIndex(x=>x.id===editActId);if(i>=0)c.actionnaires[i]=obj;}
+  // Préserver paie et autres champs étendus existants lors d'une édition
+  if(editActId){const i=c.actionnaires.findIndex(x=>x.id===editActId);if(i>=0)c.actionnaires[i]={...c.actionnaires[i],...obj};}
   else c.actionnaires.push(obj);
   save();closeModal('modalActionnaire');renderDashboard();renderFicheClientChips();
   notif('s',editActId?'✅ Modifié':'✅ '+prenom+' '+nom+' ajouté');
