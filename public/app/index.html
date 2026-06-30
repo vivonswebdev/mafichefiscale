@@ -462,10 +462,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 <div class="modal-bg" id="modalFichePaie">
   <div class="modal" style="width:760px;padding:0;background:#fff;color:#1a1a1a">
     <div id="fdpDoc" style="padding:20px"></div>
-    <div class="acts" id="fdpActions" style="padding:0 32px 24px;background:#fff">
-      <button class="btn" style="background:#0E3692;color:#fff" onclick="downloadFichePaiePdf()">📥 Télécharger PDF</button>
-      <button class="btn btn-ghost" onclick="printFichePaie()" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de">🖨️ Imprimer</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalFichePaie')" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de">Fermer</button>
+    <div class="acts" id="fdpActions" style="padding:0 32px 24px;background:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="display:inline-flex;border:1px solid #d0d7de;border-radius:6px;overflow:hidden;margin-right:auto">
+        <button class="btn btn-ghost" id="fdpLangFr" onclick="setFdpLang('fr')" style="background:#0E3692;color:#fff;border:none;border-radius:0;padding:8px 14px;font-weight:700">FR</button>
+        <button class="btn btn-ghost" id="fdpLangNl" onclick="setFdpLang('nl')" style="background:#f0f2f5;color:#1a1a1a;border:none;border-radius:0;padding:8px 14px;font-weight:700">NL</button>
+      </div>
+      <button class="btn" style="background:#0E3692;color:#fff" onclick="downloadFichePaiePdf()">📥 <span data-fdp-i18n="download">Télécharger PDF</span></button>
+      <button class="btn btn-ghost" onclick="printFichePaie()" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de">🖨️ <span data-fdp-i18n="print">Imprimer</span></button>
+      <button class="btn btn-ghost" onclick="closeModal('modalFichePaie')" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de" data-fdp-i18n="close">Fermer</button>
     </div>
   </div>
 </div>
@@ -3465,6 +3469,71 @@ function exportODAnnuel(){
 // ══════════════════════════════════════════════
 // FICHE DE PAIE — DOCUMENT IMPRIMABLE (style TwinnTax)
 // ══════════════════════════════════════════════
+// ===== i18n Fiche de Paie =====
+window.fdpLang = window.fdpLang || 'fr';
+window.fdpCurrentIdx = null;
+const FDP_I18N = {
+  fr: {
+    title:'Fiche de paie', dateCalc:'Date de calcul',
+    entreprise:'Entreprise', beneficiaire:'Bénéficiaire',
+    infosPerso:'Informations personnelles',
+    statut:'Statut', sexe:'Sexe', dateEntree:"Date d'entrée", niss:'Numéro national',
+    periode:'Période', mensuel:'Mensuel', etatCivil:'État civil',
+    localite:'Localité', personnesCharge:'Personnes à charge',
+    compte:'Compte (IBAN)', dnaiss:'Date de naissance',
+    remunHead:'Rémunérations — avantages et retenues',
+    libelles:'Libellés', unites:'Unités', montants:'Montants EUR',
+    aucun:'Aucun montant encodé pour ce mois',
+    baseImpo:'Base imposable', cotis:'Cotisations', precompte:'Précompte',
+    fraisP:'Frais propres', divers:'Divers',
+    netApayer:'Net à payer', versement:'Versement sur compte',
+    statutDefault:"Dirigeant d'entreprise",
+    download:'Télécharger PDF', print:'Imprimer', close:'Fermer',
+    salaireBrut:'Salaire brut', cotisSoc:'Cotisations sociales / PLCI',
+    precomptePro:'Précompte professionnel', atn:'Avantage de toute nature (ATN)',
+    fraisProp:"Frais propres à l'employeur", deductions:'Déductions diverses',
+    mois:['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'],
+    fileName:'Fiche_de_Paie'
+  },
+  nl: {
+    title:'Loonfiche', dateCalc:'Berekeningsdatum',
+    entreprise:'Onderneming', beneficiaire:'Begunstigde',
+    infosPerso:'Persoonlijke gegevens',
+    statut:'Statuut', sexe:'Geslacht', dateEntree:'Datum indiensttreding', niss:'Rijksregisternummer',
+    periode:'Periode', mensuel:'Maandelijks', etatCivil:'Burgerlijke staat',
+    localite:'Gemeente', personnesCharge:'Personen ten laste',
+    compte:'Rekening (IBAN)', dnaiss:'Geboortedatum',
+    remunHead:'Bezoldigingen — voordelen en inhoudingen',
+    libelles:'Omschrijving', unites:'Eenheden', montants:'Bedragen EUR',
+    aucun:'Geen bedragen ingevoerd voor deze maand',
+    baseImpo:'Belastbare basis', cotis:'Bijdragen', precompte:'Bedrijfsvoorheffing',
+    fraisP:'Eigen kosten', divers:'Diverse',
+    netApayer:'Netto te betalen', versement:'Storting op rekening',
+    statutDefault:'Bedrijfsleider',
+    download:'PDF downloaden', print:'Afdrukken', close:'Sluiten',
+    salaireBrut:'Brutoloon', cotisSoc:'Sociale bijdragen / VAPZ',
+    precomptePro:'Bedrijfsvoorheffing', atn:'Voordeel van alle aard (VAA)',
+    fraisProp:'Eigen kosten van de werkgever', deductions:'Diverse inhoudingen',
+    mois:['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'],
+    fileName:'Loonfiche'
+  }
+};
+function setFdpLang(lang){
+  window.fdpLang = (lang==='nl')?'nl':'fr';
+  const fr=document.getElementById('fdpLangFr'), nl=document.getElementById('fdpLangNl');
+  if(fr&&nl){
+    const on={background:'#0E3692',color:'#fff'}, off={background:'#f0f2f5',color:'#1a1a1a'};
+    Object.assign((window.fdpLang==='fr'?fr:nl).style,on);
+    Object.assign((window.fdpLang==='fr'?nl:fr).style,off);
+  }
+  const t=FDP_I18N[window.fdpLang];
+  document.querySelectorAll('[data-fdp-i18n]').forEach(el=>{
+    const k=el.getAttribute('data-fdp-i18n'); if(t[k]) el.textContent=t[k];
+  });
+  if(window.fdpCurrentIdx!=null) openFicheDePaie(window.fdpCurrentIdx);
+}
+function slugifyName(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'_').replace(/^_+|_+$/g,'');}
+
 function openFicheDePaie(idx){
   const ctx=getCurrentDir();if(!ctx)return;
   const{c,a}=ctx;
@@ -3472,32 +3541,34 @@ function openFicheDePaie(idx){
   const m=computeMonthRow(yd.months[idx]);
   const annee=parseInt(document.getElementById('p_annee').value)||new Date().getFullYear();
   const exp=DB.exp||{};
+  window.fdpCurrentIdx=idx;
+  const T=FDP_I18N[window.fdpLang||'fr'];
 
   const dnaiss=a.dnaiss?a.dnaiss.split('-').reverse().join('/'):'—';
   const dentree=a.dateEntree?a.dateEntree.split('-').reverse().join('/'):'—';
 
-  // Mois/année en français
-  const MOIS_FR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
-  const periodeLabel=`${MOIS_FR[idx]} ${annee}`;
+  const periodeLabel=`${T.mois[idx]} ${annee}`;
   const lastDay=new Date(annee,idx+1,0).getDate();
   const dateCalcul=`${String(lastDay).padStart(2,'0')}/${String(idx+1).padStart(2,'0')}/${annee}`;
+  const isoDate=`${annee}-${String(idx+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
 
-  const eur=v=>(v/100).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const locale = (window.fdpLang==='nl') ? 'nl-BE' : 'fr-BE';
+  const eur=v=>(v/100).toLocaleString(locale,{minimumFractionDigits:2,maximumFractionDigits:2});
   const eurS=(v,sign)=>{const s=sign==='+'?'+':'-';return (v===0?'':s)+eur(Math.abs(v));};
 
   const cotisations=m.cotis,precompte=m.precompte;
   const baseImposable=m.brut+m.atn;
   const netAPayer=m.salairePoche;
 
-  document.title=`Fiche de paie - ${a.prenom} ${a.nom} - ${periodeLabel}`;
-  currentPdfFilename=`Fiche_de_Paie_${annee}-${String(idx+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
+  document.title=`${T.title} - ${a.prenom} ${a.nom} - ${periodeLabel}`;
+  const nameSlug=slugifyName(`${a.prenom||''}_${a.nom||''}`);
+  currentPdfFilename=`${T.fileName}_${nameSlug?nameSlug+'_':''}${isoDate}`;
 
   const expAdresse=[exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
   const empAdresse=[c.adresse,[c.cp,c.commune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
   const dirAdresse=a.adresse||'';
   const dirVille=[a.cp,a.commune].filter(Boolean).join(' ');
 
-  // Ligne tableau rémunération
   const LINE=(label,unites,montant,sign)=>`
     <tr>
       <td style="padding:6px 9px;border-bottom:1px solid #e7edf5;color:#111827">${label}</td>
@@ -3506,106 +3577,101 @@ function openFicheDePaie(idx){
     </tr>`;
 
   const lines=[];
-  if(m.brut)lines.push(LINE('Salaire brut','',m.brut,'+'));
-  if(cotisations)lines.push(LINE('Cotisations sociales / PLCI','',cotisations,'-'));
-  if(precompte)lines.push(LINE('Précompte professionnel','',precompte,'-'));
-  if(m.atn)lines.push(LINE('Avantage de toute nature (ATN)','',m.atn,'+'));
-  if(m.frais)lines.push(LINE("Frais propres à l'employeur",'',m.frais,'+'));
-  if(m.deductions)lines.push(LINE('Déductions diverses','',m.deductions,'-'));
+  if(m.brut)lines.push(LINE(T.salaireBrut,'',m.brut,'+'));
+  if(cotisations)lines.push(LINE(T.cotisSoc,'',cotisations,'-'));
+  if(precompte)lines.push(LINE(T.precomptePro,'',precompte,'-'));
+  if(m.atn)lines.push(LINE(T.atn,'',m.atn,'+'));
+  if(m.frais)lines.push(LINE(T.fraisProp,'',m.frais,'+'));
+  if(m.deductions)lines.push(LINE(T.deductions,'',m.deductions,'-'));
 
   const html=`
   <div class="fdp-sheet" style="display:flex;flex-direction:column;min-height:1047px">
-    <!-- BANDEAU TITRE -->
     <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(90deg,#0E3692,#1a4cb8);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:16px">
       <div>
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">Fiche de paie</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">${T.title}</div>
         <div style="font-size:26px;font-weight:800;letter-spacing:.5px;margin-top:2px">${periodeLabel}</div>
       </div>
       <div style="text-align:right;font-size:11px;line-height:1.5">
-        <div style="opacity:.85;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px">Date de calcul</div>
+        <div style="opacity:.85;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px">${T.dateCalc}</div>
         <div style="font-size:14px;font-weight:700">${dateCalcul}</div>
       </div>
     </div>
 
-    <!-- ENTREPRISE + BÉNÉFICIAIRE -->
     <div style="display:flex;gap:12px;margin-bottom:14px">
       <div style="flex:1;border:1.5px solid #0E3692;border-radius:8px;padding:12px 14px;background:#F7FAFF">
-        <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Entreprise</div>
+        <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">${T.entreprise}</div>
         <div style="font-size:14px;font-weight:800;color:#111827">${escX(c.nom||'—')}</div>
         <div style="font-size:11px;color:#374151;margin-top:3px">${escX(empAdresse)||'—'}</div>
         <div style="font-size:11px;color:#374151">${c.bce?'BE '+fmtBce(c.bce):''}</div>
       </div>
       <div style="flex:1;border:1.5px solid #0E3692;border-radius:8px;padding:12px 14px;background:#F7FAFF">
-        <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Bénéficiaire</div>
+        <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">${T.beneficiaire}</div>
         <div style="font-size:14px;font-weight:800;color:#111827">${escX(a.prenom+' '+a.nom)}</div>
         <div style="font-size:11px;color:#374151;margin-top:3px">${escX(dirAdresse)||'—'}</div>
         <div style="font-size:11px;color:#374151">${escX(dirVille)}</div>
       </div>
     </div>
 
-    <!-- INFORMATIONS PERSONNELLES -->
     <div style="border:1px solid #c7d4f0;border-radius:8px;padding:12px 14px;margin-bottom:14px;background:#fff">
-      <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Informations personnelles</div>
+      <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">${T.infosPerso}</div>
       <table style="width:100%;font-size:11px;border-collapse:collapse;table-layout:fixed">
         <tr>
-          <td style="padding:4px 8px 4px 0;width:18%;color:#5f6f89;font-weight:600">Statut</td>
-          <td style="padding:4px 8px;width:32%;color:#111827;font-weight:700">${escX(a.fonction||"Dirigeant d'entreprise")}</td>
-          <td style="padding:4px 8px;width:18%;color:#5f6f89;font-weight:600">Sexe</td>
+          <td style="padding:4px 8px 4px 0;width:18%;color:#5f6f89;font-weight:600">${T.statut}</td>
+          <td style="padding:4px 8px;width:32%;color:#111827;font-weight:700">${escX(a.fonction||T.statutDefault)}</td>
+          <td style="padding:4px 8px;width:18%;color:#5f6f89;font-weight:600">${T.sexe}</td>
           <td style="padding:4px 0;width:32%;color:#111827;font-weight:700">${escX(a.sexe||'—')}</td>
         </tr>
         <tr>
-          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">Date d'entrée</td>
+          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">${T.dateEntree}</td>
           <td style="padding:4px 8px;color:#111827;font-weight:700">${dentree}</td>
-          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">Numéro national</td>
+          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">${T.niss}</td>
           <td style="padding:4px 0;color:#111827;font-weight:700">${a.niss?fmtNiss(a.niss):'—'}</td>
         </tr>
         <tr>
-          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">Période</td>
-          <td style="padding:4px 8px;color:#111827;font-weight:700">Mensuel</td>
-          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">État civil</td>
+          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">${T.periode}</td>
+          <td style="padding:4px 8px;color:#111827;font-weight:700">${T.mensuel}</td>
+          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">${T.etatCivil}</td>
           <td style="padding:4px 0;color:#111827;font-weight:700">${escX(a.etatCivil||'—')}</td>
         </tr>
         <tr>
-          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">Localité</td>
+          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">${T.localite}</td>
           <td style="padding:4px 8px;color:#111827;font-weight:700">${escX(a.commune||'—')}</td>
-          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">Personnes à charge</td>
+          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">${T.personnesCharge}</td>
           <td style="padding:4px 0;color:#111827;font-weight:700">${a.personnesCharge||'—'}</td>
         </tr>
         <tr>
-          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">Compte (IBAN)</td>
+          <td style="padding:4px 8px 4px 0;color:#5f6f89;font-weight:600">${T.compte}</td>
           <td style="padding:4px 8px;color:#111827;font-weight:700">${escX(a.iban||'—')}</td>
-          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">Date de naissance</td>
+          <td style="padding:4px 8px;color:#5f6f89;font-weight:600">${T.dnaiss}</td>
           <td style="padding:4px 0;color:#111827;font-weight:700">${dnaiss}</td>
         </tr>
       </table>
     </div>
 
-    <!-- RÉMUNÉRATIONS -->
     <div style="margin-bottom:14px">
-      <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Rémunérations — avantages et retenues</div>
+      <div style="font-size:10px;font-weight:800;color:#0E3692;text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">${T.remunHead}</div>
       <table style="width:100%;border:1.5px solid #0E3692;border-radius:8px;border-collapse:separate;border-spacing:0;font-size:12px;table-layout:fixed;overflow:hidden">
         <thead>
           <tr style="background:#0E3692;color:#fff">
-            <th style="text-align:left;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Libellés</th>
-            <th style="text-align:center;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:90px">Unités</th>
-            <th style="text-align:right;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:150px">Montants EUR</th>
+            <th style="text-align:left;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">${T.libelles}</th>
+            <th style="text-align:center;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:90px">${T.unites}</th>
+            <th style="text-align:right;padding:10px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:150px">${T.montants}</th>
           </tr>
         </thead>
         <tbody>
-          ${lines.join('')||`<tr><td colspan="3" style="padding:18px;text-align:center;color:#9aa3ad">Aucun montant encodé pour ce mois</td></tr>`}
+          ${lines.join('')||`<tr><td colspan="3" style="padding:18px;text-align:center;color:#9aa3ad">${T.aucun}</td></tr>`}
         </tbody>
       </table>
     </div>
 
-    <!-- RÉCAPITULATIF -->
     <table style="width:100%;border-collapse:separate;border-spacing:0;font-size:11px;border:1.5px solid #0E3692;border-radius:8px;overflow:hidden;margin-bottom:14px;table-layout:fixed">
       <thead>
         <tr style="background:#EAF0FB;color:#0E3692">
-          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">Base imposable</th>
-          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">Cotisations</th>
-          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">Précompte</th>
-          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">Frais propres</th>
-          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">Divers</th>
+          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">${T.baseImpo}</th>
+          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">${T.cotis}</th>
+          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">${T.precompte}</th>
+          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">${T.fraisP}</th>
+          <th style="padding:9px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700">${T.divers}</th>
         </tr>
       </thead>
       <tbody>
@@ -3619,19 +3685,16 @@ function openFicheDePaie(idx){
       </tbody>
     </table>
 
-    <!-- NET À PAYER (grand bloc encadré) -->
     <div style="background:linear-gradient(135deg,#0E3692,#1a4cb8);color:#fff;border-radius:10px;padding:22px 26px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 14px rgba(14,54,146,.18)">
       <div>
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">Net à payer</div>
-        <div style="font-size:11px;opacity:.8;margin-top:3px">Versement sur compte ${escX(a.iban||'—')}</div>
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">${T.netApayer}</div>
+        <div style="font-size:11px;opacity:.8;margin-top:3px">${T.versement} ${escX(a.iban||'—')}</div>
       </div>
       <div style="font-size:38px;font-weight:800;letter-spacing:.5px;font-family:Consolas,Menlo,monospace">${eur(netAPayer)} €</div>
     </div>
 
-    <!-- Espace flexible pour pousser le footer en bas -->
     <div style="flex:1"></div>
 
-    <!-- PIED DE PAGE — FIDUCIAIRE -->
     <div style="border-top:2px solid #0E3692;padding-top:10px;margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:12px">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:38px;height:38px;border-radius:6px;background:${exp.logo?'#fff':'#0E3692'};border:${exp.logo?'1px solid #d7deea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:15px;overflow:hidden;flex-shrink:0">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
