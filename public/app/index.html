@@ -3622,41 +3622,99 @@ function openFicheDePaie(idx){
   openModal('modalFichePaie');
 }
 function printFichePaie(){window.print();}
-function downloadFichePaiePdf(){
+function loadPdfScript(src){
+  return new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){
+      if(existing.dataset.loaded==='true') resolve();
+      else {existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});}
+      return;
+    }
+    const s=document.createElement('script');
+    s.src=src;s.async=true;
+    s.onload=()=>{s.dataset.loaded='true';resolve();};
+    s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+async function ensurePdfLibraries(){
+  if(typeof window.html2canvas==='undefined') await loadPdfScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  if(!window.jspdf?.jsPDF) await loadPdfScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+}
+function nextFrame(){return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));}
+async function downloadFichePaiePdf(){
   const src=document.getElementById('fdpDoc');
   if(!src || !src.innerHTML.trim()){
     notif('e','❌ Aucune fiche à exporter');
     return;
   }
   const filename=(currentPdfFilename||'Fiche_de_Paie')+'.pdf';
-  if(typeof html2pdf==='undefined'){
-    notif('i','ℹ️ Génération PDF directe indisponible. Ouverture de l\'impression : choisissez "Enregistrer en PDF".');
-    setTimeout(printFichePaie,300);
-    return;
-  }
   notif('i','📄 Génération du PDF…');
-  // Clone offscreen so html2canvas captures it reliably (modal positioning/scroll breaks capture)
-  const wrap=document.createElement('div');
-  wrap.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#1a1a1a;padding:24px;font-family:Inter,Arial,sans-serif;z-index:-1';
-  wrap.innerHTML=src.innerHTML;
-  document.body.appendChild(wrap);
-  const opt={
-    margin:[8,8,8,8],
-    filename:filename,
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,letterRendering:true,windowWidth:794,scrollX:0,scrollY:0},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},
-    pagebreak:{mode:['css','legacy','avoid-all']}
-  };
-  html2pdf().set(opt).from(wrap).save().then(()=>{
-    document.body.removeChild(wrap);
+  let wrap=null;
+  try{
+    await ensurePdfLibraries();
+    wrap=document.createElement('div');
+    wrap.id='fdpPdfCapture';
+    wrap.style.cssText='position:absolute;left:0;top:0;width:794px;min-height:1123px;background:#fff;color:#111827;padding:38px;box-sizing:border-box;opacity:0;pointer-events:none;z-index:-1;overflow:hidden';
+    wrap.innerHTML=src.innerHTML;
+    document.body.appendChild(wrap);
+    const images=[...wrap.querySelectorAll('img')];
+    await Promise.all(images.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;})));
+    await nextFrame();
+
+    const canvas=await window.html2canvas(wrap,{
+      scale:2,
+      backgroundColor:'#ffffff',
+      useCORS:true,
+      allowTaint:true,
+      logging:false,
+      width:794,
+      height:Math.max(1123,wrap.scrollHeight),
+      windowWidth:794,
+      windowHeight:Math.max(1123,wrap.scrollHeight),
+      scrollX:0,
+      scrollY:0,
+      onclone:(doc)=>{
+        const el=doc.getElementById('fdpPdfCapture');
+        if(el){el.style.opacity='1';el.style.position='static';el.style.zIndex='0';}
+      }
+    });
+    if(!canvas || canvas.width<20 || canvas.height<20) throw new Error('Capture PDF vide');
+    const ctx=canvas.getContext('2d');
+    const sample=ctx.getImageData(0,0,Math.min(canvas.width,40),Math.min(canvas.height,40)).data;
+    let nonWhite=0;
+    for(let i=0;i<sample.length;i+=4){if(sample[i]<245||sample[i+1]<245||sample[i+2]<245) nonWhite++;}
+    if(nonWhite===0 && wrap.innerText.trim().length>0){
+      const center=ctx.getImageData(Math.floor(canvas.width/4),Math.floor(canvas.height/4),Math.min(canvas.width/2,240),Math.min(canvas.height/2,240)).data;
+      for(let i=0;i<center.length;i+=4){if(center[i]<245||center[i+1]<245||center[i+2]<245){nonWhite++;break;}}
+      if(nonWhite===0) throw new Error('Capture blanche');
+    }
+
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+    const pageW=210,pageH=297;
+    const imgData=canvas.toDataURL('image/png');
+    const imgH=(canvas.height*pageW)/canvas.width;
+    pdf.addImage(imgData,'PNG',0,0,pageW,imgH,undefined,'FAST');
+    if(imgH>pageH){
+      let remaining=imgH-pageH;
+      let y=-pageH;
+      while(remaining>0){
+        pdf.addPage();
+        pdf.addImage(imgData,'PNG',0,y,pageW,imgH,undefined,'FAST');
+        remaining-=pageH;
+        y-=pageH;
+      }
+    }
+    pdf.save(filename);
+    if(wrap.parentNode) document.body.removeChild(wrap);
     notif('s','✅ PDF téléchargé');
-  }).catch((e)=>{
+  }catch(e){
     if(wrap.parentNode) document.body.removeChild(wrap);
     console.error('PDF error',e);
     notif('i','ℹ️ Erreur génération PDF — ouverture de l\'impression');
     setTimeout(printFichePaie,300);
-  });
+  }
 }
 
 let currentPdfFilename=null;
