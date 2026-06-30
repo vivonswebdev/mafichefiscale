@@ -3677,13 +3677,11 @@ async function downloadFichePaiePdf(){
     });
     if(!canvas || canvas.width<20 || canvas.height<20) throw new Error('Capture PDF vide');
     const ctx=canvas.getContext('2d');
-    const sample=ctx.getImageData(0,0,Math.min(canvas.width,40),Math.min(canvas.height,40)).data;
+    const sample=ctx.getImageData(0,0,canvas.width,canvas.height).data;
     let nonWhite=0;
-    for(let i=0;i<sample.length;i+=4){if(sample[i]<245||sample[i+1]<245||sample[i+2]<245) nonWhite++;}
+    for(let i=0;i<sample.length;i+=160){if(sample[i]<245||sample[i+1]<245||sample[i+2]<245){nonWhite++;if(nonWhite>20)break;}}
     if(nonWhite===0 && wrap.innerText.trim().length>0){
-      const center=ctx.getImageData(Math.floor(canvas.width/4),Math.floor(canvas.height/4),Math.min(canvas.width/2,240),Math.min(canvas.height/2,240)).data;
-      for(let i=0;i<center.length;i+=4){if(center[i]<245||center[i+1]<245||center[i+2]<245){nonWhite++;break;}}
-      if(nonWhite===0) throw new Error('Capture blanche');
+      throw new Error('Capture blanche');
     }
 
     const {jsPDF}=window.jspdf;
