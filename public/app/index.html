@@ -471,12 +471,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 </div>
 
 <style>
-#fdpDoc,#fdpDoc *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+#fdpDoc,#fdpDoc *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;box-sizing:border-box}
+#fdpDoc{background:#fff;color:#111827}
+#fdpDoc table{border-collapse:collapse;border-spacing:0}
+#fdpDoc .fdp-sheet{width:100%;max-width:718px;margin:0 auto;background:#fff;font-family:Arial,'Helvetica Neue',sans-serif;color:#111827;font-size:11.5px;line-height:1.42}
+#fdpDoc .fdp-block{border:1px solid #d7deea;border-radius:6px;background:#fff;overflow:hidden}
+#fdpDoc .fdp-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#5f6f89}
+#fdpDoc .fdp-value{font-size:11.2px;font-weight:700;color:#111827}
+#fdpDoc .fdp-money{font-family:Consolas,'Courier New',monospace;font-variant-numeric:tabular-nums}
 @media print{
-  @page{size:A4;margin:8mm}
+  @page{size:A4;margin:10mm}
   body *{visibility:hidden}
   #fdpDoc,#fdpDoc *{visibility:visible}
   #fdpDoc{position:absolute;top:0;left:0;width:100%;padding:0!important;background:#fff!important}
+  #fdpDoc .fdp-sheet{max-width:none;width:190mm}
   #fdpActions{display:none!important}
   .modal-bg{position:absolute;background:none}
   .modal{box-shadow:none!important;width:100%!important}
