@@ -3417,16 +3417,16 @@ function openFicheDePaie(idx){
   const html=`
   <div style="font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;font-size:12px;line-height:1.45">
     <!-- BANDEAU TITRE -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0d9488;padding-bottom:10px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0E3692;padding-bottom:10px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:48px;height:48px;border-radius:8px;background:${exp.logo?'#fff':'#0d9488'};border:${exp.logo?'1px solid #e4e6ea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;overflow:hidden">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
+        <div style="width:48px;height:48px;border-radius:8px;background:${exp.logo?'#fff':'#0E3692'};border:${exp.logo?'1px solid #e4e6ea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;overflow:hidden">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
         <div>
-          <div style="font-size:11px;color:#0f766e;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${escX(exp.nom||'Mon Cabinet')}</div>
+          <div style="font-size:11px;color:#0E3692;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${escX(exp.nom||'Mon Cabinet')}</div>
           <div style="font-size:10px;color:#65676b">${escX(expAdresse)}</div>
         </div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:22px;font-weight:700;color:#0d9488;letter-spacing:.02em">Fiche de Paie</div>
+        <div style="font-size:22px;font-weight:700;color:#0E3692;letter-spacing:.02em">Fiche de Paie</div>
         <div style="font-size:11px;color:#444;margin-top:4px"><strong>Période :</strong> ${periodeLabel}</div>
         <div style="font-size:11px;color:#65676b">Date de calcul : ${dateCalcul}</div>
       </div>
@@ -3435,13 +3435,13 @@ function openFicheDePaie(idx){
     <!-- ENTREPRISE + BÉNÉFICIAIRE -->
     <div style="display:flex;gap:14px;margin-bottom:14px">
       <div style="flex:1;border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:6px">Entreprise</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:6px">Entreprise</div>
         <div style="font-size:13px;font-weight:700">${escX(c.nom||'—')}</div>
         <div style="font-size:11px;color:#444;margin-top:2px">${escX(empAdresse)||'—'}</div>
         <div style="font-size:11px;color:#444">${c.bce?'BE '+fmtBce(c.bce):''}</div>
       </div>
       <div style="flex:1;border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:6px">Bénéficiaire</div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:6px">Bénéficiaire</div>
         <div style="font-size:13px;font-weight:700">${escX(a.prenom+' '+a.nom)}</div>
         <div style="font-size:11px;color:#444;margin-top:2px">${escX(dirAdresse)||'—'}</div>
         <div style="font-size:11px;color:#444">${escX(dirVille)}</div>
@@ -3450,7 +3450,7 @@ function openFicheDePaie(idx){
 
     <!-- INFORMATIONS PERSONNELLES -->
     <div style="border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px;margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:8px">Informations personnelles</div>
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:8px">Informations personnelles</div>
       <table style="width:100%;font-size:11px;border-collapse:collapse">
         <tr>
           <td style="padding:3px 8px 3px 0;color:#65676b;width:18%">Statut</td>
@@ -3487,13 +3487,13 @@ function openFicheDePaie(idx){
 
     <!-- RÉMUNÉRATIONS -->
     <div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:6px">Rémunérations — avantages et retenues</div>
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:6px">Rémunérations — avantages et retenues</div>
       <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #e4e6ea;border-radius:8px;overflow:hidden">
         <thead>
-          <tr style="background:#f0fdfa;color:#0f766e">
-            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #ccfbf1">Libellés</th>
-            <th style="text-align:center;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #ccfbf1;width:90px">Unités</th>
-            <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #ccfbf1;width:140px">Montants EUR</th>
+          <tr style="background:#EAF0FB;color:#0E3692">
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #C7D4F0">Libellés</th>
+            <th style="text-align:center;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #C7D4F0;width:90px">Unités</th>
+            <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #C7D4F0;width:140px">Montants EUR</th>
           </tr>
         </thead>
         <tbody>
@@ -3503,25 +3503,25 @@ function openFicheDePaie(idx){
     </div>
 
     <!-- RÉCAPITULATIF -->
-    <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #0d9488;border-radius:8px;overflow:hidden;margin-bottom:14px">
+    <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #0E3692;border-radius:8px;overflow:hidden;margin-bottom:14px">
       <thead>
-        <tr style="background:#0d9488;color:#fff">
+        <tr style="background:#0E3692;color:#fff">
           <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Base Imposable (+)</th>
           <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Cotisations (-)</th>
           <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Précompte (-)</th>
           <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Frais Propres (+)</th>
           <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Divers (-)</th>
-          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;background:#0f766e">Net à Payer</th>
+          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;background:#0E3692">Net à Payer</th>
         </tr>
       </thead>
       <tbody>
-        <tr style="background:#f0fdfa">
+        <tr style="background:#EAF0FB">
           <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(baseImposable)}</td>
           <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(cotisations)}</td>
           <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(precompte)}</td>
           <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(m.frais)}</td>
           <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(m.deductions||0)}</td>
-          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:700;color:#0d9488;font-size:13px">${eur(netAPayer)}</td>
+          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:700;color:#0E3692;font-size:13px">${eur(netAPayer)}</td>
         </tr>
       </tbody>
     </table>
