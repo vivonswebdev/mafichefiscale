@@ -471,12 +471,20 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 </div>
 
 <style>
-#fdpDoc,#fdpDoc *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important}
+#fdpDoc,#fdpDoc *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;box-sizing:border-box}
+#fdpDoc{background:#fff;color:#111827}
+#fdpDoc table{border-collapse:collapse;border-spacing:0}
+#fdpDoc .fdp-sheet{width:100%;max-width:718px;margin:0 auto;background:#fff;font-family:Arial,'Helvetica Neue',sans-serif;color:#111827;font-size:11.5px;line-height:1.42}
+#fdpDoc .fdp-block{border:1px solid #d7deea;border-radius:6px;background:#fff;overflow:hidden}
+#fdpDoc .fdp-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#5f6f89}
+#fdpDoc .fdp-value{font-size:11.2px;font-weight:700;color:#111827}
+#fdpDoc .fdp-money{font-family:Consolas,'Courier New',monospace;font-variant-numeric:tabular-nums}
 @media print{
-  @page{size:A4;margin:8mm}
+  @page{size:A4;margin:10mm}
   body *{visibility:hidden}
   #fdpDoc,#fdpDoc *{visibility:visible}
   #fdpDoc{position:absolute;top:0;left:0;width:100%;padding:0!important;background:#fff!important}
+  #fdpDoc .fdp-sheet{max-width:none;width:190mm}
   #fdpActions{display:none!important}
   .modal-bg{position:absolute;background:none}
   .modal{box-shadow:none!important;width:100%!important}
@@ -3480,9 +3488,9 @@ function openFicheDePaie(idx){
   // Ligne tableau rémunération
   const LINE=(label,unites,montant,sign)=>`
     <tr>
-      <td style="padding:7px 10px;border-bottom:1px solid #eef0f2">${label}</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eef0f2;text-align:center;color:#65676b">${unites||''}</td>
-      <td style="padding:7px 10px;border-bottom:1px solid #eef0f2;text-align:right;font-family:Consolas,monospace;${sign==='-'?'color:#b91c1c':''}">${eurS(montant,sign)}</td>
+      <td style="padding:6px 9px;border-bottom:1px solid #e7edf5;color:#111827">${label}</td>
+      <td style="padding:6px 9px;border-bottom:1px solid #e7edf5;text-align:center;color:#5f6f89">${unites||''}</td>
+      <td class="fdp-money" style="padding:6px 9px;border-bottom:1px solid #e7edf5;text-align:right;font-weight:700;${sign==='-'?'color:#b42318':'color:#111827'}">${eurS(montant,sign)}</td>
     </tr>`;
 
   const lines=[];
@@ -3494,85 +3502,85 @@ function openFicheDePaie(idx){
   if(m.deductions)lines.push(LINE('Déductions diverses','',m.deductions,'-'));
 
   const html=`
-  <div style="font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;font-size:12px;line-height:1.45">
+  <div class="fdp-sheet">
     <!-- BANDEAU TITRE -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0E3692;padding-bottom:10px;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0E3692;padding-bottom:10px;margin-bottom:12px">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:48px;height:48px;border-radius:8px;background:${exp.logo?'#fff':'#0E3692'};border:${exp.logo?'1px solid #e4e6ea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;overflow:hidden">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
+        <div style="width:46px;height:46px;border-radius:6px;background:${exp.logo?'#fff':'#0E3692'};border:${exp.logo?'1px solid #d7deea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px;overflow:hidden">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
         <div>
-          <div style="font-size:11px;color:#0E3692;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${escX(exp.nom||'Mon Cabinet')}</div>
-          <div style="font-size:10px;color:#65676b">${escX(expAdresse)}</div>
+          <div style="font-size:11px;color:#0E3692;font-weight:800;text-transform:uppercase;letter-spacing:.06em">${escX(exp.nom||'Mon Cabinet')}</div>
+          <div style="font-size:9.8px;color:#5f6f89;max-width:300px">${escX(expAdresse)}</div>
         </div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:22px;font-weight:700;color:#0E3692;letter-spacing:.02em">Fiche de Paie</div>
-        <div style="font-size:11px;color:#444;margin-top:4px"><strong>Période :</strong> ${periodeLabel}</div>
-        <div style="font-size:11px;color:#65676b">Date de calcul : ${dateCalcul}</div>
+        <div style="font-size:22px;font-weight:800;color:#0E3692;letter-spacing:0">Fiche de paie</div>
+        <div style="font-size:10.8px;color:#111827;margin-top:3px"><strong>Période :</strong> ${periodeLabel}</div>
+        <div style="font-size:10px;color:#5f6f89">Date de calcul : ${dateCalcul}</div>
       </div>
     </div>
 
     <!-- ENTREPRISE + BÉNÉFICIAIRE -->
-    <div style="display:flex;gap:14px;margin-bottom:14px">
-      <div style="flex:1;border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:6px">Entreprise</div>
-        <div style="font-size:13px;font-weight:700">${escX(c.nom||'—')}</div>
-        <div style="font-size:11px;color:#444;margin-top:2px">${escX(empAdresse)||'—'}</div>
-        <div style="font-size:11px;color:#444">${c.bce?'BE '+fmtBce(c.bce):''}</div>
+    <div style="display:flex;gap:10px;margin-bottom:10px">
+      <div class="fdp-block" style="flex:1;padding:9px 10px">
+        <div class="fdp-label" style="color:#0E3692;margin-bottom:5px">Entreprise</div>
+        <div style="font-size:12.2px;font-weight:800;color:#111827">${escX(c.nom||'—')}</div>
+        <div style="font-size:10.2px;color:#374151;margin-top:2px">${escX(empAdresse)||'—'}</div>
+        <div style="font-size:10.2px;color:#374151">${c.bce?'BE '+fmtBce(c.bce):''}</div>
       </div>
-      <div style="flex:1;border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:6px">Bénéficiaire</div>
-        <div style="font-size:13px;font-weight:700">${escX(a.prenom+' '+a.nom)}</div>
-        <div style="font-size:11px;color:#444;margin-top:2px">${escX(dirAdresse)||'—'}</div>
-        <div style="font-size:11px;color:#444">${escX(dirVille)}</div>
+      <div class="fdp-block" style="flex:1;padding:9px 10px">
+        <div class="fdp-label" style="color:#0E3692;margin-bottom:5px">Bénéficiaire</div>
+        <div style="font-size:12.2px;font-weight:800;color:#111827">${escX(a.prenom+' '+a.nom)}</div>
+        <div style="font-size:10.2px;color:#374151;margin-top:2px">${escX(dirAdresse)||'—'}</div>
+        <div style="font-size:10.2px;color:#374151">${escX(dirVille)}</div>
       </div>
     </div>
 
     <!-- INFORMATIONS PERSONNELLES -->
-    <div style="border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px;margin-bottom:14px">
-      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:8px">Informations personnelles</div>
-      <table style="width:100%;font-size:11px;border-collapse:collapse">
+    <div class="fdp-block" style="padding:9px 10px;margin-bottom:10px">
+      <div class="fdp-label" style="color:#0E3692;margin-bottom:6px">Informations personnelles</div>
+      <table style="width:100%;font-size:10.4px;border-collapse:collapse;table-layout:fixed">
         <tr>
-          <td style="padding:3px 8px 3px 0;color:#65676b;width:18%">Statut</td>
-          <td style="padding:3px 8px;font-weight:600;width:32%">${escX(a.fonction||"Dirigeant d'entreprise")}</td>
-          <td style="padding:3px 8px;color:#65676b;width:18%">Sexe</td>
-          <td style="padding:3px 0;font-weight:600;width:32%">${escX(a.sexe||'—')}</td>
+          <td class="fdp-label" style="padding:3px 7px 3px 0;width:18%">Statut</td>
+          <td class="fdp-value" style="padding:3px 7px;width:32%">${escX(a.fonction||"Dirigeant d'entreprise")}</td>
+          <td class="fdp-label" style="padding:3px 7px;width:18%">Sexe</td>
+          <td class="fdp-value" style="padding:3px 0;width:32%">${escX(a.sexe||'—')}</td>
         </tr>
         <tr>
-          <td style="padding:3px 8px 3px 0;color:#65676b">Date d'entrée</td>
-          <td style="padding:3px 8px;font-weight:600">${dentree}</td>
-          <td style="padding:3px 8px;color:#65676b">Numéro national</td>
-          <td style="padding:3px 0;font-weight:600">${a.niss?fmtNiss(a.niss):'—'}</td>
+          <td class="fdp-label" style="padding:3px 7px 3px 0">Date d'entrée</td>
+          <td class="fdp-value" style="padding:3px 7px">${dentree}</td>
+          <td class="fdp-label" style="padding:3px 7px">Numéro national</td>
+          <td class="fdp-value" style="padding:3px 0">${a.niss?fmtNiss(a.niss):'—'}</td>
         </tr>
         <tr>
-          <td style="padding:3px 8px 3px 0;color:#65676b">Période</td>
-          <td style="padding:3px 8px;font-weight:600">Mensuel</td>
-          <td style="padding:3px 8px;color:#65676b">État civil</td>
-          <td style="padding:3px 0;font-weight:600">${escX(a.etatCivil||'—')}</td>
+          <td class="fdp-label" style="padding:3px 7px 3px 0">Période</td>
+          <td class="fdp-value" style="padding:3px 7px">Mensuel</td>
+          <td class="fdp-label" style="padding:3px 7px">État civil</td>
+          <td class="fdp-value" style="padding:3px 0">${escX(a.etatCivil||'—')}</td>
         </tr>
         <tr>
-          <td style="padding:3px 8px 3px 0;color:#65676b">Localité</td>
-          <td style="padding:3px 8px;font-weight:600">${escX(a.commune||'—')}</td>
-          <td style="padding:3px 8px;color:#65676b">Personnes à charge</td>
-          <td style="padding:3px 0;font-weight:600">${a.personnesCharge||'—'}</td>
+          <td class="fdp-label" style="padding:3px 7px 3px 0">Localité</td>
+          <td class="fdp-value" style="padding:3px 7px">${escX(a.commune||'—')}</td>
+          <td class="fdp-label" style="padding:3px 7px">Personnes à charge</td>
+          <td class="fdp-value" style="padding:3px 0">${a.personnesCharge||'—'}</td>
         </tr>
         <tr>
-          <td style="padding:3px 8px 3px 0;color:#65676b">Compte (IBAN)</td>
-          <td style="padding:3px 8px;font-weight:600">${escX(a.iban||'—')}</td>
-          <td style="padding:3px 8px;color:#65676b">Date de naissance</td>
-          <td style="padding:3px 0;font-weight:600">${dnaiss}</td>
+          <td class="fdp-label" style="padding:3px 7px 3px 0">Compte (IBAN)</td>
+          <td class="fdp-value" style="padding:3px 7px">${escX(a.iban||'—')}</td>
+          <td class="fdp-label" style="padding:3px 7px">Date de naissance</td>
+          <td class="fdp-value" style="padding:3px 0">${dnaiss}</td>
         </tr>
       </table>
     </div>
 
     <!-- RÉMUNÉRATIONS -->
-    <div style="margin-bottom:14px">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:6px">Rémunérations — avantages et retenues</div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #e4e6ea;border-radius:8px;overflow:hidden">
+    <div style="margin-bottom:10px">
+      <div class="fdp-label" style="color:#0E3692;margin-bottom:5px">Rémunérations — avantages et retenues</div>
+      <table class="fdp-block" style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed">
         <thead>
           <tr style="background:#EAF0FB;color:#0E3692">
-            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #C7D4F0">Libellés</th>
-            <th style="text-align:center;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #C7D4F0;width:90px">Unités</th>
-            <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #C7D4F0;width:140px">Montants EUR</th>
+            <th style="text-align:left;padding:7px 9px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #c7d4f0;width:auto">Libellés</th>
+            <th style="text-align:center;padding:7px 9px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #c7d4f0;width:76px">Unités</th>
+            <th style="text-align:right;padding:7px 9px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #c7d4f0;width:130px">Montants EUR</th>
           </tr>
         </thead>
         <tbody>
@@ -3582,30 +3590,30 @@ function openFicheDePaie(idx){
     </div>
 
     <!-- RÉCAPITULATIF -->
-    <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #0E3692;border-radius:8px;overflow:hidden;margin-bottom:14px">
+    <table style="width:100%;border-collapse:collapse;font-size:10.2px;border:1px solid #0E3692;border-radius:6px;overflow:hidden;margin-bottom:10px;table-layout:fixed">
       <thead>
         <tr style="background:#0E3692;color:#fff">
-          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Base Imposable (+)</th>
-          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Cotisations (-)</th>
-          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Précompte (-)</th>
-          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Frais Propres (+)</th>
-          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Divers (-)</th>
-          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;background:#0E3692">Net à Payer</th>
+          <th style="padding:7px 4px;text-align:center;font-size:8.4px;text-transform:uppercase;letter-spacing:.03em;font-weight:700">Base imposable</th>
+          <th style="padding:7px 4px;text-align:center;font-size:8.4px;text-transform:uppercase;letter-spacing:.03em;font-weight:700">Cotisations</th>
+          <th style="padding:7px 4px;text-align:center;font-size:8.4px;text-transform:uppercase;letter-spacing:.03em;font-weight:700">Précompte</th>
+          <th style="padding:7px 4px;text-align:center;font-size:8.4px;text-transform:uppercase;letter-spacing:.03em;font-weight:700">Frais propres</th>
+          <th style="padding:7px 4px;text-align:center;font-size:8.4px;text-transform:uppercase;letter-spacing:.03em;font-weight:700">Divers</th>
+          <th style="padding:7px 4px;text-align:center;font-size:8.4px;text-transform:uppercase;letter-spacing:.03em;font-weight:800">Net à payer</th>
         </tr>
       </thead>
       <tbody>
         <tr style="background:#EAF0FB">
-          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(baseImposable)}</td>
-          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(cotisations)}</td>
-          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(precompte)}</td>
-          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(m.frais)}</td>
-          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(m.deductions||0)}</td>
-          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:700;color:#0E3692;font-size:13px">${eur(netAPayer)}</td>
+          <td class="fdp-money" style="padding:8px 4px;text-align:center;font-weight:700">${eur(baseImposable)}</td>
+          <td class="fdp-money" style="padding:8px 4px;text-align:center;font-weight:700">${eur(cotisations)}</td>
+          <td class="fdp-money" style="padding:8px 4px;text-align:center;font-weight:700">${eur(precompte)}</td>
+          <td class="fdp-money" style="padding:8px 4px;text-align:center;font-weight:700">${eur(m.frais)}</td>
+          <td class="fdp-money" style="padding:8px 4px;text-align:center;font-weight:700">${eur(m.deductions||0)}</td>
+          <td class="fdp-money" style="padding:8px 4px;text-align:center;font-weight:800;color:#0E3692;font-size:12px">${eur(netAPayer)}</td>
         </tr>
       </tbody>
     </table>
 
-    <div style="margin-top:18px;padding-top:8px;border-top:1px solid #e4e6ea;font-size:9px;color:#9aa3ad;text-align:center">
+    <div style="margin-top:12px;padding-top:7px;border-top:1px solid #d7deea;font-size:8.6px;color:#6b7280;text-align:center">
       Document généré par ${escX(exp.nom||'votre cabinet')}${exp.bce?' — BE '+fmtBce(exp.bce):''}${exp.email?' — '+escX(exp.email):''}${exp.tel?' — '+escX(exp.tel):''}
     </div>
   </div>
@@ -3614,41 +3622,93 @@ function openFicheDePaie(idx){
   openModal('modalFichePaie');
 }
 function printFichePaie(){window.print();}
-function downloadFichePaiePdf(){
+function loadPdfScript(src){
+  return new Promise((resolve,reject)=>{
+    const existing=[...document.scripts].find(s=>s.src===src);
+    if(existing){
+      if(existing.dataset.loaded==='true') resolve();
+      else {existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});}
+      return;
+    }
+    const s=document.createElement('script');
+    s.src=src;s.async=true;
+    s.onload=()=>{s.dataset.loaded='true';resolve();};
+    s.onerror=reject;
+    document.head.appendChild(s);
+  });
+}
+async function ensurePdfLibraries(){
+  if(typeof window.html2canvas==='undefined') await loadPdfScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
+  if(!window.jspdf?.jsPDF) await loadPdfScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+}
+function nextFrame(){return new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));}
+async function downloadFichePaiePdf(){
   const src=document.getElementById('fdpDoc');
   if(!src || !src.innerHTML.trim()){
     notif('e','❌ Aucune fiche à exporter');
     return;
   }
   const filename=(currentPdfFilename||'Fiche_de_Paie')+'.pdf';
-  if(typeof html2pdf==='undefined'){
-    notif('i','ℹ️ Génération PDF directe indisponible. Ouverture de l\'impression : choisissez "Enregistrer en PDF".');
-    setTimeout(printFichePaie,300);
-    return;
-  }
   notif('i','📄 Génération du PDF…');
-  // Clone offscreen so html2canvas captures it reliably (modal positioning/scroll breaks capture)
-  const wrap=document.createElement('div');
-  wrap.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#1a1a1a;padding:24px;font-family:Inter,Arial,sans-serif;z-index:-1';
-  wrap.innerHTML=src.innerHTML;
-  document.body.appendChild(wrap);
-  const opt={
-    margin:[8,8,8,8],
-    filename:filename,
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,letterRendering:true,windowWidth:794,scrollX:0,scrollY:0},
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},
-    pagebreak:{mode:['css','legacy','avoid-all']}
-  };
-  html2pdf().set(opt).from(wrap).save().then(()=>{
-    document.body.removeChild(wrap);
+  let wrap=null;
+  try{
+    await ensurePdfLibraries();
+    wrap=document.createElement('div');
+    wrap.id='fdpPdfCapture';
+    wrap.style.cssText='position:fixed;left:0;top:0;width:794px;min-height:1123px;background:#fff;color:#111827;padding:38px;box-sizing:border-box;opacity:1;pointer-events:none;z-index:2147483647;overflow:hidden';
+    wrap.innerHTML=src.innerHTML;
+    document.body.appendChild(wrap);
+    const images=[...wrap.querySelectorAll('img')];
+    await Promise.all(images.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;})));
+    await nextFrame();
+
+    const canvas=await window.html2canvas(wrap,{
+      scale:2,
+      backgroundColor:'#ffffff',
+      useCORS:true,
+      allowTaint:true,
+      logging:false,
+      width:794,
+      height:Math.max(1123,wrap.scrollHeight),
+      windowWidth:794,
+      windowHeight:Math.max(1123,wrap.scrollHeight),
+      scrollX:0,
+      scrollY:0
+    });
+    if(!canvas || canvas.width<20 || canvas.height<20) throw new Error('Capture PDF vide');
+    const ctx=canvas.getContext('2d');
+    const sample=ctx.getImageData(0,0,canvas.width,canvas.height).data;
+    let nonWhite=0;
+    for(let i=0;i<sample.length;i+=160){if(sample[i]<245||sample[i+1]<245||sample[i+2]<245){nonWhite++;if(nonWhite>20)break;}}
+    if(nonWhite===0 && wrap.innerText.trim().length>0){
+      throw new Error('Capture blanche');
+    }
+
+    const {jsPDF}=window.jspdf;
+    const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
+    const pageW=210,pageH=297;
+    const imgData=canvas.toDataURL('image/png');
+    const imgH=(canvas.height*pageW)/canvas.width;
+    pdf.addImage(imgData,'PNG',0,0,pageW,imgH,undefined,'FAST');
+    if(imgH>pageH){
+      let remaining=imgH-pageH;
+      let y=-pageH;
+      while(remaining>0){
+        pdf.addPage();
+        pdf.addImage(imgData,'PNG',0,y,pageW,imgH,undefined,'FAST');
+        remaining-=pageH;
+        y-=pageH;
+      }
+    }
+    pdf.save(filename);
+    if(wrap?.parentNode) document.body.removeChild(wrap);
     notif('s','✅ PDF téléchargé');
-  }).catch((e)=>{
+  }catch(e){
     if(wrap.parentNode) document.body.removeChild(wrap);
     console.error('PDF error',e);
     notif('i','ℹ️ Erreur génération PDF — ouverture de l\'impression');
     setTimeout(printFichePaie,300);
-  });
+  }
 }
 
 let currentPdfFilename=null;
