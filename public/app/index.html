@@ -2686,21 +2686,21 @@ function downloadUboPdf(){
 // Bouton "Fiche" depuis la liste actionnaires
 function goToFiche(actId){
   if(!currentClientId)return;
-  selectClient(currentClientId);
   selectedGlobalDirId=actId;
   selectedFicheClientId=currentClientId;
   selectedFicheDirId=actId;
+  renderSidebar();
   showMain('fiches');
 }
 function goToPaie(actId){
   if(!currentClientId)return;
-  selectClient(currentClientId);
   selectedGlobalDirId=actId;
   selectedFicheClientId=currentClientId;
   selectedFicheDirId=actId;
   renderSidebar();
   showMain('paie');
 }
+
 
 
 // ══════════════════════════════════════════════
