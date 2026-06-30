@@ -310,13 +310,21 @@ function AppPage() {
         mandatDureeMois: c.csam_duration_months ?? 24,
         actionnaires: dirigeants
           .filter((d: any) => d.client_id === c.id)
-          .map((d: any) => ({
-            id: d.local_id || d.id,
-            prenom: d.first_name ?? "",
-            nom: d.last_name ?? "",
-            niss: d.niss ?? "",
-            fonction: d.fonction ?? "",
-          })),
+          .map((d: any) => {
+            // The full actionnaire (address, paie monthly amounts, civil
+            // status, IBAN, etc.) lives in meta. Flat columns are kept as
+            // a fallback for older rows.
+            const meta = d.meta && typeof d.meta === "object" ? d.meta : {};
+            return {
+              ...meta,
+              id: meta.id || d.local_id || d.id,
+              prenom: meta.prenom ?? d.first_name ?? "",
+              nom: meta.nom ?? d.last_name ?? "",
+              niss: meta.niss ?? d.niss ?? "",
+              fonction: meta.fonction ?? d.fonction ?? "",
+            };
+          }),
+
       }));
 
       const htmlFiches = fiches.map((f: any) => ({
