@@ -143,24 +143,37 @@ function AppPage() {
                 last_name: a.nom ?? a.last_name ?? null,
                 niss: a.niss ?? null,
                 fonction: a.fonction ?? a.function ?? null,
+                // Store the full actionnaire (address, paie monthly data,
+                // civil status, IBAN, etc.) so nothing is lost on round-trip.
+                meta: a && typeof a === "object" ? a : {},
                 updated_at: nowIso,
               });
             })
           ).filter((d: any) => d.local_id && d.client_id);
 
+
           if (incomingDirs.length) {
             const { data: existingD } = await (supabase.from("dirigeants") as any)
-              .select("id, local_id")
+              .select("id, local_id, meta")
               .eq("user_id", user.id);
-            const dByLocal = new Map<string, string>();
-            (existingD ?? []).forEach((r: any) => { if (r.local_id) dByLocal.set(String(r.local_id), r.id); });
+            const dByLocal = new Map<string, { id: string; meta: any }>();
+            (existingD ?? []).forEach((r: any) => {
+              if (r.local_id) dByLocal.set(String(r.local_id), { id: r.id, meta: r.meta || {} });
+            });
 
             const dInsert: any[] = [];
             const dUpdate: { id: string; patch: any }[] = [];
             for (const row of incomingDirs) {
-              const prevId = dByLocal.get(String(row.local_id));
-              if (prevId) dUpdate.push({ id: prevId, patch: row });
-              else dInsert.push(row);
+              const prev = dByLocal.get(String(row.local_id));
+              if (prev) {
+                // Deep-merge meta so we never lose paie/address when a sync
+                // pushes a partial actionnaire object.
+                const mergedMeta = { ...prev.meta, ...(row.meta || {}) };
+                if (prev.meta?.paie && !row.meta?.paie) mergedMeta.paie = prev.meta.paie;
+                dUpdate.push({ id: prev.id, patch: { ...row, meta: mergedMeta } });
+              } else {
+                dInsert.push(row);
+              }
             }
             if (dInsert.length) {
               const { error } = await (supabase.from("dirigeants") as any).insert(dInsert);
@@ -171,6 +184,7 @@ function AppPage() {
               if (error) throw error;
             }
           }
+
         }
 
         if (Array.isArray(db?.fiches) && db.fiches.length) {
@@ -296,13 +310,21 @@ function AppPage() {
         mandatDureeMois: c.csam_duration_months ?? 24,
         actionnaires: dirigeants
           .filter((d: any) => d.client_id === c.id)
-          .map((d: any) => ({
-            id: d.local_id || d.id,
-            prenom: d.first_name ?? "",
-            nom: d.last_name ?? "",
-            niss: d.niss ?? "",
-            fonction: d.fonction ?? "",
-          })),
+          .map((d: any) => {
+            // The full actionnaire (address, paie monthly amounts, civil
+            // status, IBAN, etc.) lives in meta. Flat columns are kept as
+            // a fallback for older rows.
+            const meta = d.meta && typeof d.meta === "object" ? d.meta : {};
+            return {
+              ...meta,
+              id: meta.id || d.local_id || d.id,
+              prenom: meta.prenom ?? d.first_name ?? "",
+              nom: meta.nom ?? d.last_name ?? "",
+              niss: meta.niss ?? d.niss ?? "",
+              fonction: meta.fonction ?? d.fonction ?? "",
+            };
+          }),
+
       }));
 
       const htmlFiches = fiches.map((f: any) => ({
