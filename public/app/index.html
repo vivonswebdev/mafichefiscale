@@ -3684,8 +3684,11 @@ async function downloadFichePaiePdf(){
     await ensurePdfLibraries();
     wrap=document.createElement('div');
     wrap.id='fdpPdfCapture';
-    wrap.style.cssText='position:fixed;left:0;top:0;width:794px;min-height:1123px;background:#fff;color:#111827;padding:38px;box-sizing:border-box;opacity:1;pointer-events:none;z-index:2147483647;overflow:hidden';
+    wrap.style.cssText='position:fixed;left:0;top:0;width:794px;height:1123px;background:#fff;color:#111827;padding:30px;box-sizing:border-box;opacity:1;pointer-events:none;z-index:2147483647;overflow:hidden';
     wrap.innerHTML=src.innerHTML;
+    // Forcer le contenu à tenir sur une seule page A4
+    const sheet=wrap.querySelector('.fdp-sheet');
+    if(sheet){sheet.style.minHeight='0';sheet.style.height='100%';sheet.style.display='flex';sheet.style.flexDirection='column';}
     document.body.appendChild(wrap);
     const images=[...wrap.querySelectorAll('img')];
     await Promise.all(images.map(img=>img.complete?Promise.resolve():new Promise(resolve=>{img.onload=resolve;img.onerror=resolve;})));
@@ -3698,9 +3701,9 @@ async function downloadFichePaiePdf(){
       allowTaint:true,
       logging:false,
       width:794,
-      height:Math.max(1123,wrap.scrollHeight),
+      height:1123,
       windowWidth:794,
-      windowHeight:Math.max(1123,wrap.scrollHeight),
+      windowHeight:1123,
       scrollX:0,
       scrollY:0
     });
@@ -3717,18 +3720,7 @@ async function downloadFichePaiePdf(){
     const pdf=new jsPDF({orientation:'portrait',unit:'mm',format:'a4',compress:true});
     const pageW=210,pageH=297;
     const imgData=canvas.toDataURL('image/png');
-    const imgH=(canvas.height*pageW)/canvas.width;
-    pdf.addImage(imgData,'PNG',0,0,pageW,imgH,undefined,'FAST');
-    if(imgH>pageH){
-      let remaining=imgH-pageH;
-      let y=-pageH;
-      while(remaining>0){
-        pdf.addPage();
-        pdf.addImage(imgData,'PNG',0,y,pageW,imgH,undefined,'FAST');
-        remaining-=pageH;
-        y-=pageH;
-      }
-    }
+    pdf.addImage(imgData,'PNG',0,0,pageW,pageH,undefined,'FAST');
     pdf.save(filename);
     if(wrap?.parentNode) document.body.removeChild(wrap);
     notif('s','✅ PDF téléchargé');
