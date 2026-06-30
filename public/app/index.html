@@ -2346,12 +2346,40 @@ function renderDashboard(){
 function openNewActionnaire(){
   editActId=null;
   document.getElementById('modalActTitle').textContent='Nouvel actionnaire / dirigeant';
-  ['ma_prenom','ma_nom','ma_niss','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie'].forEach(id=>document.getElementById(id).value='');
+  ['ma_prenom','ma_nom','ma_niss','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie','ma_pers_charge','ma_iban'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ma_fonction').value='Gérant';
   document.getElementById('ma_pays').value='0';
   document.getElementById('ma_parts').value='';
   document.getElementById('ma_val_part').value='';
   document.getElementById('ma_pct_controle').value='';
+  document.getElementById('ma_sexe').value='';
+  document.getElementById('ma_etat_civil').value='';
+  document.getElementById('ma_niss_hint').textContent='';
+  openModal('modalActionnaire');
+}
+function editActionnaire(id){
+  const c=DB.clients.find(x=>x.id===currentClientId);if(!c)return;
+  const a=c.actionnaires.find(x=>x.id===id);if(!a)return;
+  editActId=id;
+  document.getElementById('modalActTitle').textContent='Modifier';
+  document.getElementById('ma_prenom').value=a.prenom;
+  document.getElementById('ma_nom').value=a.nom;
+  document.getElementById('ma_niss').value=fmtNiss(a.niss||'');
+  document.getElementById('ma_adresse').value=a.adresse||'';
+  document.getElementById('ma_cp').value=a.cp||'';
+  document.getElementById('ma_commune').value=a.commune||'';
+  document.getElementById('ma_dnaiss').value=a.dnaiss||'';
+  document.getElementById('ma_fonction').value=a.fonction||'Gérant';
+  document.getElementById('ma_pays').value=a.pays||'0';
+  document.getElementById('ma_parts').value=a.parts||'';
+  document.getElementById('ma_val_part').value=a.valPart||'';
+  document.getElementById('ma_pct_controle').value=a.pctControle||'';
+  document.getElementById('ma_date_entree').value=a.dateEntree||'';
+  document.getElementById('ma_date_sortie').value=a.dateSortie||'';
+  document.getElementById('ma_sexe').value=a.sexe||'';
+  document.getElementById('ma_etat_civil').value=a.etatCivil||'';
+  document.getElementById('ma_pers_charge').value=a.personnesCharge||'';
+  document.getElementById('ma_iban').value=a.iban||'';
   document.getElementById('ma_niss_hint').textContent='';
   openModal('modalActionnaire');
 }
