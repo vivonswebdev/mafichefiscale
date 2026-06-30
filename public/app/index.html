@@ -3373,161 +3373,159 @@ function openFicheDePaie(idx){
   const dnaiss=a.dnaiss?a.dnaiss.split('-').reverse().join('/'):'—';
   const dentree=a.dateEntree?a.dateEntree.split('-').reverse().join('/'):'—';
 
-  // Période du / au + date de paiement (dernier jour du mois)
+  // Mois/année en français
+  const MOIS_FR=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const periodeLabel=`${MOIS_FR[idx]} ${annee}`;
   const lastDay=new Date(annee,idx+1,0).getDate();
-  const fmt2=(d,mo,y)=>`${String(d).padStart(2,'0')}/${String(mo+1).padStart(2,'0')}/${y}`;
-  const periodeDu=fmt2(1,idx,annee);
-  const periodeAu=fmt2(lastDay,idx,annee);
-  const paiementLe=periodeAu;
+  const dateCalcul=`${String(lastDay).padStart(2,'0')}/${String(idx+1).padStart(2,'0')}/${annee}`;
+
+  const eur=v=>(v/100).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const eurS=(v,sign)=>{const s=sign==='+'?'+':'-';return (v===0?'':s)+eur(Math.abs(v));};
 
   const cotisations=m.cotis,precompte=m.precompte;
-  const eur=c=>(c/100).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+  const baseImposable=m.brut+m.atn;
+  const netAPayer=m.salairePoche;
 
-  // Cumuls annuels jusqu'au mois sélectionné (inclus)
-  let cumBrut=0,cumCotis=0,cumPrec=0,cumFrais=0,cumImposable=0,cumNet=0;
-  for(let i=0;i<=idx;i++){
-    const r=computeMonthRow(yd.months[i]);
-    cumBrut+=r.brut;cumCotis+=r.cotis;cumPrec+=r.precompte;cumFrais+=r.frais;
-    cumImposable+=(r.brut+r.atn);cumNet+=r.salairePoche;
-  }
+  document.title=`Fiche de paie - ${a.prenom} ${a.nom} - ${periodeLabel}`;
+  currentPdfFilename=`Fiche_de_Paie_${annee}-${String(idx+1).padStart(2,'0')}-${String(lastDay).padStart(2,'0')}`;
 
-  const ROW=(label,montant,opts={})=>`
-    <tr style="${opts.bold?'font-weight:700;':''}${opts.bg?'background:#f0fdfa;':''}">
-      <td style="padding:3px 10px;${opts.section?'font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.04em;color:#0f766e;padding-top:14px;':''}">${label}</td>
-      <td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace;${opts.color?'color:'+opts.color+';':''}">${montant!==undefined?eur(montant):''}</td>
+  const expAdresse=[exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const empAdresse=[c.adresse,[c.cp,c.commune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const dirAdresse=a.adresse||'';
+  const dirVille=[a.cp,a.commune].filter(Boolean).join(' ');
+
+  // Ligne tableau rémunération
+  const LINE=(label,unites,montant,sign)=>`
+    <tr>
+      <td style="padding:7px 10px;border-bottom:1px solid #eef0f2">${label}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eef0f2;text-align:center;color:#65676b">${unites||''}</td>
+      <td style="padding:7px 10px;border-bottom:1px solid #eef0f2;text-align:right;font-family:Consolas,monospace;${sign==='-'?'color:#b91c1c':''}">${eurS(montant,sign)}</td>
     </tr>`;
 
-  const baseImposable=m.brut+m.atn;
-  const totalRetenues=cotisations+precompte;
-  const initialesA=initials(a.prenom,a.nom);
-
-  document.title=`Fiche de paie - ${a.prenom} ${a.nom} - ${moisLabel(idx)} ${annee}`;
-  currentPdfFilename=`fiche-paie-${a.prenom}-${a.nom}-${moisLabel(idx)}-${annee}`;
+  const lines=[];
+  if(m.brut)lines.push(LINE('Salaire brut','',m.brut,'+'));
+  if(cotisations)lines.push(LINE('Cotisations sociales / PLCI','',cotisations,'-'));
+  if(precompte)lines.push(LINE('Précompte professionnel','',precompte,'-'));
+  if(m.atn)lines.push(LINE('Avantage de toute nature (ATN)','',m.atn,'+'));
+  if(m.frais)lines.push(LINE("Frais propres à l'employeur",'',m.frais,'+'));
+  if(m.deductions)lines.push(LINE('Déductions diverses','',m.deductions,'-'));
 
   const html=`
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;border-bottom:1px solid #ccfbf1;padding-bottom:8px;margin-bottom:10px">
+  <div style="font-family:'Helvetica Neue',Arial,sans-serif;color:#1a1a1a;font-size:12px;line-height:1.45">
+    <!-- BANDEAU TITRE -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #0d9488;padding-bottom:10px;margin-bottom:14px">
       <div style="display:flex;align-items:center;gap:12px">
-        <div style="width:46px;height:46px;border-radius:50%;background:${exp.logo?'#fff':'#0d9488'};border:${exp.logo?'1px solid #e4e6ea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;overflow:hidden">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
+        <div style="width:48px;height:48px;border-radius:8px;background:${exp.logo?'#fff':'#0d9488'};border:${exp.logo?'1px solid #e4e6ea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:18px;overflow:hidden">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
         <div>
-          <div style="font-size:11px;color:#0f766e;font-weight:700;text-transform:uppercase;letter-spacing:.06em">${escX(exp.nom||'Mon Cabinet')}</div>
-          <div style="font-size:10px;color:#65676b">${escX([exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(' · '))}</div>
+          <div style="font-size:11px;color:#0f766e;font-weight:700;text-transform:uppercase;letter-spacing:.08em">${escX(exp.nom||'Mon Cabinet')}</div>
+          <div style="font-size:10px;color:#65676b">${escX(expAdresse)}</div>
         </div>
       </div>
       <div style="text-align:right">
-        <div style="font-size:19px;font-weight:700;color:#1a1a1a">Fiche de paie</div>
-        <div style="font-size:13px;color:#0d9488;font-weight:600;margin-top:2px">${escX(a.fonction||"Dirigeant d'entreprise")}</div>
-        <div style="font-size:11px;color:#65676b;margin-top:6px">Employeur &nbsp; <strong style="color:#1a1a1a">${escX(c.nom)}</strong></div>
-        <div style="font-size:11px;color:#65676b">Période du calcul : ${String(idx+1).padStart(2,'0')}/${annee}</div>
+        <div style="font-size:22px;font-weight:700;color:#0d9488;letter-spacing:.02em">Fiche de Paie</div>
+        <div style="font-size:11px;color:#444;margin-top:4px"><strong>Période :</strong> ${periodeLabel}</div>
+        <div style="font-size:11px;color:#65676b">Date de calcul : ${dateCalcul}</div>
       </div>
     </div>
 
-    <div style="display:flex;gap:16px;margin-bottom:10px">
-      <div style="flex:1.1;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px 14px">
-        <div style="font-size:11px;color:#0f766e">Le montant net versé le <strong>${paiementLe}</strong> s'élève à</div>
-        <div style="font-size:23px;font-weight:700;color:#0d9488;margin-top:4px">${eur(m.salairePoche)}</div>
-        
+    <!-- ENTREPRISE + BÉNÉFICIAIRE -->
+    <div style="display:flex;gap:14px;margin-bottom:14px">
+      <div style="flex:1;border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:6px">Entreprise</div>
+        <div style="font-size:13px;font-weight:700">${escX(c.nom||'—')}</div>
+        <div style="font-size:11px;color:#444;margin-top:2px">${escX(empAdresse)||'—'}</div>
+        <div style="font-size:11px;color:#444">${c.bce?'BE '+fmtBce(c.bce):''}</div>
       </div>
-      <div style="flex:1.4;border:1px solid #e4e6ea;border-radius:10px;padding:10px 14px">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e">Bénéficiaire</div>
-          <div style="margin-left:auto;width:30px;height:30px;border-radius:50%;background:#ccfbf1;display:flex;align-items:center;justify-content:center;color:#0f766e;font-weight:700;font-size:11px">${initialesA}</div>
-        </div>
-        <div style="font-size:14px;font-weight:700;color:#1a1a1a">${escX((a.prenom+' '+a.nom).toUpperCase())}</div>
-        <div style="font-size:11px;color:#444;margin-top:2px">${escX([a.adresse].filter(Boolean).join(', '))||'—'}${a.cp||a.commune?', '+escX([a.cp,a.commune].filter(Boolean).join(' ')):''}</div>
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:11px;color:#444;margin-top:6px">
-          <span style="color:#65676b">N° registre national</span><strong>${a.niss?fmtNiss(a.niss):'—'}</strong>
-          <span style="color:#65676b">Date de naissance</span><strong>${dnaiss}</strong>
-        </div>
+      <div style="flex:1;border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px">
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:6px">Bénéficiaire</div>
+        <div style="font-size:13px;font-weight:700">${escX(a.prenom+' '+a.nom)}</div>
+        <div style="font-size:11px;color:#444;margin-top:2px">${escX(dirAdresse)||'—'}</div>
+        <div style="font-size:11px;color:#444">${escX(dirVille)}</div>
       </div>
     </div>
 
-    <div style="border:1px solid #e4e6ea;border-radius:10px;padding:9px 12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="width:24px;height:24px;border-radius:6px;background:#ccfbf1;display:flex;align-items:center;justify-content:center;font-size:12px">📋</div>
-        <div style="font-size:12px;font-weight:700;color:#0f766e">Données professionnelles</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 24px;font-size:11px;color:#333">
-        <div><span style="color:#65676b">Statut</span> &nbsp; <strong>${escX(a.fonction||"Dirigeant d'entreprise")}</strong></div>
-        <div><span style="color:#65676b">Entrée le</span> &nbsp; <strong>${dentree}</strong></div>
-        <div><span style="color:#65676b">Localité</span> &nbsp; <strong>${escX(a.commune||'—')}</strong></div>
-        <div><span style="color:#65676b">Période</span> &nbsp; <strong>Mensuel</strong></div>
-      </div>
+    <!-- INFORMATIONS PERSONNELLES -->
+    <div style="border:1px solid #e4e6ea;border-radius:8px;padding:10px 12px;margin-bottom:14px">
+      <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:8px">Informations personnelles</div>
+      <table style="width:100%;font-size:11px;border-collapse:collapse">
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#65676b;width:18%">Statut</td>
+          <td style="padding:3px 8px;font-weight:600;width:32%">${escX(a.fonction||"Dirigeant d'entreprise")}</td>
+          <td style="padding:3px 8px;color:#65676b;width:18%">Sexe</td>
+          <td style="padding:3px 0;font-weight:600;width:32%">${escX(a.sexe||'—')}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#65676b">Date d'entrée</td>
+          <td style="padding:3px 8px;font-weight:600">${dentree}</td>
+          <td style="padding:3px 8px;color:#65676b">Numéro national</td>
+          <td style="padding:3px 0;font-weight:600">${a.niss?fmtNiss(a.niss):'—'}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#65676b">Période</td>
+          <td style="padding:3px 8px;font-weight:600">Mensuel</td>
+          <td style="padding:3px 8px;color:#65676b">État civil</td>
+          <td style="padding:3px 0;font-weight:600">${escX(a.etatCivil||'—')}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#65676b">Localité</td>
+          <td style="padding:3px 8px;font-weight:600">${escX(a.commune||'—')}</td>
+          <td style="padding:3px 8px;color:#65676b">Personnes à charge</td>
+          <td style="padding:3px 0;font-weight:600">${a.personnesCharge||'—'}</td>
+        </tr>
+        <tr>
+          <td style="padding:3px 8px 3px 0;color:#65676b">Compte (IBAN)</td>
+          <td style="padding:3px 8px;font-weight:600">${escX(a.iban||'—')}</td>
+          <td style="padding:3px 8px;color:#65676b">Date de naissance</td>
+          <td style="padding:3px 0;font-weight:600">${dnaiss}</td>
+        </tr>
+      </table>
     </div>
 
-    <div style="border:1px solid #e4e6ea;border-radius:10px;padding:9px 12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="width:24px;height:24px;border-radius:6px;background:#ccfbf1;display:flex;align-items:center;justify-content:center;font-size:12px">💶</div>
-        <div style="font-size:12px;font-weight:700;color:#0f766e">Détail de la rémunération</div>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
+    <!-- RÉMUNÉRATIONS -->
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:6px">Rémunérations — avantages et retenues</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #e4e6ea;border-radius:8px;overflow:hidden">
         <thead>
-          <tr style="border-bottom:2px solid #ccfbf1;color:#0f766e">
-            <th style="text-align:left;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em">Libellé</th>
-            <th style="text-align:right;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;width:130px">Montant</th>
+          <tr style="background:#f0fdfa;color:#0f766e">
+            <th style="text-align:left;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #ccfbf1">Libellés</th>
+            <th style="text-align:center;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #ccfbf1;width:90px">Unités</th>
+            <th style="text-align:right;padding:8px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;border-bottom:1px solid #ccfbf1;width:140px">Montants EUR</th>
           </tr>
         </thead>
         <tbody>
-          ${ROW('Salaire brut',m.brut,{bold:true})}
-          ${ROW('RETENUES SOCIALES & FISCALES',undefined,{section:true})}
-          ${ROW('Cotisations sociales + PLCI',cotisations,{bg:true,color:cotisations?'#dc2626':undefined})}
-          ${ROW('Précompte professionnel',precompte,{color:precompte?'#dc2626':undefined})}
-          ${m.deductions?ROW('Déductions diverses',m.deductions,{bg:true,color:'#dc2626'}):''}
-          ${ROW('TOTAL DES RETENUES',totalRetenues+(m.deductions||0),{bold:true})}
-          ${ROW('AVANTAGES & FRAIS PROPRES',undefined,{section:true})}
-          ${m.atn?ROW('Avantage de toute nature (ATN)',m.atn,{bg:true,color:'#0f766e'}):''}
-          ${ROW("Frais propres à l'employeur (cadre 19)",m.frais,{bg:!m.atn,color:'#0d9488'})}
-          <tr style="border-top:2px solid #ccfbf1"><td colspan="2" style="padding:6px 0"></td></tr>
-          ${ROW('Revenu imposable (avant retenues)',baseImposable,{bold:true})}
-          ${ROW('Revenu imposable net',baseImposable-totalRetenues,{bold:true,bg:true})}
+          ${lines.join('')||`<tr><td colspan="3" style="padding:14px;text-align:center;color:#9aa3ad">Aucun montant encodé pour ce mois</td></tr>`}
         </tbody>
       </table>
     </div>
 
-    <div style="border:1px solid #e4e6ea;border-radius:10px;padding:9px 12px;margin-bottom:8px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <div style="width:24px;height:24px;border-radius:6px;background:#ccfbf1;display:flex;align-items:center;justify-content:center;font-size:12px">📋</div>
-        <div style="font-size:12px;font-weight:700;color:#0f766e">Écriture comptable (OD) — ${moisLabel(idx)} ${annee}</div>
-      </div>
-      <table style="width:100%;border-collapse:collapse;font-size:12px">
-        <thead>
-          <tr style="border-bottom:2px solid #ccfbf1;color:#0f766e">
-            <th style="text-align:left;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;width:70px">Compte</th>
-            <th style="text-align:left;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em">Libellé</th>
-            <th style="text-align:right;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;width:110px">Débit</th>
-            <th style="text-align:right;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;width:110px">Crédit</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td style="padding:3px 10px;font-family:Consolas,monospace">620</td><td style="padding:3px 10px">Rémunérations — ${escX(a.prenom+' '+a.nom)}</td><td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace">${eur(m.brut)}</td><td></td></tr>
-          ${m.frais?`<tr style="background:#f0fdfa"><td style="padding:3px 10px;font-family:Consolas,monospace">623</td><td style="padding:3px 10px">Frais propres à l'employeur</td><td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace">${eur(m.frais)}</td><td></td></tr>`:''}
-          ${m.cotis?`<tr><td style="padding:3px 10px;font-family:Consolas,monospace">453</td><td style="padding:3px 10px">Cotisations sociales / PLCI à payer</td><td></td><td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace;color:#dc2626">${eur(m.cotis)}</td></tr>`:''}
-          ${precompte?`<tr style="background:#f0fdfa"><td style="padding:3px 10px;font-family:Consolas,monospace">454</td><td style="padding:3px 10px">Précompte professionnel à payer</td><td></td><td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace;color:#dc2626">${eur(precompte)}</td></tr>`:''}
-          <tr style="border-top:2px solid #ccfbf1;font-weight:700"><td style="padding:3px 10px;font-family:Consolas,monospace">455</td><td style="padding:3px 10px">Rémunération à payer (net)</td><td></td><td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace;color:#0d9488">${eur(m.salairePoche)}</td></tr>
-          <tr style="font-weight:700;background:#f0fdfa"><td colspan="2" style="padding:3px 10px;color:#0f766e">Total débit = Total crédit</td><td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace">${eur(m.brut+m.frais)}</td><td style="padding:3px 10px;text-align:right;font-family:Consolas,monospace">${eur(m.cotis+precompte+m.salairePoche)}</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- RÉCAPITULATIF -->
+    <table style="width:100%;border-collapse:collapse;font-size:11px;border:1px solid #0d9488;border-radius:8px;overflow:hidden;margin-bottom:14px">
+      <thead>
+        <tr style="background:#0d9488;color:#fff">
+          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Base Imposable (+)</th>
+          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Cotisations (-)</th>
+          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Précompte (-)</th>
+          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Frais Propres (+)</th>
+          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:600">Divers (-)</th>
+          <th style="padding:8px 6px;text-align:center;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;font-weight:700;background:#0f766e">Net à Payer</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr style="background:#f0fdfa">
+          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(baseImposable)}</td>
+          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(cotisations)}</td>
+          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(precompte)}</td>
+          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(m.frais)}</td>
+          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:600">${eur(m.deductions||0)}</td>
+          <td style="padding:10px 6px;text-align:center;font-family:Consolas,monospace;font-weight:700;color:#0d9488;font-size:13px">${eur(netAPayer)}</td>
+        </tr>
+      </tbody>
+    </table>
 
-    <div style="display:flex;gap:14px;align-items:stretch">
-      <div style="flex:1;border:1px solid #e4e6ea;border-radius:10px;padding:9px 12px">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#0f766e;margin-bottom:8px">Cumuls annuels (janvier → ${moisLabel(idx)} ${annee})</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:0;text-align:center">
-          <div style="padding:4px 6px;border-right:1px solid #e4e6ea"><div style="font-size:9px;color:#65676b;text-transform:uppercase">Bruts</div><div style="font-size:13px;font-weight:700;margin-top:2px">${eur(cumBrut)}</div></div>
-          <div style="padding:4px 6px;border-right:1px solid #e4e6ea"><div style="font-size:9px;color:#65676b;text-transform:uppercase">Cotis.</div><div style="font-size:13px;font-weight:700;margin-top:2px">${eur(cumCotis)}</div></div>
-          <div style="padding:4px 6px;border-right:1px solid #e4e6ea"><div style="font-size:9px;color:#65676b;text-transform:uppercase">Précompte</div><div style="font-size:13px;font-weight:700;margin-top:2px">${eur(cumPrec)}</div></div>
-          <div style="padding:4px 6px"><div style="font-size:9px;color:#65676b;text-transform:uppercase">Frais propres</div><div style="font-size:13px;font-weight:700;margin-top:2px;color:#0d9488">${eur(cumFrais)}</div></div>
-        </div>
-      </div>
-      <div style="flex:0 0 160px;background:#0d9488;border-radius:10px;padding:14px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center">
-        <div style="font-size:10px;color:#ccfbf1;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Net cumulé ${annee}</div>
-        <div style="font-size:22px;font-weight:700;color:#fff;line-height:1.2">${eur(cumNet)}</div>
-        <div style="font-size:9px;color:#a7f3d0;margin-top:6px">Solde versé depuis janvier</div>
-      </div>
-    </div>
-
-    <div style="margin-top:16px;padding-top:10px;border-top:1px solid #ccfbf1;font-size:10px;color:#9aa3ad;text-align:center">
+    <div style="margin-top:18px;padding-top:8px;border-top:1px solid #e4e6ea;font-size:9px;color:#9aa3ad;text-align:center">
       Document généré par ${escX(exp.nom||'votre cabinet')}${exp.bce?' — BE '+fmtBce(exp.bce):''}${exp.email?' — '+escX(exp.email):''}${exp.tel?' — '+escX(exp.tel):''}
     </div>
+  </div>
   `;
   document.getElementById('fdpDoc').innerHTML=html;
   openModal('modalFichePaie');
@@ -3535,21 +3533,22 @@ function openFicheDePaie(idx){
 function printFichePaie(){window.print();}
 function downloadFichePaiePdf(){
   const el=document.getElementById('fdpDoc');
-  const filename=(currentPdfFilename||'document').replace(/\s+/g,'_')+'.pdf';
+  const filename=(currentPdfFilename||'Fiche_de_Paie')+'.pdf';
   if(typeof html2pdf==='undefined'){
-    notif('i','ℹ️ Génération PDF directe indisponible (bibliothèque non chargée — réseau bloqué ?). Ouverture de l\'impression : choisissez "Enregistrer en PDF".');
+    notif('i','ℹ️ Génération PDF directe indisponible. Ouverture de l\'impression : choisissez "Enregistrer en PDF".');
     setTimeout(printFichePaie,300);
     return;
   }
   notif('i','📄 Génération du PDF…');
-  html2pdf().set({html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true}}).from(el).toCanvas().then(canvas=>{
-    const imgData=canvas.toDataURL('image/png');
-    const w=canvas.width,h=canvas.height;
-    const jsPDF=(window.jspdf&&window.jspdf.jsPDF)||window.jsPDF;
-    if(!jsPDF){notif('i','ℹ️ jsPDF indisponible — ouverture de l\'impression');setTimeout(printFichePaie,300);return;}
-    const pdf=new jsPDF({orientation:w>h?'landscape':'portrait',unit:'px',format:[w,h]});
-    pdf.addImage(imgData,'PNG',0,0,w,h);
-    pdf.save(filename);
+  const opt={
+    margin:[10,10,10,10],
+    filename:filename,
+    image:{type:'jpeg',quality:0.98},
+    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,letterRendering:true},
+    jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},
+    pagebreak:{mode:['css','legacy']}
+  };
+  html2pdf().set(opt).from(el).save().then(()=>{
     notif('s','✅ PDF téléchargé');
   }).catch(()=>{
     notif('i','ℹ️ Erreur génération PDF — ouverture de l\'impression');
