@@ -3707,7 +3707,7 @@ async function downloadFichePaiePdf(){
       }
     }
     pdf.save(filename);
-    if(wrap.parentNode) document.body.removeChild(wrap);
+    if(wrap?.parentNode) document.body.removeChild(wrap);
     notif('s','✅ PDF téléchargé');
   }catch(e){
     if(wrap.parentNode) document.body.removeChild(wrap);
