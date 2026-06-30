@@ -2484,8 +2484,9 @@ function renderActionnaires(){
         </div>
       </td>
       <td>${isUBO?'<span class="tag tag-amber">🔒 UBO</span>':'<span class="tag tag-gray">—</span>'}</td>
-      <td>
+      <td style="white-space:nowrap">
         <button class="btn btn-teal btn-xs" onclick="goToFiche('${a.id}')">📄 Fiche</button>
+        <button class="btn btn-primary btn-xs" onclick="goToPaie('${a.id}')" title="Fiche de paie">💰 Paie</button>
       </td>
       <td style="white-space:nowrap">
         <button class="btn btn-ghost btn-xs" onclick="editActionnaire('${a.id}')">✏️</button>
