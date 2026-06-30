@@ -3655,7 +3655,7 @@ async function downloadFichePaiePdf(){
     await ensurePdfLibraries();
     wrap=document.createElement('div');
     wrap.id='fdpPdfCapture';
-    wrap.style.cssText='position:absolute;left:0;top:0;width:794px;min-height:1123px;background:#fff;color:#111827;padding:38px;box-sizing:border-box;opacity:0;pointer-events:none;z-index:-1;overflow:hidden';
+    wrap.style.cssText='position:fixed;left:0;top:0;width:794px;min-height:1123px;background:#fff;color:#111827;padding:38px;box-sizing:border-box;opacity:1;pointer-events:none;z-index:2147483647;overflow:hidden';
     wrap.innerHTML=src.innerHTML;
     document.body.appendChild(wrap);
     const images=[...wrap.querySelectorAll('img')];
@@ -3673,11 +3673,7 @@ async function downloadFichePaiePdf(){
       windowWidth:794,
       windowHeight:Math.max(1123,wrap.scrollHeight),
       scrollX:0,
-      scrollY:0,
-      onclone:(doc)=>{
-        const el=doc.getElementById('fdpPdfCapture');
-        if(el){el.style.opacity='1';el.style.position='static';el.style.zIndex='0';}
-      }
+      scrollY:0
     });
     if(!canvas || canvas.width<20 || canvas.height<20) throw new Error('Capture PDF vide');
     const ctx=canvas.getContext('2d');
