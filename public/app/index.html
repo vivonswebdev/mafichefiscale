@@ -2428,8 +2428,13 @@ function saveActionnaire(){
     pctControle:parseFloat(document.getElementById('ma_pct_controle').value)||0,
     dateEntree:document.getElementById('ma_date_entree').value,
     dateSortie:document.getElementById('ma_date_sortie').value,
+    sexe:document.getElementById('ma_sexe').value,
+    etatCivil:document.getElementById('ma_etat_civil').value,
+    personnesCharge:parseInt(document.getElementById('ma_pers_charge').value)||0,
+    iban:document.getElementById('ma_iban').value.trim(),
   };
-  if(editActId){const i=c.actionnaires.findIndex(x=>x.id===editActId);if(i>=0)c.actionnaires[i]=obj;}
+  // Préserver paie et autres champs étendus existants lors d'une édition
+  if(editActId){const i=c.actionnaires.findIndex(x=>x.id===editActId);if(i>=0)c.actionnaires[i]={...c.actionnaires[i],...obj};}
   else c.actionnaires.push(obj);
   save();closeModal('modalActionnaire');renderDashboard();renderFicheClientChips();
   notif('s',editActId?'✅ Modifié':'✅ '+prenom+' '+nom+' ajouté');
