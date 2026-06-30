@@ -3615,7 +3615,11 @@ function openFicheDePaie(idx){
 }
 function printFichePaie(){window.print();}
 function downloadFichePaiePdf(){
-  const el=document.getElementById('fdpDoc');
+  const src=document.getElementById('fdpDoc');
+  if(!src || !src.innerHTML.trim()){
+    notif('e','❌ Aucune fiche à exporter');
+    return;
+  }
   const filename=(currentPdfFilename||'Fiche_de_Paie')+'.pdf';
   if(typeof html2pdf==='undefined'){
     notif('i','ℹ️ Génération PDF directe indisponible. Ouverture de l\'impression : choisissez "Enregistrer en PDF".');
@@ -3623,21 +3627,30 @@ function downloadFichePaiePdf(){
     return;
   }
   notif('i','📄 Génération du PDF…');
+  // Clone offscreen so html2canvas captures it reliably (modal positioning/scroll breaks capture)
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff;color:#1a1a1a;padding:24px;font-family:Inter,Arial,sans-serif;z-index:-1';
+  wrap.innerHTML=src.innerHTML;
+  document.body.appendChild(wrap);
   const opt={
-    margin:[10,10,10,10],
+    margin:[8,8,8,8],
     filename:filename,
     image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,letterRendering:true},
+    html2canvas:{scale:2,backgroundColor:'#ffffff',useCORS:true,letterRendering:true,windowWidth:794,scrollX:0,scrollY:0},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait',compress:true},
-    pagebreak:{mode:['css','legacy']}
+    pagebreak:{mode:['css','legacy','avoid-all']}
   };
-  html2pdf().set(opt).from(el).save().then(()=>{
+  html2pdf().set(opt).from(wrap).save().then(()=>{
+    document.body.removeChild(wrap);
     notif('s','✅ PDF téléchargé');
-  }).catch(()=>{
+  }).catch((e)=>{
+    if(wrap.parentNode) document.body.removeChild(wrap);
+    console.error('PDF error',e);
     notif('i','ℹ️ Erreur génération PDF — ouverture de l\'impression');
     setTimeout(printFichePaie,300);
   });
 }
+
 let currentPdfFilename=null;
 
 // ══════════════════════════════════════════════
