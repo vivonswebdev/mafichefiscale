@@ -462,10 +462,14 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 <div class="modal-bg" id="modalFichePaie">
   <div class="modal" style="width:760px;padding:0;background:#fff;color:#1a1a1a">
     <div id="fdpDoc" style="padding:20px"></div>
-    <div class="acts" id="fdpActions" style="padding:0 32px 24px;background:#fff">
-      <button class="btn" style="background:#0E3692;color:#fff" onclick="downloadFichePaiePdf()">📥 Télécharger PDF</button>
-      <button class="btn btn-ghost" onclick="printFichePaie()" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de">🖨️ Imprimer</button>
-      <button class="btn btn-ghost" onclick="closeModal('modalFichePaie')" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de">Fermer</button>
+    <div class="acts" id="fdpActions" style="padding:0 32px 24px;background:#fff;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <div style="display:inline-flex;border:1px solid #d0d7de;border-radius:6px;overflow:hidden;margin-right:auto">
+        <button class="btn btn-ghost" id="fdpLangFr" onclick="setFdpLang('fr')" style="background:#0E3692;color:#fff;border:none;border-radius:0;padding:8px 14px;font-weight:700">FR</button>
+        <button class="btn btn-ghost" id="fdpLangNl" onclick="setFdpLang('nl')" style="background:#f0f2f5;color:#1a1a1a;border:none;border-radius:0;padding:8px 14px;font-weight:700">NL</button>
+      </div>
+      <button class="btn" style="background:#0E3692;color:#fff" onclick="downloadFichePaiePdf()">📥 <span data-fdp-i18n="download">Télécharger PDF</span></button>
+      <button class="btn btn-ghost" onclick="printFichePaie()" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de">🖨️ <span data-fdp-i18n="print">Imprimer</span></button>
+      <button class="btn btn-ghost" onclick="closeModal('modalFichePaie')" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de" data-fdp-i18n="close">Fermer</button>
     </div>
   </div>
 </div>
