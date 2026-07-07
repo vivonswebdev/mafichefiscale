@@ -51,6 +51,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 .client-card .cb{font-size:11px;color:var(--text3);font-family:Consolas,monospace;margin-top:2px}
 .client-card .cs{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
 .no-clients{padding:20px 8px;text-align:center;color:var(--text3);font-size:12px}
+.client-search-wrap{display:flex;align-items:center;gap:8px;padding:0 8px;margin-bottom:8px}
+#clientSearch{flex:1;font-size:12px;padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);outline:none}
+#clientSearch:focus{border-color:var(--primary)}
+.sidebar.collapsed{width:0;min-width:0;padding:0;overflow:hidden;border-right:none}
+#sidebarOpenBtn{display:none;position:fixed;left:0;top:72px;z-index:60;width:32px;height:36px;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;font-size:14px;box-shadow:2px 0 8px rgba(0,0,0,.3)}
+#sidebarOpenBtn:hover{color:var(--text)}
+#sidebarOpenBtn.visible{display:flex}
 
 .main{flex:1;overflow-y:auto}
 .page{display:none;padding:24px;max-width:1100px;margin:0 auto}
@@ -242,6 +249,8 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 @media(max-width:900px){
   .sidebar{position:fixed;left:0;top:56px;bottom:0;z-index:60;box-shadow:4px 0 16px rgba(0,0,0,.4);transform:translateX(-100%);transition:transform .2s}
   .sidebar.open{transform:translateX(0)}
+  .sidebar.collapsed{width:260px;min-width:260px;padding:16px 12px;border-right:1px solid var(--border)}
+  #sidebarOpenBtn{display:none!important}
   .layout{position:relative}
   .main{width:100%}
   #sidebarToggle{display:flex!important;align-items:center;justify-content:center}
@@ -528,13 +537,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 
 <div class="layout">
   <!-- SIDEBAR CLIENTS -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="clientSidebar">
     <div class="sidebar-section">
+      <div class="client-search-wrap">
+        <input type="text" id="clientSearch" placeholder="🔎 Rechercher…" oninput="renderSidebar()">
+        <button class="btn btn-ghost btn-xs" onclick="toggleClientSidebar()" title="Cacher la barre">◀</button>
+      </div>
       <div class="sidebar-label">Clients</div>
       <div id="sidebarClients"></div>
       <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;justify-content:center" onclick="openNewClient()">+ Nouveau client</button>
     </div>
   </aside>
+
+  <button id="sidebarOpenBtn" onclick="toggleClientSidebar()" title="Afficher les clients">▶</button>
 
   <!-- SIDEBAR DIRIGEANTS (visible sur Fiches & Paie) -->
   <aside class="sidebar" id="dirSidebar" style="display:none">
@@ -2083,10 +2098,16 @@ function selectGlobalDir(id){
 
 function renderSidebar(){
   const box=document.getElementById('sidebarClients');
-  if(!DB.clients.length){
-    box.innerHTML='<div class="no-clients">Aucun client<br>Cliquez sur + pour commencer</div>';return;
+  const q=document.getElementById('clientSearch')?.value?.trim().toLowerCase()||'';
+  let list=DB.clients;
+  if(q){
+    list=list.filter(c=>(c.nom||'').toLowerCase().includes(q)||(c.bce||'').toLowerCase().includes(q));
   }
-  box.innerHTML=DB.clients.map(c=>{
+  if(!list.length){
+    box.innerHTML=q?'<div class="no-clients">Aucun client ne correspond</div>':'<div class="no-clients">Aucun client<br>Cliquez sur + pour commencer</div>';
+    return;
+  }
+  box.innerHTML=list.map(c=>{
     const acts=c.actionnaires||[];
     const nf=DB.fiches.filter(f=>f.debBce===c.bce).length;
     return`<div class="client-card ${currentClientId===c.id?'active':''}" onclick="selectClient('${c.id}')">
@@ -2099,6 +2120,26 @@ function renderSidebar(){
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleClientSidebar(){
+  const sb=document.getElementById('clientSidebar');
+  const btn=document.getElementById('sidebarOpenBtn');
+  const collapsed=!sb.classList.contains('collapsed');
+  sb.classList.toggle('collapsed',collapsed);
+  btn.classList.toggle('visible',collapsed);
+  try{localStorage.setItem('clientSidebarCollapsed',collapsed?'1':'0');}catch(_){}
+}
+
+function initClientSidebar(){
+  const sb=document.getElementById('clientSidebar');
+  const btn=document.getElementById('sidebarOpenBtn');
+  try{
+    if(localStorage.getItem('clientSidebarCollapsed')==='1'){
+      sb.classList.add('collapsed');
+      btn.classList.add('visible');
+    }
+  }catch(_){}
 }
 
 // ══════════════════════════════════════════════
@@ -5351,7 +5392,7 @@ window.onload=()=>{
   });
   if(migrated>0){save();console.log(`[migration] ${migrated} fiche(s) recalculée(s) — f2063/f2059 corrigés`);}
   // ─────────────────────────────────────────────────────────────────────────
-  renderAll();recalc();updateNextSeq();
+  renderAll();recalc();updateNextSeq();initClientSidebar();
   if(DB.clients.length)selectClient(DB.clients[0].id);
   try{window.parent&&window.parent.postMessage({type:'MAFICHE_SYNC',payload:DB},'*');window.parent&&window.parent.postMessage({type:'DB_SYNC',db:DB},'*');}catch(_){}
 };
