@@ -2096,10 +2096,16 @@ function selectGlobalDir(id){
 
 function renderSidebar(){
   const box=document.getElementById('sidebarClients');
-  if(!DB.clients.length){
-    box.innerHTML='<div class="no-clients">Aucun client<br>Cliquez sur + pour commencer</div>';return;
+  const q=document.getElementById('clientSearch')?.value?.trim().toLowerCase()||'';
+  let list=DB.clients;
+  if(q){
+    list=list.filter(c=>(c.nom||'').toLowerCase().includes(q)||(c.bce||'').toLowerCase().includes(q));
   }
-  box.innerHTML=DB.clients.map(c=>{
+  if(!list.length){
+    box.innerHTML=q?'<div class="no-clients">Aucun client ne correspond</div>':'<div class="no-clients">Aucun client<br>Cliquez sur + pour commencer</div>';
+    return;
+  }
+  box.innerHTML=list.map(c=>{
     const acts=c.actionnaires||[];
     const nf=DB.fiches.filter(f=>f.debBce===c.bce).length;
     return`<div class="client-card ${currentClientId===c.id?'active':''}" onclick="selectClient('${c.id}')">
@@ -2112,6 +2118,26 @@ function renderSidebar(){
       </div>
     </div>`;
   }).join('');
+}
+
+function toggleClientSidebar(){
+  const sb=document.getElementById('clientSidebar');
+  const btn=document.getElementById('sidebarOpenBtn');
+  const collapsed=!sb.classList.contains('collapsed');
+  sb.classList.toggle('collapsed',collapsed);
+  btn.classList.toggle('visible',collapsed);
+  try{localStorage.setItem('clientSidebarCollapsed',collapsed?'1':'0');}catch(_){}
+}
+
+function initClientSidebar(){
+  const sb=document.getElementById('clientSidebar');
+  const btn=document.getElementById('sidebarOpenBtn');
+  try{
+    if(localStorage.getItem('clientSidebarCollapsed')==='1'){
+      sb.classList.add('collapsed');
+      btn.classList.add('visible');
+    }
+  }catch(_){}
 }
 
 // ══════════════════════════════════════════════
