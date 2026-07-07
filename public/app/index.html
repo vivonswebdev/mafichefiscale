@@ -51,6 +51,13 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 .client-card .cb{font-size:11px;color:var(--text3);font-family:Consolas,monospace;margin-top:2px}
 .client-card .cs{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap}
 .no-clients{padding:20px 8px;text-align:center;color:var(--text3);font-size:12px}
+.client-search-wrap{display:flex;align-items:center;gap:8px;padding:0 8px;margin-bottom:8px}
+#clientSearch{flex:1;font-size:12px;padding:6px 10px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);outline:none}
+#clientSearch:focus{border-color:var(--primary)}
+.sidebar.collapsed{width:0;min-width:0;padding:0;overflow:hidden;border-right:none}
+#sidebarOpenBtn{display:none;position:fixed;left:0;top:72px;z-index:60;width:32px;height:36px;background:var(--surface);border:1px solid var(--border);border-left:none;border-radius:0 var(--radius-sm) var(--radius-sm) 0;align-items:center;justify-content:center;color:var(--text2);cursor:pointer;font-size:14px;box-shadow:2px 0 8px rgba(0,0,0,.3)}
+#sidebarOpenBtn:hover{color:var(--text)}
+#sidebarOpenBtn.visible{display:flex}
 
 .main{flex:1;overflow-y:auto}
 .page{display:none;padding:24px;max-width:1100px;margin:0 auto}
