@@ -600,7 +600,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 
             <div class="card-title" style="margin:16px 0 8px;font-size:12px">
               <div class="icon icon-teal">📅</div>Suivi des rémunérations dirigeants
-              <span class="fld" style="margin:0 0 0 auto;min-width:90px"><input id="matrixAnnee" type="number" value="2025" oninput="renderPaieMatrix()"></span>
+              <span class="fld" style="margin:0 0 0 auto;min-width:90px"><select id="matrixAnnee" onchange="renderPaieMatrix()" style="background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:7px 8px;color:var(--text);font-size:13px"><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option></select></span>
             </div>
             <div class="tbl-wrap">
               <table class="tbl" id="paieMatrixTable" style="font-size:11px"></table>
@@ -1286,7 +1286,7 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 
           <!-- Champs spécifiques bilan -->
           <div class="g3" id="att_fields_bilan" style="display:none">
-            <div class="fld"><label>Exercice comptable (année)</label><input id="att_exercice" type="number" value="2025"></div>
+            <div class="fld"><label>Exercice comptable (année)</label><select id="att_exercice"><option value="2025">2025</option><option value="2026">2026</option><option value="2027">2027</option></select></div>
             <div class="fld"><label>Total du bilan (€)</label><input id="att_total_bilan" class="amt" placeholder="0.00"></div>
             <div class="fld"><label>Capitaux propres (€)</label><input id="att_capitaux_propres" class="amt" placeholder="0.00"></div>
           </div>
