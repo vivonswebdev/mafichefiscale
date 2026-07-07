@@ -535,13 +535,19 @@ body{font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;line-height:1.5;
 
 <div class="layout">
   <!-- SIDEBAR CLIENTS -->
-  <aside class="sidebar">
+  <aside class="sidebar" id="clientSidebar">
     <div class="sidebar-section">
+      <div class="client-search-wrap">
+        <input type="text" id="clientSearch" placeholder="🔎 Rechercher…" oninput="renderSidebar()">
+        <button class="btn btn-ghost btn-xs" onclick="toggleClientSidebar()" title="Cacher la barre">◀</button>
+      </div>
       <div class="sidebar-label">Clients</div>
       <div id="sidebarClients"></div>
       <button class="btn btn-primary btn-sm" style="width:100%;margin-top:8px;justify-content:center" onclick="openNewClient()">+ Nouveau client</button>
     </div>
   </aside>
+
+  <button id="sidebarOpenBtn" onclick="toggleClientSidebar()" title="Afficher les clients">▶</button>
 
   <!-- SIDEBAR DIRIGEANTS (visible sur Fiches & Paie) -->
   <aside class="sidebar" id="dirSidebar" style="display:none">
