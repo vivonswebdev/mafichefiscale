@@ -5390,7 +5390,7 @@ window.onload=()=>{
   });
   if(migrated>0){save();console.log(`[migration] ${migrated} fiche(s) recalculée(s) — f2063/f2059 corrigés`);}
   // ─────────────────────────────────────────────────────────────────────────
-  renderAll();recalc();updateNextSeq();
+  renderAll();recalc();updateNextSeq();initClientSidebar();
   if(DB.clients.length)selectClient(DB.clients[0].id);
   try{window.parent&&window.parent.postMessage({type:'MAFICHE_SYNC',payload:DB},'*');window.parent&&window.parent.postMessage({type:'DB_SYNC',db:DB},'*');}catch(_){}
 };
