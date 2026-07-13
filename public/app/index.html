@@ -5796,6 +5796,23 @@ document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>
 // ══════════════════════════════════════════════
 // INIT
 // ══════════════════════════════════════════════
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  const btn=document.getElementById('themeToggle');
+  if(btn) btn.textContent = t==='dark' ? '☀️' : '🌙';
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme')||'light';
+  const next=cur==='dark'?'light':'dark';
+  applyTheme(next);
+  try{localStorage.setItem('mafiche_theme',next);}catch(_){}
+}
+function initTheme(){
+  let t='light';
+  try{t=localStorage.getItem('mafiche_theme')||'light';}catch(_){}
+  applyTheme(t);
+}
+initTheme();
 window.onload=()=>{
   load();
   // ── MIGRATION : recalcule f2063 et f2059 sur toutes les fiches stockées ──
