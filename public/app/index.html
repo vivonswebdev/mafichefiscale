@@ -805,8 +805,126 @@ html[data-theme="dark"] .toggle-btn.active{color:#93C5FD}
 html[data-theme="dark"] *::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);background-clip:padding-box;border:2px solid transparent}
 html[data-theme="dark"] *::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.22);background-clip:padding-box;border:2px solid transparent}
 
+/* ════════════════════════════════════════════════════════════════════
+   DARK MODE — Palette AA tuning (neon preserved)
+   Targets: text≥AA (4.5:1), tag/badge foregrounds ≥ AA on tinted bg,
+   table headers legible, focus ring visible.
+   ════════════════════════════════════════════════════════════════════ */
+html[data-theme="dark"]{
+  /* Slightly cooler bg + brighter foregrounds */
+  --bg:#0A0D16;
+  --bg-2:#0E1220;
+  --surface-solid:#161A2A;
+
+  /* Text — bump AA everywhere */
+  --text:#F1F3FA;        /* ≈16.8:1 on --bg */
+  --text2:#C3CADE;       /* ≈11.2:1 on --bg — AAA */
+  --text3:#8A94B0;       /* ≈4.9:1  on --bg — AA (was #6C7591 → 4.1) */
+
+  /* Borders a touch more visible */
+  --border:rgba(255,255,255,0.09);
+  --border2:rgba(255,255,255,0.14);
+
+  /* Neon accents — brighter fg used ONLY in dark for tags/links */
+  --primary-d:#93C5FD;   /* AA on rgba(59,130,246,0.14) */
+  --teal-d:#5EEAD4;
+  --lavender-d:#C4B5FD;
+}
+
+/* Body: slightly stronger neon halos (kept subtle enough for text contrast) */
+html[data-theme="dark"] body{
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgba(59,130,246,0.18), transparent 62%),
+    radial-gradient(900px 600px at -5% 30%,  rgba(13,148,136,0.12), transparent 62%),
+    radial-gradient(700px 500px at 50% 110%, rgba(167,139,250,0.12), transparent 62%),
+    var(--bg);
+}
+
+/* Placeholders — AA on inputs */
+html[data-theme="dark"] .fld input::placeholder,
+html[data-theme="dark"] .fld textarea::placeholder,
+html[data-theme="dark"] input::placeholder,
+html[data-theme="dark"] textarea::placeholder{
+  color:#8A94B0;opacity:1; /* 4.9:1 */
+}
+
+/* Focus ring — brighter for visibility in dark */
+html[data-theme="dark"] .fld input:focus,
+html[data-theme="dark"] .fld select:focus,
+html[data-theme="dark"] .fld textarea:focus,
+html[data-theme="dark"] .pfx:focus-within,
+html[data-theme="dark"] .search-input:focus,
+html[data-theme="dark"] input[type="search"]:focus{
+  border-color:#60A5FA;
+  box-shadow:0 0 0 3px rgba(96,165,250,0.32);
+}
+
+/* BE prefix */
+html[data-theme="dark"] .pfx{background:#161A2A;border-color:rgba(255,255,255,0.14)}
+html[data-theme="dark"] .pfx-label{background:rgba(96,165,250,0.14);color:#BFDBFE;border-right-color:rgba(255,255,255,0.10)}
+
+/* TABLES — headers & rows AA */
+html[data-theme="dark"] .tbl th{
+  background:rgba(255,255,255,0.05);
+  color:#C3CADE;                      /* AAA */
+  border-bottom-color:rgba(255,255,255,0.12);
+  letter-spacing:.06em;
+}
+html[data-theme="dark" ] .tbl td{color:#DEE3F0;border-bottom-color:rgba(255,255,255,0.07)}
+html[data-theme="dark"] .tbl tr:hover td{background:rgba(96,165,250,0.10)}
+html[data-theme="dark"] .tbl .fw{color:#F5F7FC}
+html[data-theme="dark"] .tbl .mn{color:#A9B2CB;font-variant-numeric:tabular-nums}
+html[data-theme="dark"] .tbl tr:nth-child(even) td{background:rgba(255,255,255,0.015)}
+
+/* BADGES / TAGS — brighter fg + slightly denser bg for AA on tinted surface */
+html[data-theme="dark"] .tag,
+html[data-theme="dark"] .hdr-badge{border:1px solid transparent}
+html[data-theme="dark"] .tag-indigo,html[data-theme="dark"] .badge-indigo{
+  background:rgba(96,165,250,0.18);color:#BFDBFE;border-color:rgba(96,165,250,0.35);
+}
+html[data-theme="dark"] .tag-teal{
+  background:rgba(45,212,191,0.18);color:#99F6E4;border-color:rgba(45,212,191,0.35);
+}
+html[data-theme="dark"] .tag-green,html[data-theme="dark"] .badge-green{
+  background:rgba(74,222,128,0.18);color:#BBF7D0;border-color:rgba(74,222,128,0.35);
+}
+html[data-theme="dark"] .tag-amber{
+  background:rgba(251,191,36,0.18);color:#FDE68A;border-color:rgba(251,191,36,0.40);
+}
+html[data-theme="dark"] .tag-red{
+  background:rgba(248,113,113,0.20);color:#FECACA;border-color:rgba(248,113,113,0.40);
+}
+html[data-theme="dark"] .tag-gray{
+  background:rgba(255,255,255,0.08);color:#DCE1EE;border-color:rgba(255,255,255,0.14);
+}
+
+/* Chips (filtres) — état actif AA */
+html[data-theme="dark"] .chip{background:#161A2A;border-color:rgba(255,255,255,0.12);color:#C3CADE}
+html[data-theme="dark"] .chip:hover{color:#F1F3FA;border-color:rgba(96,165,250,0.45)}
+html[data-theme="dark"] .chip.active,html[data-theme="dark"] .chip[aria-pressed="true"]{
+  background:rgba(96,165,250,0.16);border-color:#60A5FA;color:#BFDBFE;
+}
+
+/* Hints — états validation AA */
+html[data-theme="dark"] .fld .hint.ok{color:#86EFAC}
+html[data-theme="dark"] .fld .hint.warn{color:#FDE68A}
+html[data-theme="dark"] .fld .hint.err,html[data-theme="dark"] .fld .hint.error{color:#FCA5A5}
+
+/* Boutons danger — texte AA */
+html[data-theme="dark"] .btn-danger{background:rgba(248,113,113,0.16);color:#FECACA;border-color:rgba(248,113,113,0.40)}
+html[data-theme="dark"] .btn-danger:hover{background:rgba(248,113,113,0.24);color:#FEE2E2}
+
+/* Nav actif + hover restent lisibles */
+html[data-theme="dark"] .nav-btn{color:#C3CADE}
+html[data-theme="dark"] .nav-btn:hover{background:rgba(96,165,250,0.16);color:#DBEAFE}
+
+/* Notifications */
+html[data-theme="dark"] .notif-s{color:#86EFAC}
+html[data-theme="dark"] .notif-e{color:#FCA5A5}
+
 /* Preserve dark PDF fiche paie (scoped #fdpDoc) — do not touch */
 </style>
+
 </head>
 <body>
 <button id="sidebarToggle" class="btn btn-ghost btn-sm" style="display:none;position:fixed;bottom:16px;left:16px;z-index:70;border-radius:50%;width:44px;height:44px;font-size:18px" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
