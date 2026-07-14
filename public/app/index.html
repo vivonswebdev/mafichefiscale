@@ -701,7 +701,9 @@ html[data-theme="dark"] .tag-red{color:#FCA5A5}
 html[data-theme="dark"] .tag-gray{background:rgba(255,255,255,0.06);color:var(--text2)}
 
 /* ── MODALS ── */
-.modal-bg{background:rgba(15,23,42,0.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal-bg{background:rgba(15,23,42,0.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .22s ease}
+.modal-bg.open{opacity:1}
+.modal-bg.closing{opacity:0}
 html[data-theme="dark"] .modal-bg{background:rgba(0,0,0,0.55)}
 .modal{
   background:var(--surface2);
@@ -710,13 +712,25 @@ html[data-theme="dark"] .modal-bg{background:rgba(0,0,0,0.55)}
   border:1px solid var(--border-glass);
   border-radius:24px;
   box-shadow:var(--shadow-modal);
-  animation:modalIn .28s cubic-bezier(.16,1,.3,1);
+  animation:modalIn .32s cubic-bezier(.16,1,.3,1);
+  position:relative;
 }
-@keyframes modalIn{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-bg.closing .modal{animation:modalOut .22s cubic-bezier(.4,0,1,1) forwards}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes modalOut{from{opacity:1;transform:scale(1) translateY(0)}to{opacity:0;transform:scale(.97) translateY(4px)}}
 .modal-title{color:var(--text);font-weight:700;letter-spacing:-0.01em}
 .modal-close{color:var(--text3);border-radius:8px;transition:all .18s}
 .modal-close:hover{color:var(--text);background:rgba(15,23,42,0.06)}
+.modal-close:focus-visible,.modal :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 html[data-theme="dark"] .modal-close:hover{background:rgba(255,255,255,0.06)}
+/* Loading overlay inside modals */
+.modal-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:color-mix(in oklab,var(--surface2) 78%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:inherit;z-index:5;animation:mfIn .18s ease}
+.modal-loading.on{display:flex}
+.modal-loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid color-mix(in oklab,var(--primary) 22%,transparent);border-top-color:var(--primary);animation:mfSpin .8s linear infinite}
+.modal-loading .lbl{font-size:13px;color:var(--text2);font-weight:600}
+@keyframes mfSpin{to{transform:rotate(360deg)}}
+@keyframes mfIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.modal,.modal-bg,.modal-bg.closing .modal{animation:none!important;transition:none!important}}
 
 /* ── NOTIFS ── */
 .notif{
@@ -6375,9 +6389,72 @@ function openAttestation(){
 // ══════════════════════════════════════════════
 // MODAL
 // ══════════════════════════════════════════════
-function openModal(id){document.getElementById(id).classList.add('open');if(id==='modalExp')loadExp();}
-function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='modalFichePaie'){document.title='mafiche.be';currentPdfFilename=null;}}
-document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+// MODAL — focus management, ESC, animations, loading
+const _modalStack = [];
+const _FOCUSABLE = 'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+function _trapFocus(e, modal){
+  if(e.key!=='Tab')return;
+  const f = modal.querySelectorAll(_FOCUSABLE);
+  if(!f.length)return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
+}
+function openModal(id){
+  const bg = document.getElementById(id); if(!bg) return;
+  const modal = bg.querySelector('.modal');
+  bg.classList.remove('closing');
+  bg.classList.add('open');
+  bg.setAttribute('role','dialog');
+  bg.setAttribute('aria-modal','true');
+  if(modal && !modal.hasAttribute('tabindex')) modal.setAttribute('tabindex','-1');
+  // Ensure loading overlay exists
+  if(modal && !modal.querySelector(':scope > .modal-loading')){
+    const ov=document.createElement('div');
+    ov.className='modal-loading';
+    ov.innerHTML='<div class="spin" aria-hidden="true"></div><div class="lbl">Chargement…</div>';
+    ov.setAttribute('role','status');ov.setAttribute('aria-live','polite');
+    modal.appendChild(ov);
+  }
+  const prevFocus = document.activeElement;
+  _modalStack.push({id, prevFocus});
+  document.body.style.overflow='hidden';
+  // Focus first field
+  setTimeout(()=>{
+    const target = modal.querySelector('[autofocus]') || modal.querySelector(_FOCUSABLE) || modal;
+    try{target.focus({preventScroll:true});}catch(_){}
+  },50);
+  if(id==='modalExp' && typeof loadExp==='function') loadExp();
+}
+function closeModal(id){
+  const bg = document.getElementById(id); if(!bg || !bg.classList.contains('open')) return;
+  bg.classList.add('closing');
+  const cleanup = ()=>{
+    bg.classList.remove('open','closing');
+    bg.removeAttribute('role');bg.removeAttribute('aria-modal');
+    const idx = _modalStack.findIndex(x=>x.id===id);
+    let prev = null;
+    if(idx>=0){prev=_modalStack[idx].prevFocus; _modalStack.splice(idx,1);}
+    if(!_modalStack.length) document.body.style.overflow='';
+    if(prev && typeof prev.focus==='function'){try{prev.focus({preventScroll:true});}catch(_){}}
+    if(id==='modalFichePaie'){document.title='mafiche.be';if(typeof currentPdfFilename!=='undefined')currentPdfFilename=null;}
+  };
+  setTimeout(cleanup, 220);
+}
+function modalLoading(id, on, label){
+  const bg=document.getElementById(id); if(!bg)return;
+  const ov=bg.querySelector('.modal-loading'); if(!ov)return;
+  if(label) ov.querySelector('.lbl').textContent=label;
+  ov.classList.toggle('on', !!on);
+}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
+document.addEventListener('keydown',e=>{
+  if(!_modalStack.length) return;
+  const top=_modalStack[_modalStack.length-1];
+  const bg=document.getElementById(top.id); if(!bg)return;
+  if(e.key==='Escape'){e.stopPropagation();closeModal(top.id);}
+  else if(e.key==='Tab'){ _trapFocus(e, bg.querySelector('.modal')); }
+},true);
 
 // ══════════════════════════════════════════════
 // INIT
