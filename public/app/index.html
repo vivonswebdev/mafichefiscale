@@ -3983,12 +3983,152 @@ function genXml(f){
 }
 
 function previewFiche(i){
-  const f=DB.fiches[i];currXml=genXml(f);currFicheIdx=i;
-  document.getElementById('xmlPrev').textContent=currXml;
-  document.getElementById('previewTitle').textContent=`${f.prenom} ${f.nom} · ${fmtBce(f.debBce)} · Séq. ${f.volgnummer}`;
-  document.getElementById('previewCard').style.display='block';
-  document.getElementById('previewCard').scrollIntoView({behavior:'smooth'});
+  const f=DB.fiches[i];
+  currXml=genXml(f);currFicheIdx=i;
+  // 1) legacy panel (source XML) — conservé pour la vue latérale
+  const xp=document.getElementById('xmlPrev');if(xp)xp.textContent=currXml;
+  const pt=document.getElementById('previewTitle');
+  if(pt)pt.textContent=`${f.prenom} ${f.nom} · ${fmtBce(f.debBce)} · Séq. ${f.volgnummer}`;
+  // 2) Nouveau modal avec rendu visuel + XML
+  renderFicheSheet(f);
+  const xmlPrev=document.getElementById('ficheXmlPrev');
+  if(xmlPrev)xmlPrev.textContent=currXml;
+  document.getElementById('fichePreviewTitle').textContent=
+    `Aperçu 281.20 · ${f.prenom} ${f.nom} · Séq. ${f.volgnummer} · ${f.annee}`;
+  // Badge de validité (contrôles rapides)
+  const badge=document.getElementById('ficheValidBadge');
+  const errs=validateFiche(f);
+  if(errs.length===0){badge.style.display='inline-block';badge.textContent='✓ Fiche valide';badge.style.background='#DCFCE7';badge.style.color='#166534';}
+  else{badge.style.display='inline-block';badge.textContent=`⚠ ${errs.length} contrôle(s) à vérifier`;badge.style.background='#FEF3C7';badge.style.color='#92400E';badge.title=errs.join('\n');}
+  openModal('modalFichePreview');
 }
+function validateFiche(f){
+  const errs=[];
+  if(!f.nom||!f.prenom)errs.push('Nom/Prénom bénéficiaire manquant');
+  if(!f.niss)errs.push('NISS manquant');
+  if(!f.debBce)errs.push('BCE débiteur manquant');
+  if(!f.debNom)errs.push('Raison sociale débiteur manquante');
+  if(!f.annee)errs.push('Année manquante');
+  if(!f.f2060&&!f.f2062&&!f.f2068)errs.push('Aucune rémunération encodée');
+  const totCheck=(f.f2060||0)+(f.f2062||0)+(f.f2068||0);
+  if(f.f2063&&Math.abs(f.f2063-totCheck)>1)errs.push('f2063 ≠ f2060+f2062+f2068');
+  return errs;
+}
+function renderFicheSheet(f){
+  const exp=f.exp||DB.exp||{};
+  const eur=v=>((v||0)/100).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const mrow=(lbl,code,val,accent)=>val>0?`
+    <tr>
+      <td style="padding:7px 12px;border-bottom:1px solid #eef2f8;color:#111827">${lbl}</td>
+      <td style="padding:7px 12px;border-bottom:1px solid #eef2f8;text-align:center;color:#5f6f89;font-size:10.5px;font-family:'JetBrains Mono',Consolas,monospace">${code}</td>
+      <td class="money" style="padding:7px 12px;border-bottom:1px solid #eef2f8;text-align:right;font-weight:700;${accent?'color:#0E3692':'color:#111827'}">${eur(val)} €</td>
+    </tr>`:'';
+  const rows=[
+    mrow('a) Rémunérations périodiques','f2060',f.f2060),
+    mrow('b) Autres rémunérations','f2062',f.f2062),
+    mrow('c) Avantages de toute nature','f2068',f.f2068),
+    mrow('Total brut (a+b+c)','f2063',f.f2063,true),
+    mrow('Précompte professionnel retenu','f2066',f.f2066),
+    mrow('Cadre 19 — sommes restituées','f2204',f.f2204),
+    mrow('Indemnités avec justificatifs','f2201',f.f2201),
+    mrow('Indemnités forfaitaires (barèmes)','f2200',f.f2200),
+    mrow('Total contrôle','f2059',f.f2059,true),
+    mrow('Loyer/valeur locative','f2401',f.f2401),
+    mrow('Pécule de vacances','f2402',f.f2402),
+    mrow('Indemnité de rupture','f2431',f.f2431),
+    mrow('Rémunération non récurrente','f2418',f.f2418),
+    mrow('Travailleurs occasionnels','f2422',f.f2422),
+  ].filter(Boolean).join('');
+  const debAdr=[f.debAdresse,[f.debCp,f.debCommune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const benAdr=[f.benAdresse,[f.benCp,f.benCommune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const typeLabel=({0:'Original',1:'Modification',2:'Annulation',3:'Ajout'})[f.typeEnvoi]||'Original';
+  const html=`
+  <div class="fdp-sheet" style="display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(90deg,#0E3692,#1a4cb8);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:14px">
+      <div>
+        <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">Fiche fiscale 281.20</div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:.3px;margin-top:2px">Dirigeant d'entreprise · ${f.annee}</div>
+      </div>
+      <div style="text-align:right;font-size:11px;line-height:1.5">
+        <div style="opacity:.85;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px">Séquence</div>
+        <div style="font-size:20px;font-weight:800;font-family:'JetBrains Mono',Consolas,monospace">${String(f.volgnummer).padStart(4,'0')}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1;border:1.5px solid #0E3692;border-radius:8px;padding:11px 13px;background:#F7FAFF">
+        <div class="fdp-label" style="color:#0E3692;margin-bottom:4px">Débiteur des revenus</div>
+        <div class="fdp-value" style="font-size:13.5px">${escX(f.debNom||'—')}</div>
+        <div style="font-size:10.5px;color:#374151;margin-top:2px">${escX(debAdr)||'<span style="color:#c0c8d5">Adresse non renseignée</span>'}</div>
+        <div style="font-size:10.5px;color:#374151" class="money">${f.debBce?'BE '+fmtBce(f.debBce):'<span style="color:#c0c8d5">BCE manquant</span>'}</div>
+      </div>
+      <div style="flex:1;border:1.5px solid #0E3692;border-radius:8px;padding:11px 13px;background:#F7FAFF">
+        <div class="fdp-label" style="color:#0E3692;margin-bottom:4px">Bénéficiaire</div>
+        <div class="fdp-value" style="font-size:13.5px">${escX((f.prenom||'')+' '+(f.nom||''))}</div>
+        <div style="font-size:10.5px;color:#374151;margin-top:2px">${escX(benAdr)||'<span style="color:#c0c8d5">Adresse non renseignée</span>'}</div>
+        <div style="font-size:10.5px;color:#374151" class="money">NISS ${f.niss?fmtNiss(f.niss):'<span style="color:#c0c8d5">non renseigné</span>'}</div>
+      </div>
+    </div>
+
+    <div style="border:1px solid #c7d4f0;border-radius:8px;padding:10px 13px;margin-bottom:12px;background:#fff;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      <div><div class="fdp-label">Type d'envoi</div><div class="fdp-value">${typeLabel}</div></div>
+      <div><div class="fdp-label">Année revenus</div><div class="fdp-value">${f.annee||'—'}</div></div>
+      <div><div class="fdp-label">Séquence</div><div class="fdp-value money">${f.volgnummer||'—'}</div></div>
+      <div><div class="fdp-label">N° envoi orig.</div><div class="fdp-value money">${f.numEnvoiOrig||'—'}</div></div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div class="fdp-label" style="color:#0E3692;margin-bottom:6px">Rémunérations & retenues</div>
+      <table style="width:100%;border:1.5px solid #0E3692;border-radius:8px;border-collapse:separate;border-spacing:0;font-size:11.5px;table-layout:fixed;overflow:hidden">
+        <thead>
+          <tr style="background:#0E3692;color:#fff">
+            <th style="text-align:left;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Libellé</th>
+            <th style="text-align:center;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:100px">Code</th>
+            <th style="text-align:right;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:150px">Montant</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows||`<tr><td colspan="3" class="fdp-empty">Aucun montant encodé sur cette fiche</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="background:linear-gradient(135deg,#0E3692,#1a4cb8);color:#fff;border-radius:10px;padding:16px 22px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 14px rgba(14,54,146,.18)">
+      <div>
+        <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">Total contrôle (f2059)</div>
+        <div style="font-size:10.5px;opacity:.8;margin-top:2px">Somme des rémunérations imposables</div>
+      </div>
+      <div class="money" style="font-size:30px;font-weight:800;letter-spacing:.3px">${eur(f.f2059)} €</div>
+    </div>
+
+    <div style="border-top:2px solid #0E3692;padding-top:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;font-size:9.5px;color:#5f6f89;line-height:1.5">
+      <div>
+        <div style="color:#0E3692;font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em">${escX(exp.nom||'Mon Cabinet')}</div>
+        <div>${escX([exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(', '))||'—'}${exp.bce?' — BE '+fmtBce(exp.bce):''}</div>
+        <div>${exp.email?escX(exp.email):''}${exp.email&&exp.tel?' — ':''}${exp.tel?escX(exp.tel):''}</div>
+      </div>
+      <div style="text-align:right">Réf. ${escX((f.prenom||'?')[0])}${escX((f.nom||'?')[0])}-${f.annee}-${String(f.volgnummer).padStart(4,'0')}</div>
+    </div>
+  </div>`;
+  document.getElementById('ficheDoc').innerHTML=html;
+}
+async function downloadFichePdf(){
+  if(currFicheIdx<0)return;
+  const f=DB.fiches[currFicheIdx];
+  const src=document.getElementById('ficheDoc');
+  const filename=`Fiche_281.20_${slugifyName((f.prenom||'')+'_'+(f.nom||''))}_${f.annee}_${f.volgnummer}.pdf`;
+  if(window.html2pdf){
+    await window.html2pdf().set({
+      margin:[10,10,10,10],filename,
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    }).from(src).save();
+  } else {
+    printFicheSheet();
+  }
+}
+function printFicheSheet(){window.print();}
 function dlFicheXml(i){const f=DB.fiches[i];download(genXml(f),`fiche-28120-${f.annee}-${f.volgnummer}.xml`,'application/xml');}
 function dlFicheBow(i){const f=DB.fiches[i];download(genXml(f),`fiche-28120-${f.annee}-${f.volgnummer}.bow`,'application/octet-stream');}
 function dlCurrXml(){if(currFicheIdx>=0)dlFicheXml(currFicheIdx);}
