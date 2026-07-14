@@ -1304,33 +1304,78 @@ body.drawer-open{overflow:hidden}
   </div>
 </div>
 
+<!-- MODAL APERÇU FICHE 281.20 (visuel + XML + export) -->
+<div class="modal-bg" id="modalFichePreview">
+  <div class="modal" style="width:900px;max-width:96vw;padding:0;background:#F5F7FB;color:#1a1a1a">
+    <div class="modal-header" style="padding:16px 22px;background:#fff;border-bottom:1px solid #e5e9f2">
+      <div class="modal-title" style="color:#0E3692">🔍 <span id="fichePreviewTitle">Aperçu fiche 281.20</span></div>
+      <button class="modal-close" onclick="closeModal('modalFichePreview')">✕</button>
+    </div>
+    <div style="display:flex;gap:12px;padding:16px;background:#F5F7FB;max-height:76vh;overflow:auto">
+      <div id="ficheDocWrap" style="flex:1 1 60%;min-width:0">
+        <div id="ficheDoc"></div>
+      </div>
+      <aside style="flex:0 0 34%;min-width:280px;background:#fff;border:1px solid #e5e9f2;border-radius:10px;padding:12px;font-size:11px;overflow:auto;max-height:calc(76vh - 32px)">
+        <div style="font-weight:800;color:#0E3692;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px">Source XML</div>
+        <pre id="ficheXmlPrev" style="margin:0;font-family:'JetBrains Mono',Consolas,monospace;font-size:10.5px;line-height:1.5;color:#374151;white-space:pre-wrap;word-break:break-word"></pre>
+      </aside>
+    </div>
+    <div class="acts" style="padding:14px 22px;background:#fff;border-top:1px solid #e5e9f2;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <span id="ficheValidBadge" style="display:none;font-size:11px;padding:4px 10px;border-radius:999px;background:#DCFCE7;color:#166534;font-weight:600">✓ Prêt à envoyer</span>
+      <span style="margin-right:auto"></span>
+      <button class="btn" style="background:#0E3692;color:#fff" onclick="downloadFichePdf()">📥 Télécharger PDF</button>
+      <button class="btn btn-ghost" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de" onclick="printFicheSheet()">🖨️ Imprimer</button>
+      <button class="btn btn-ghost" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de" onclick="dlCurrXml()">📄 XML</button>
+      <button class="btn btn-ghost" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de" onclick="dlCurrBow()">📦 BOW</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalFichePreview')" style="background:#f0f2f5;color:#1a1a1a;border:1px solid #d0d7de">Fermer</button>
+    </div>
+  </div>
+</div>
+
 <style>
-#fdpDoc,#fdpDoc *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;box-sizing:border-box}
-#fdpDoc{background:#fff;color:#111827}
-#fdpDoc table{border-collapse:collapse;border-spacing:0}
-#fdpDoc .fdp-sheet{width:100%;max-width:718px;margin:0 auto;background:#fff;font-family:Arial,'Helvetica Neue',sans-serif;color:#111827;font-size:11.5px;line-height:1.42}
-#fdpDoc .fdp-block{border:1px solid #d7deea;border-radius:6px;background:#fff;overflow:hidden}
-#fdpDoc .fdp-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:#5f6f89}
-#fdpDoc .fdp-value{font-size:11.2px;font-weight:700;color:#111827}
-#fdpDoc .fdp-money{font-family:Consolas,'Courier New',monospace;font-variant-numeric:tabular-nums}
+/* Zone PDF partagée (fdpDoc + ficheDoc) */
+#fdpDoc,#fdpDoc *,#ficheDoc,#ficheDoc *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;box-sizing:border-box}
+#fdpDoc,#ficheDoc{background:#fff;color:#111827}
+#fdpDoc table,#ficheDoc table{border-collapse:collapse;border-spacing:0}
+#fdpDoc .fdp-sheet,#ficheDoc .fdp-sheet{
+  width:100%;max-width:718px;margin:0 auto;background:#fff;
+  font-family:'Inter','Segoe UI','Helvetica Neue',Arial,sans-serif;
+  color:#111827;font-size:11.5px;line-height:1.45;
+  letter-spacing:-0.005em;
+}
+#fdpDoc .fdp-block,#ficheDoc .fdp-block{border:1px solid #d7deea;border-radius:8px;background:#fff;overflow:hidden}
+#fdpDoc .fdp-label,#ficheDoc .fdp-label{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#5f6f89}
+#fdpDoc .fdp-value,#ficheDoc .fdp-value{font-size:11.2px;font-weight:700;color:#111827}
+#fdpDoc .fdp-money,#ficheDoc .fdp-money,#ficheDoc .money{
+  font-family:'JetBrains Mono','Consolas','Courier New',monospace;
+  font-variant-numeric:tabular-nums;
+  font-feature-settings:"tnum";
+}
+#fdpDoc .fdp-empty,#ficheDoc .fdp-empty{
+  padding:24px 18px;text-align:center;color:#9aa3ad;font-style:italic;
+  background:repeating-linear-gradient(45deg,#f8fafc,#f8fafc 6px,#f1f5f9 6px,#f1f5f9 12px);
+  border-radius:6px;font-size:11px;
+}
+#ficheDoc .fdp-sheet{background:#fff;padding:16px 18px;border-radius:10px;box-shadow:0 4px 16px rgba(14,54,146,.06);border:1px solid #e5e9f2}
 @media print{
   @page{size:A4;margin:10mm}
   body *{visibility:hidden}
-  #fdpDoc,#fdpDoc *{visibility:visible}
-  #fdpDoc{position:absolute;top:0;left:0;width:100%;padding:0!important;background:#fff!important}
-  #fdpDoc .fdp-sheet{max-width:none;width:190mm}
-  #fdpActions{display:none!important}
+  #fdpDoc,#fdpDoc *,#ficheDoc,#ficheDoc *{visibility:visible}
+  #fdpDoc,#ficheDoc{position:absolute;top:0;left:0;width:100%;padding:0!important;background:#fff!important;box-shadow:none!important;border:none!important}
+  #fdpDoc .fdp-sheet,#ficheDoc .fdp-sheet{max-width:none;width:190mm;box-shadow:none!important;border:none!important;padding:0!important}
+  #fdpActions,#ficheDoc + *,#modalFichePreview .acts,#modalFichePreview aside,#modalFichePreview .modal-header{display:none!important}
   .modal-bg{position:absolute;background:none}
-  .modal{box-shadow:none!important;width:100%!important}
+  .modal{box-shadow:none!important;width:100%!important;padding:0!important}
 }
 .fdp-row{display:flex;justify-content:space-between;font-size:12px;padding:6px 0;border-bottom:1px solid #eef0f2}
 .fdp-row:last-child{border:none}
 .fdp-tag{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0E3692;margin-bottom:8px}
-#fdpDoc h1,#fdpDoc h2,#fdpDoc h3{color:#0E3692}
-#fdpDoc .fdp-accent{color:#0E3692}
-#fdpDoc .fdp-band{background:#0E3692;color:#fff;padding:8px 12px;border-radius:4px;font-weight:700;letter-spacing:.04em}
-#fdpDoc .fdp-band-soft{background:#EAF0FB;color:#0E3692;padding:6px 10px;border-left:3px solid #0E3692}
+#fdpDoc h1,#fdpDoc h2,#fdpDoc h3,#ficheDoc h1,#ficheDoc h2,#ficheDoc h3{color:#0E3692}
+#fdpDoc .fdp-accent,#ficheDoc .fdp-accent{color:#0E3692}
+#fdpDoc .fdp-band,#ficheDoc .fdp-band{background:#0E3692;color:#fff;padding:8px 12px;border-radius:6px;font-weight:700;letter-spacing:.04em}
+#fdpDoc .fdp-band-soft,#ficheDoc .fdp-band-soft{background:#EAF0FB;color:#0E3692;padding:6px 10px;border-left:3px solid #0E3692}
 </style>
+
 
 <!-- HEADER -->
 <header class="hdr">
@@ -3938,12 +3983,152 @@ function genXml(f){
 }
 
 function previewFiche(i){
-  const f=DB.fiches[i];currXml=genXml(f);currFicheIdx=i;
-  document.getElementById('xmlPrev').textContent=currXml;
-  document.getElementById('previewTitle').textContent=`${f.prenom} ${f.nom} · ${fmtBce(f.debBce)} · Séq. ${f.volgnummer}`;
-  document.getElementById('previewCard').style.display='block';
-  document.getElementById('previewCard').scrollIntoView({behavior:'smooth'});
+  const f=DB.fiches[i];
+  currXml=genXml(f);currFicheIdx=i;
+  // 1) legacy panel (source XML) — conservé pour la vue latérale
+  const xp=document.getElementById('xmlPrev');if(xp)xp.textContent=currXml;
+  const pt=document.getElementById('previewTitle');
+  if(pt)pt.textContent=`${f.prenom} ${f.nom} · ${fmtBce(f.debBce)} · Séq. ${f.volgnummer}`;
+  // 2) Nouveau modal avec rendu visuel + XML
+  renderFicheSheet(f);
+  const xmlPrev=document.getElementById('ficheXmlPrev');
+  if(xmlPrev)xmlPrev.textContent=currXml;
+  document.getElementById('fichePreviewTitle').textContent=
+    `Aperçu 281.20 · ${f.prenom} ${f.nom} · Séq. ${f.volgnummer} · ${f.annee}`;
+  // Badge de validité (contrôles rapides)
+  const badge=document.getElementById('ficheValidBadge');
+  const errs=validateFiche(f);
+  if(errs.length===0){badge.style.display='inline-block';badge.textContent='✓ Fiche valide';badge.style.background='#DCFCE7';badge.style.color='#166534';}
+  else{badge.style.display='inline-block';badge.textContent=`⚠ ${errs.length} contrôle(s) à vérifier`;badge.style.background='#FEF3C7';badge.style.color='#92400E';badge.title=errs.join('\n');}
+  openModal('modalFichePreview');
 }
+function validateFiche(f){
+  const errs=[];
+  if(!f.nom||!f.prenom)errs.push('Nom/Prénom bénéficiaire manquant');
+  if(!f.niss)errs.push('NISS manquant');
+  if(!f.debBce)errs.push('BCE débiteur manquant');
+  if(!f.debNom)errs.push('Raison sociale débiteur manquante');
+  if(!f.annee)errs.push('Année manquante');
+  if(!f.f2060&&!f.f2062&&!f.f2068)errs.push('Aucune rémunération encodée');
+  const totCheck=(f.f2060||0)+(f.f2062||0)+(f.f2068||0);
+  if(f.f2063&&Math.abs(f.f2063-totCheck)>1)errs.push('f2063 ≠ f2060+f2062+f2068');
+  return errs;
+}
+function renderFicheSheet(f){
+  const exp=f.exp||DB.exp||{};
+  const eur=v=>((v||0)/100).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const mrow=(lbl,code,val,accent)=>val>0?`
+    <tr>
+      <td style="padding:7px 12px;border-bottom:1px solid #eef2f8;color:#111827">${lbl}</td>
+      <td style="padding:7px 12px;border-bottom:1px solid #eef2f8;text-align:center;color:#5f6f89;font-size:10.5px;font-family:'JetBrains Mono',Consolas,monospace">${code}</td>
+      <td class="money" style="padding:7px 12px;border-bottom:1px solid #eef2f8;text-align:right;font-weight:700;${accent?'color:#0E3692':'color:#111827'}">${eur(val)} €</td>
+    </tr>`:'';
+  const rows=[
+    mrow('a) Rémunérations périodiques','f2060',f.f2060),
+    mrow('b) Autres rémunérations','f2062',f.f2062),
+    mrow('c) Avantages de toute nature','f2068',f.f2068),
+    mrow('Total brut (a+b+c)','f2063',f.f2063,true),
+    mrow('Précompte professionnel retenu','f2066',f.f2066),
+    mrow('Cadre 19 — sommes restituées','f2204',f.f2204),
+    mrow('Indemnités avec justificatifs','f2201',f.f2201),
+    mrow('Indemnités forfaitaires (barèmes)','f2200',f.f2200),
+    mrow('Total contrôle','f2059',f.f2059,true),
+    mrow('Loyer/valeur locative','f2401',f.f2401),
+    mrow('Pécule de vacances','f2402',f.f2402),
+    mrow('Indemnité de rupture','f2431',f.f2431),
+    mrow('Rémunération non récurrente','f2418',f.f2418),
+    mrow('Travailleurs occasionnels','f2422',f.f2422),
+  ].filter(Boolean).join('');
+  const debAdr=[f.debAdresse,[f.debCp,f.debCommune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const benAdr=[f.benAdresse,[f.benCp,f.benCommune].filter(Boolean).join(' ')].filter(Boolean).join(', ');
+  const typeLabel=({0:'Original',1:'Modification',2:'Annulation',3:'Ajout'})[f.typeEnvoi]||'Original';
+  const html=`
+  <div class="fdp-sheet" style="display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;background:linear-gradient(90deg,#0E3692,#1a4cb8);color:#fff;padding:18px 22px;border-radius:8px;margin-bottom:14px">
+      <div>
+        <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">Fiche fiscale 281.20</div>
+        <div style="font-size:24px;font-weight:800;letter-spacing:.3px;margin-top:2px">Dirigeant d'entreprise · ${f.annee}</div>
+      </div>
+      <div style="text-align:right;font-size:11px;line-height:1.5">
+        <div style="opacity:.85;text-transform:uppercase;letter-spacing:.08em;font-size:9.5px">Séquence</div>
+        <div style="font-size:20px;font-weight:800;font-family:'JetBrains Mono',Consolas,monospace">${String(f.volgnummer).padStart(4,'0')}</div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-bottom:12px">
+      <div style="flex:1;border:1.5px solid #0E3692;border-radius:8px;padding:11px 13px;background:#F7FAFF">
+        <div class="fdp-label" style="color:#0E3692;margin-bottom:4px">Débiteur des revenus</div>
+        <div class="fdp-value" style="font-size:13.5px">${escX(f.debNom||'—')}</div>
+        <div style="font-size:10.5px;color:#374151;margin-top:2px">${escX(debAdr)||'<span style="color:#c0c8d5">Adresse non renseignée</span>'}</div>
+        <div style="font-size:10.5px;color:#374151" class="money">${f.debBce?'BE '+fmtBce(f.debBce):'<span style="color:#c0c8d5">BCE manquant</span>'}</div>
+      </div>
+      <div style="flex:1;border:1.5px solid #0E3692;border-radius:8px;padding:11px 13px;background:#F7FAFF">
+        <div class="fdp-label" style="color:#0E3692;margin-bottom:4px">Bénéficiaire</div>
+        <div class="fdp-value" style="font-size:13.5px">${escX((f.prenom||'')+' '+(f.nom||''))}</div>
+        <div style="font-size:10.5px;color:#374151;margin-top:2px">${escX(benAdr)||'<span style="color:#c0c8d5">Adresse non renseignée</span>'}</div>
+        <div style="font-size:10.5px;color:#374151" class="money">NISS ${f.niss?fmtNiss(f.niss):'<span style="color:#c0c8d5">non renseigné</span>'}</div>
+      </div>
+    </div>
+
+    <div style="border:1px solid #c7d4f0;border-radius:8px;padding:10px 13px;margin-bottom:12px;background:#fff;display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+      <div><div class="fdp-label">Type d'envoi</div><div class="fdp-value">${typeLabel}</div></div>
+      <div><div class="fdp-label">Année revenus</div><div class="fdp-value">${f.annee||'—'}</div></div>
+      <div><div class="fdp-label">Séquence</div><div class="fdp-value money">${f.volgnummer||'—'}</div></div>
+      <div><div class="fdp-label">N° envoi orig.</div><div class="fdp-value money">${f.numEnvoiOrig||'—'}</div></div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div class="fdp-label" style="color:#0E3692;margin-bottom:6px">Rémunérations & retenues</div>
+      <table style="width:100%;border:1.5px solid #0E3692;border-radius:8px;border-collapse:separate;border-spacing:0;font-size:11.5px;table-layout:fixed;overflow:hidden">
+        <thead>
+          <tr style="background:#0E3692;color:#fff">
+            <th style="text-align:left;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700">Libellé</th>
+            <th style="text-align:center;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:100px">Code</th>
+            <th style="text-align:right;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:700;width:150px">Montant</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows||`<tr><td colspan="3" class="fdp-empty">Aucun montant encodé sur cette fiche</td></tr>`}
+        </tbody>
+      </table>
+    </div>
+
+    <div style="background:linear-gradient(135deg,#0E3692,#1a4cb8);color:#fff;border-radius:10px;padding:16px 22px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 14px rgba(14,54,146,.18)">
+      <div>
+        <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:.14em;opacity:.85;font-weight:700">Total contrôle (f2059)</div>
+        <div style="font-size:10.5px;opacity:.8;margin-top:2px">Somme des rémunérations imposables</div>
+      </div>
+      <div class="money" style="font-size:30px;font-weight:800;letter-spacing:.3px">${eur(f.f2059)} €</div>
+    </div>
+
+    <div style="border-top:2px solid #0E3692;padding-top:10px;margin-top:8px;display:flex;justify-content:space-between;align-items:flex-end;gap:12px;font-size:9.5px;color:#5f6f89;line-height:1.5">
+      <div>
+        <div style="color:#0E3692;font-weight:800;font-size:10.5px;text-transform:uppercase;letter-spacing:.05em">${escX(exp.nom||'Mon Cabinet')}</div>
+        <div>${escX([exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(', '))||'—'}${exp.bce?' — BE '+fmtBce(exp.bce):''}</div>
+        <div>${exp.email?escX(exp.email):''}${exp.email&&exp.tel?' — ':''}${exp.tel?escX(exp.tel):''}</div>
+      </div>
+      <div style="text-align:right">Réf. ${escX((f.prenom||'?')[0])}${escX((f.nom||'?')[0])}-${f.annee}-${String(f.volgnummer).padStart(4,'0')}</div>
+    </div>
+  </div>`;
+  document.getElementById('ficheDoc').innerHTML=html;
+}
+async function downloadFichePdf(){
+  if(currFicheIdx<0)return;
+  const f=DB.fiches[currFicheIdx];
+  const src=document.getElementById('ficheDoc');
+  const filename=`Fiche_281.20_${slugifyName((f.prenom||'')+'_'+(f.nom||''))}_${f.annee}_${f.volgnummer}.pdf`;
+  if(window.html2pdf){
+    await window.html2pdf().set({
+      margin:[10,10,10,10],filename,
+      image:{type:'jpeg',quality:0.98},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff'},
+      jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}
+    }).from(src).save();
+  } else {
+    printFicheSheet();
+  }
+}
+function printFicheSheet(){window.print();}
 function dlFicheXml(i){const f=DB.fiches[i];download(genXml(f),`fiche-28120-${f.annee}-${f.volgnummer}.xml`,'application/xml');}
 function dlFicheBow(i){const f=DB.fiches[i];download(genXml(f),`fiche-28120-${f.annee}-${f.volgnummer}.bow`,'application/octet-stream');}
 function dlCurrXml(){if(currFicheIdx>=0)dlFicheXml(currFicheIdx);}
@@ -4526,7 +4711,7 @@ function openFicheDePaie(idx){
           </tr>
         </thead>
         <tbody>
-          ${lines.join('')||`<tr><td colspan="3" style="padding:18px;text-align:center;color:#9aa3ad">${T.aucun}</td></tr>`}
+          ${lines.join('')||`<tr><td colspan="3" class="fdp-empty">${T.aucun||'Aucune ligne de rémunération pour cette période'}</td></tr>`}
         </tbody>
       </table>
     </div>
