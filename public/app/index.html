@@ -982,7 +982,12 @@ body.drawer-open{overflow:hidden}
   }
   .hdr-logo .name{display:none}
   .hdr-logo .ver{display:none}
-  .hdr-nav{gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .hdr-nav{
+    gap:2px;overflow-x:auto;overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none;
+    margin-left:8px!important;flex:1 1 0;min-width:0;
+    mask-image:linear-gradient(to right,#000 0,#000 calc(100% - 24px),transparent 100%);
+  }
   .hdr-nav::-webkit-scrollbar{display:none}
   .nav-btn{
     padding:8px 10px;font-size:12px;white-space:nowrap;
