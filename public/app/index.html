@@ -513,29 +513,89 @@ html[data-theme="dark"] .icon-red{color:#FCA5A5}
 html[data-theme="dark"] .btn-danger{color:#FCA5A5}
 html[data-theme="dark"] .btn-danger:hover{color:#FECACA}
 
-/* ── FORMULAIRES ── */
-.fld label{color:var(--text2);font-weight:500;font-size:12.5px}
+/* ── FORMULAIRES — Future-Soft (shadcn-inspired) ── */
+.fld{gap:6px}
+.fld label{
+  color:var(--text2);font-weight:500;font-size:12px;
+  letter-spacing:.01em;line-height:1.3;
+  display:inline-flex;align-items:center;gap:6px;
+}
+/* Required marker: any label ending with * gets a soft accent */
+.fld label::after{content:""}
 .fld input,.fld select,.fld textarea{
   background:var(--surface-solid);
   border:1px solid var(--border2);
-  border-radius:12px;
+  border-radius:10px;
   color:var(--text);
-  padding:10px 13px;
-  transition:border-color .18s ease,box-shadow .18s ease;
+  padding:9px 12px;
+  font-size:13.5px;
+  line-height:1.4;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease;
   font-family:inherit;
+  width:100%;
+  box-sizing:border-box;
 }
-html[data-theme="dark"] .fld input,html[data-theme="dark"] .fld select,html[data-theme="dark"] .fld textarea{
-  background:var(--surface-solid);
+.fld input::placeholder,.fld textarea::placeholder{color:var(--text3);opacity:.75}
+.fld input:hover:not(:focus):not([readonly]):not(:disabled),
+.fld select:hover:not(:focus):not(:disabled),
+.fld textarea:hover:not(:focus):not([readonly]):not(:disabled){
+  border-color:color-mix(in oklab,var(--primary) 40%,var(--border2));
 }
 .fld input:focus,.fld select:focus,.fld textarea:focus{
   border-color:var(--primary);
-  box-shadow:0 0 0 3px rgba(59,130,246,0.15);
+  box-shadow:0 0 0 3px rgba(59,130,246,0.18);
+  outline:none;
 }
-.fld input.amt{font-family:'JetBrains Mono',Consolas,monospace;font-variant-numeric:tabular-nums}
-.fld .hint{color:var(--text3)}
+.fld input:disabled,.fld select:disabled,.fld textarea:disabled{
+  opacity:.55;cursor:not-allowed;background:rgba(15,23,42,0.03);
+}
+html[data-theme="dark"] .fld input:disabled,html[data-theme="dark"] .fld select:disabled{background:rgba(255,255,255,0.03)}
+
+/* Custom select chevron */
+.fld select{
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
+  background-repeat:no-repeat;background-position:right 11px center;padding-right:32px;
+}
+
+.fld input.amt{font-family:'JetBrains Mono',Consolas,monospace;font-variant-numeric:tabular-nums;text-align:right}
+
+/* Hints & validation states */
+.fld .hint{color:var(--text3);font-size:11.5px;margin-top:2px;display:inline-flex;align-items:center;gap:4px}
 .fld .hint.ok{color:var(--teal-d)}
 .fld .hint.warn{color:#B45309}
-.pfx-label{color:var(--text3)}
+.fld .hint.err,.fld .hint.error{color:#B91C1C}
+html[data-theme="dark"] .fld .hint.err,html[data-theme="dark"] .fld .hint.error{color:#FCA5A5}
+html[data-theme="dark"] .fld .hint.warn{color:#FCD34D}
+
+/* Error state (via aria-invalid or .is-invalid) */
+.fld input[aria-invalid="true"],.fld select[aria-invalid="true"],.fld textarea[aria-invalid="true"],
+.fld input.is-invalid,.fld select.is-invalid,.fld textarea.is-invalid{
+  border-color:#DC2626;
+  background:rgba(220,38,38,0.04);
+}
+.fld input[aria-invalid="true"]:focus,.fld select[aria-invalid="true"]:focus,.fld textarea[aria-invalid="true"]:focus,
+.fld input.is-invalid:focus,.fld select.is-invalid:focus,.fld textarea.is-invalid:focus{
+  box-shadow:0 0 0 3px rgba(220,38,38,0.18);
+  border-color:#DC2626;
+}
+
+/* Success state */
+.fld input.is-valid,.fld select.is-valid,.fld textarea.is-valid{
+  border-color:rgba(16,185,129,0.55);
+}
+
+.pfx{display:flex;align-items:stretch;border:1px solid var(--border2);border-radius:10px;overflow:hidden;background:var(--surface-solid);transition:border-color .18s,box-shadow .18s}
+.pfx:focus-within{border-color:var(--primary);box-shadow:0 0 0 3px rgba(59,130,246,0.18)}
+.pfx-label{
+  background:rgba(59,130,246,0.06);
+  color:var(--primary-d);
+  padding:0 11px;display:flex;align-items:center;
+  font-family:'JetBrains Mono',Consolas,monospace;font-size:12px;font-weight:600;
+  border-right:1px solid var(--border2);
+}
+.pfx input{border:none!important;border-radius:0!important;box-shadow:none!important;background:transparent!important}
+.pfx input:focus{box-shadow:none!important}
 
 /* Auto-calculated field style (lavande) */
 .fld input[readonly]{
@@ -546,6 +606,58 @@ html[data-theme="dark"] .fld input,html[data-theme="dark"] .fld select,html[data
 html[data-theme="dark"] .fld input[readonly]{
   background:rgba(167,139,250,0.14);color:#C4B5FD;
 }
+
+/* ── SEARCH & FILTERS ── */
+.search-input,input[type="search"],input[placeholder^="🔎"],input[placeholder^="Rechercher"]{
+  background:var(--surface-solid);
+  border:1px solid var(--border2);
+  border-radius:10px;
+  padding:8px 12px 8px 34px;
+  color:var(--text);
+  font-size:13px;
+  width:100%;
+  box-sizing:border-box;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><circle cx='11' cy='11' r='7'/><line x1='21' y1='21' x2='16.5' y2='16.5'/></svg>");
+  background-repeat:no-repeat;background-position:11px center;
+  transition:border-color .18s,box-shadow .18s;
+}
+.search-input:focus,input[type="search"]:focus{
+  border-color:var(--primary);
+  box-shadow:0 0 0 3px rgba(59,130,246,0.18);
+  outline:none;
+}
+
+/* Filter chips row */
+.filter-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 12px;border-radius:999px;
+  background:var(--surface-solid);
+  border:1px solid var(--border2);
+  color:var(--text2);
+  font-size:12px;font-weight:500;
+  cursor:pointer;user-select:none;
+  transition:all .15s ease;
+}
+.chip:hover{border-color:color-mix(in oklab,var(--primary) 50%,var(--border2));color:var(--text)}
+.chip.active,.chip[aria-pressed="true"]{
+  background:rgba(59,130,246,0.10);
+  border-color:var(--primary);
+  color:var(--primary-d);
+}
+html[data-theme="dark"] .chip.active,html[data-theme="dark"] .chip[aria-pressed="true"]{color:#93C5FD}
+.chip .count{
+  background:rgba(15,23,42,0.06);padding:1px 7px;border-radius:999px;
+  font-size:10.5px;font-family:'JetBrains Mono',Consolas,monospace;
+}
+html[data-theme="dark"] .chip .count{background:rgba(255,255,255,0.08)}
+
+/* Checkbox / radio polish */
+.fld input[type="checkbox"],.fld input[type="radio"]{
+  width:16px;height:16px;padding:0;accent-color:var(--primary);cursor:pointer;
+}
+label.chk{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:var(--text2)}
+label.chk:hover{color:var(--text)}
 
 /* ── TABLEAUX ── */
 .tbl-wrap{
