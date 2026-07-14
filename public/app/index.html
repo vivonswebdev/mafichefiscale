@@ -4571,7 +4571,7 @@ function openFicheDePaie(idx){
           </tr>
         </thead>
         <tbody>
-          ${lines.join('')||`<tr><td colspan="3" style="padding:18px;text-align:center;color:#9aa3ad">${T.aucun}</td></tr>`}
+          ${lines.join('')||`<tr><td colspan="3" class="fdp-empty">${T.aucun||'Aucune ligne de rémunération pour cette période'}</td></tr>`}
         </tbody>
       </table>
     </div>
