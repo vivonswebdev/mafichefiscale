@@ -701,7 +701,9 @@ html[data-theme="dark"] .tag-red{color:#FCA5A5}
 html[data-theme="dark"] .tag-gray{background:rgba(255,255,255,0.06);color:var(--text2)}
 
 /* ── MODALS ── */
-.modal-bg{background:rgba(15,23,42,0.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.modal-bg{background:rgba(15,23,42,0.32);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .22s ease}
+.modal-bg.open{opacity:1}
+.modal-bg.closing{opacity:0}
 html[data-theme="dark"] .modal-bg{background:rgba(0,0,0,0.55)}
 .modal{
   background:var(--surface2);
@@ -710,13 +712,25 @@ html[data-theme="dark"] .modal-bg{background:rgba(0,0,0,0.55)}
   border:1px solid var(--border-glass);
   border-radius:24px;
   box-shadow:var(--shadow-modal);
-  animation:modalIn .28s cubic-bezier(.16,1,.3,1);
+  animation:modalIn .32s cubic-bezier(.16,1,.3,1);
+  position:relative;
 }
-@keyframes modalIn{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modal-bg.closing .modal{animation:modalOut .22s cubic-bezier(.4,0,1,1) forwards}
+@keyframes modalIn{from{opacity:0;transform:scale(.96) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes modalOut{from{opacity:1;transform:scale(1) translateY(0)}to{opacity:0;transform:scale(.97) translateY(4px)}}
 .modal-title{color:var(--text);font-weight:700;letter-spacing:-0.01em}
 .modal-close{color:var(--text3);border-radius:8px;transition:all .18s}
 .modal-close:hover{color:var(--text);background:rgba(15,23,42,0.06)}
+.modal-close:focus-visible,.modal :focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 html[data-theme="dark"] .modal-close:hover{background:rgba(255,255,255,0.06)}
+/* Loading overlay inside modals */
+.modal-loading{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:color-mix(in oklab,var(--surface2) 78%,transparent);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-radius:inherit;z-index:5;animation:mfIn .18s ease}
+.modal-loading.on{display:flex}
+.modal-loading .spin{width:34px;height:34px;border-radius:50%;border:3px solid color-mix(in oklab,var(--primary) 22%,transparent);border-top-color:var(--primary);animation:mfSpin .8s linear infinite}
+.modal-loading .lbl{font-size:13px;color:var(--text2);font-weight:600}
+@keyframes mfSpin{to{transform:rotate(360deg)}}
+@keyframes mfIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){.modal,.modal-bg,.modal-bg.closing .modal{animation:none!important;transition:none!important}}
 
 /* ── NOTIFS ── */
 .notif{
