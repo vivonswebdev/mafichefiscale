@@ -6389,9 +6389,72 @@ function openAttestation(){
 // ══════════════════════════════════════════════
 // MODAL
 // ══════════════════════════════════════════════
-function openModal(id){document.getElementById(id).classList.add('open');if(id==='modalExp')loadExp();}
-function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='modalFichePaie'){document.title='mafiche.be';currentPdfFilename=null;}}
-document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open');}));
+// MODAL — focus management, ESC, animations, loading
+const _modalStack = [];
+const _FOCUSABLE = 'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
+function _trapFocus(e, modal){
+  if(e.key!=='Tab')return;
+  const f = modal.querySelectorAll(_FOCUSABLE);
+  if(!f.length)return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey && document.activeElement===first){e.preventDefault();last.focus();}
+  else if(!e.shiftKey && document.activeElement===last){e.preventDefault();first.focus();}
+}
+function openModal(id){
+  const bg = document.getElementById(id); if(!bg) return;
+  const modal = bg.querySelector('.modal');
+  bg.classList.remove('closing');
+  bg.classList.add('open');
+  bg.setAttribute('role','dialog');
+  bg.setAttribute('aria-modal','true');
+  if(modal && !modal.hasAttribute('tabindex')) modal.setAttribute('tabindex','-1');
+  // Ensure loading overlay exists
+  if(modal && !modal.querySelector(':scope > .modal-loading')){
+    const ov=document.createElement('div');
+    ov.className='modal-loading';
+    ov.innerHTML='<div class="spin" aria-hidden="true"></div><div class="lbl">Chargement…</div>';
+    ov.setAttribute('role','status');ov.setAttribute('aria-live','polite');
+    modal.appendChild(ov);
+  }
+  const prevFocus = document.activeElement;
+  _modalStack.push({id, prevFocus});
+  document.body.style.overflow='hidden';
+  // Focus first field
+  setTimeout(()=>{
+    const target = modal.querySelector('[autofocus]') || modal.querySelector(_FOCUSABLE) || modal;
+    try{target.focus({preventScroll:true});}catch(_){}
+  },50);
+  if(id==='modalExp' && typeof loadExp==='function') loadExp();
+}
+function closeModal(id){
+  const bg = document.getElementById(id); if(!bg || !bg.classList.contains('open')) return;
+  bg.classList.add('closing');
+  const cleanup = ()=>{
+    bg.classList.remove('open','closing');
+    bg.removeAttribute('role');bg.removeAttribute('aria-modal');
+    const idx = _modalStack.findIndex(x=>x.id===id);
+    let prev = null;
+    if(idx>=0){prev=_modalStack[idx].prevFocus; _modalStack.splice(idx,1);}
+    if(!_modalStack.length) document.body.style.overflow='';
+    if(prev && typeof prev.focus==='function'){try{prev.focus({preventScroll:true});}catch(_){}}
+    if(id==='modalFichePaie'){document.title='mafiche.be';if(typeof currentPdfFilename!=='undefined')currentPdfFilename=null;}
+  };
+  setTimeout(cleanup, 220);
+}
+function modalLoading(id, on, label){
+  const bg=document.getElementById(id); if(!bg)return;
+  const ov=bg.querySelector('.modal-loading'); if(!ov)return;
+  if(label) ov.querySelector('.lbl').textContent=label;
+  ov.classList.toggle('on', !!on);
+}
+document.querySelectorAll('.modal-bg').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)closeModal(m.id);}));
+document.addEventListener('keydown',e=>{
+  if(!_modalStack.length) return;
+  const top=_modalStack[_modalStack.length-1];
+  const bg=document.getElementById(top.id); if(!bg)return;
+  if(e.key==='Escape'){e.stopPropagation();closeModal(top.id);}
+  else if(e.key==='Tab'){ _trapFocus(e, bg.querySelector('.modal')); }
+},true);
 
 // ══════════════════════════════════════════════
 // INIT
