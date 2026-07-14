@@ -6209,6 +6209,37 @@ function initTheme(){
   applyTheme(t);
 }
 initTheme();
+
+// ── Mobile drawer ──
+function isMobileView(){return window.matchMedia('(max-width:900px)').matches}
+function openMobileDrawer(){
+  const sb=document.querySelector('.sidebar:not([style*="display:none"])')||document.getElementById('clientSidebar');
+  if(!sb)return;
+  sb.classList.add('open');
+  document.body.classList.add('drawer-open');
+  const t=document.getElementById('sidebarToggle');
+  if(t)t.setAttribute('aria-expanded','true');
+}
+function closeMobileDrawer(){
+  document.querySelectorAll('.sidebar.open').forEach(s=>s.classList.remove('open'));
+  document.body.classList.remove('drawer-open');
+  const t=document.getElementById('sidebarToggle');
+  if(t)t.setAttribute('aria-expanded','false');
+}
+function toggleMobileDrawer(){
+  if(document.body.classList.contains('drawer-open'))closeMobileDrawer();
+  else openMobileDrawer();
+}
+// ESC pour fermer + fermer sur clic dans un lien client (mobile)
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeMobileDrawer();});
+document.addEventListener('click',e=>{
+  if(!isMobileView())return;
+  const item=e.target.closest('#sidebarClients .sidebar-item,#sidebarClients [onclick*="selectClient"]');
+  if(item)setTimeout(closeMobileDrawer,120);
+},true);
+// Fermer si on repasse desktop
+window.addEventListener('resize',()=>{if(!isMobileView())closeMobileDrawer();});
+
 window.onload=()=>{
   load();
   // ── MIGRATION : recalcule f2063 et f2059 sur toutes les fiches stockées ──
