@@ -28,6 +28,8 @@ function safeNext(raw: string): string | null {
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
+  const nextPath = safeNext(next);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,11 +37,25 @@ function AuthPage() {
   const [cabinet, setCabinet] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const goAfterAuth = () => {
+    if (nextPath) {
+      window.location.href = nextPath;
+    } else {
+      navigate({ to: "/dashboard" });
+    }
+  };
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard" });
+      if (data.session) {
+        if (nextPath) {
+          window.location.href = nextPath;
+        } else {
+          navigate({ to: "/dashboard" });
+        }
+      }
     });
-  }, [navigate]);
+  }, [navigate, nextPath]);
 
   async function handleEmail(e: React.FormEvent) {
     e.preventDefault();
@@ -56,7 +72,9 @@ function AuthPage() {
           email,
           password,
           options: {
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: nextPath
+              ? `${window.location.origin}${nextPath}`
+              : window.location.origin,
             data: { full_name: fullName, cabinet },
           },
         });
@@ -67,7 +85,7 @@ function AuthPage() {
         if (error) throw error;
         toast.success("Connecté");
       }
-      navigate({ to: "/dashboard" });
+      goAfterAuth();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Erreur");
     } finally {
@@ -78,7 +96,9 @@ function AuthPage() {
   async function handleGoogle() {
     setLoading(true);
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: nextPath
+        ? `${window.location.origin}${nextPath}`
+        : window.location.origin,
     });
     if (result.error) {
       toast.error("Échec connexion Google");
@@ -86,8 +106,9 @@ function AuthPage() {
       return;
     }
     if (result.redirected) return;
-    navigate({ to: "/dashboard" });
+    goAfterAuth();
   }
+
 
   return (
     <div className="min-h-screen bg-bg text-ink flex items-center justify-center px-6">
