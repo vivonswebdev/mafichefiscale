@@ -3,6 +3,7 @@ import listClients from "./tools/list-clients";
 import listFiches from "./tools/list-fiches";
 import listDirigeants from "./tools/list-dirigeants";
 import createFiche from "./tools/create-fiche";
+import listUpcomingDeadlines from "./tools/list-upcoming-deadlines";
 
 // Managed Cloud Auth publishes the issuer on the direct supabase.co host.
 // VITE_SUPABASE_PROJECT_ID is inlined at build time by Vite.
@@ -18,5 +19,5 @@ export default defineMcp({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [listClients, listFiches, listDirigeants, createFiche],
+  tools: [listClients, listFiches, listDirigeants, createFiche, listUpcomingDeadlines],
 });

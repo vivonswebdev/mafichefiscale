@@ -172,6 +172,47 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "list_upcoming_deadlines",
+        "title": "Lister les échéances fiscales à venir",
+        "description": "Retourne les échéances fiscales à venir pour les clients du cabinet connecté : TVA (mensuelle/trimestrielle), impôt des sociétés (7 mois après clôture), renouvellement CSAM, fiches 281.20 du millésime en cours, et factures non payées. Chaque échéance inclut le client, la catégorie, la date clé et un statut (en_retard, urgent, a_venir, planifie).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "client_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Restreindre les échéances à un dossier client précis."
+            },
+            "horizon_days": {
+              "type": "integer",
+              "minimum": 7,
+              "maximum": 730,
+              "default": 180,
+              "description": "Fenêtre en jours à partir d'aujourd'hui (défaut 180)."
+            },
+            "include_overdue": {
+              "type": "boolean",
+              "default": true,
+              "description": "Inclure les échéances déjà dépassées mais non clôturées."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 200
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
       }
     ]
   }
