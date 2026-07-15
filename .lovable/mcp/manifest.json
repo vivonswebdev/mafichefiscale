@@ -113,6 +113,65 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "create_fiche",
+        "title": "Créer une fiche 281.20",
+        "description": "Génère automatiquement une nouvelle fiche fiscale 281.20 à partir d'un client (et optionnellement d'un dirigeant) pour le millésime indiqué. La fiche est créée en brouillon, sous l'identité de l'utilisateur connecté (RLS).",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "client_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID du client concerné par la fiche."
+            },
+            "year": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100,
+              "description": "Millésime / année d'imposition de la fiche."
+            },
+            "dirigeant_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID du dirigeant bénéficiaire (optionnel). Doit appartenir au même client."
+            },
+            "montant_brut": {
+              "type": "number",
+              "minimum": 0,
+              "description": "Montant brut attribué au dirigeant pour ce millésime (EUR)."
+            },
+            "type": {
+              "type": "string",
+              "default": "281.20",
+              "description": "Type de fiche fiscale (défaut 281.20)."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "brouillon",
+                "valide",
+                "envoye",
+                "cloture"
+              ],
+              "default": "brouillon",
+              "description": "Statut initial de la fiche (défaut brouillon)."
+            }
+          },
+          "required": [
+            "client_id",
+            "year"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
       }
     ]
   }
