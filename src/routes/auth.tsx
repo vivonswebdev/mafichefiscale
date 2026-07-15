@@ -7,6 +7,9 @@ import { isPasswordPwned } from "@/lib/hibp";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : "",
+  }),
   head: () => ({
     meta: [
       { title: "Connexion — mafiche.be" },
@@ -15,6 +18,13 @@ export const Route = createFileRoute("/auth")({
   }),
   component: AuthPage,
 });
+
+// Only accept same-origin relative paths for post-login redirects.
+function safeNext(raw: string): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
 
 function AuthPage() {
   const navigate = useNavigate();
