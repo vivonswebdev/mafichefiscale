@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://rjrcpcdfvytwqnqgpqvf.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "mafiche-mcp",
+      "version": "0.1.0",
+      "title": "mafiche.be"
+    },
+    "tools": [
+      {
+        "name": "list_clients",
+        "title": "Lister les clients",
+        "description": "Retourne les clients du cabinet de l'utilisateur connecté (nom, BCE, email, forme juridique, ville).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "search": {
+              "type": "string",
+              "description": "Filtre optionnel appliqué sur le nom, la BCE ou l'email du client."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Nombre max de clients à retourner."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_fiches",
+        "title": "Lister les fiches 281.20",
+        "description": "Retourne les fiches fiscales 281.20 de l'utilisateur connecté, optionnellement filtrées par année ou statut.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "year": {
+              "type": "integer",
+              "minimum": 2000,
+              "maximum": 2100,
+              "description": "Année d'imposition à filtrer."
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "brouillon",
+                "valide",
+                "envoye",
+                "cloture"
+              ],
+              "description": "Statut de la fiche."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_dirigeants",
+        "title": "Lister les dirigeants",
+        "description": "Retourne les dirigeants/actionnaires liés aux clients de l'utilisateur connecté. Filtrable par client.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "client_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID du client pour restreindre la liste."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 500,
+              "default": 100
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
