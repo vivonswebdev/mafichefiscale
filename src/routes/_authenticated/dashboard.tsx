@@ -78,15 +78,32 @@ function Dashboard() {
             <h1 className="font-serif text-4xl font-semibold tracking-tight mt-2">
               Votre <span className="text-primary">cabinet</span> en un coup d'œil
             </h1>
-            <p className="text-ink-2 mt-2">Exercice fiscal 2025 — données synchronisées en temps réel.</p>
+            {/* Ne plus annoncer « synchronisées en temps réel » : la remontée
+                vers Supabase est différée et ne couvre que les clients, les
+                dirigeants et les fiches. Les chiffres ci-dessous sont donc un
+                sous-ensemble de ce que contient l'application — le dire plutôt
+                que laisser croire à deux vérités. */}
+            <p className="text-ink-2 mt-2">Ce qui est remonté dans le cloud.</p>
           </div>
           <Link
-            to="/clients"
+            to="/app"
             className="inline-flex items-center gap-2 px-4 py-2 rounded-md font-bold text-sm transition-all hover:brightness-110 hover:-translate-y-px"
             style={{ background: "linear-gradient(160deg, #c9a45c, #a3823f)", color: "#1a1408" }}
           >
-            <Plus className="w-4 h-4" /> Gérer mes clients
+            <Plus className="w-4 h-4" /> Ouvrir l'application
           </Link>
+        </div>
+
+        <div
+          className="mt-6 rounded-lg border p-4 text-sm text-ink-2"
+          style={{ backgroundColor: "rgba(201,164,92,0.06)", borderColor: "rgba(201,164,92,0.28)" }}
+        >
+          <strong className="text-ink">Ces compteurs ne sont pas votre dossier complet.</strong>{" "}
+          Seuls les clients, dirigeants et fiches 281.20 remontent aujourd'hui vers le cloud, et
+          uniquement après une sauvegarde dans l'application. Tâches, notes, prestations, temps et
+          comptabilité restent dans l'application.{" "}
+          <Link to="/app" className="text-primary underline">Ouvrir l'application</Link> pour voir
+          l'ensemble.
         </div>
 
         <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

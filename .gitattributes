@@ -1,0 +1,4 @@
+# mafiche.html est un livrable servi tel quel : git ne doit jamais en
+# réécrire les fins de ligne. Sans ça, un `git checkout` change les octets
+# du fichier, et les vérifications par empreinte SHA-256 ne valent plus rien.
+* -text

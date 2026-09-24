@@ -1,0 +1,656 @@
+{
+  "clients": [
+    {
+      "id": "mqqfkza78tq0gtw5xs4",
+      "nom": "GARAGE WALIDA",
+      "bce": "1005094105",
+      "adresse": "Avenue de la Liberté  175",
+      "cp": "1080",
+      "commune": "Molenbeek",
+      "forme": "SRL",
+      "capital": 1000,
+      "tva": "oui",
+      "email": "info.garagewalida24@gmail.com",
+      "gsm": "0472896553",
+      "abonnement": 150,
+      "tvaPeriode": "trimestrielle",
+      "cloture": "31/12",
+      "mandatDate": "2022-01-01",
+      "mandatDureeMois": 24,
+      "actionnaires": [
+        {
+          "id": "mqqfmu4t0vl47gs26h0h",
+          "prenom": "RACHID",
+          "nom": "DAHIR",
+          "niss": "88040657158",
+          "adresse": "Rue Flachaux(W-B) 23",
+          "cp": "1440",
+          "commune": "Braine-le-Château",
+          "dnaiss": "1988-04-06",
+          "fonction": "Gérant",
+          "pays": "0",
+          "parts": 50,
+          "valPart": 10,
+          "pctControle": 50,
+          "dateEntree": "2024-01-23",
+          "dateSortie": ""
+        }
+      ],
+      "tags": [],
+      "checklist": {},
+      "statut": "actif",
+      "kyc": {},
+      "contacts": []
+    },
+    {
+      "id": "mqqmq0gaon3qu3p0tn",
+      "nom": "VOI.CO",
+      "bce": "1025239520",
+      "adresse": "Mutsaardplein 2",
+      "cp": "1853",
+      "commune": "Grimbergen",
+      "forme": "SRL",
+      "capital": 1000,
+      "tva": "oui",
+      "email": "voicooperative.business@gmail.com",
+      "gsm": "0465322020",
+      "abonnement": 250,
+      "tvaPeriode": "trimestrielle",
+      "cloture": "31/12",
+      "mandatDate": "2026-01-01",
+      "mandatDureeMois": 24,
+      "actionnaires": [
+        {
+          "id": "mqqmrm1foqjzu6zaa3m",
+          "prenom": "Igor",
+          "nom": "Stavila",
+          "niss": "81030564950",
+          "adresse": "Avenue de Messidor",
+          "cp": "1180",
+          "commune": "Uccle",
+          "dnaiss": "1981-03-05",
+          "fonction": "Administrateur",
+          "pays": "0",
+          "parts": 85,
+          "valPart": 10,
+          "pctControle": 0,
+          "dateEntree": "2025-07-07",
+          "dateSortie": ""
+        },
+        {
+          "id": "mqqmsnugfufaak5xsqp",
+          "prenom": "Cristian",
+          "nom": "Doros",
+          "niss": "",
+          "adresse": "",
+          "cp": "",
+          "commune": "",
+          "dnaiss": "",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 0,
+          "valPart": 0,
+          "pctControle": 0,
+          "dateEntree": "2025-07-09",
+          "dateSortie": "2025-08-09"
+        },
+        {
+          "id": "mqqmtczjt3wn5zeiwhn",
+          "prenom": "Sergiu",
+          "nom": "Doros",
+          "niss": "03020448385",
+          "adresse": "Avenue de Misedor 3/8",
+          "cp": "1180",
+          "commune": "Uccle",
+          "dnaiss": "2003-02-04",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 5,
+          "valPart": 10,
+          "pctControle": 0,
+          "dateEntree": "2025-07-09",
+          "dateSortie": "",
+          "paie": {
+            "2026": {
+              "config": {
+                "brut": 161000,
+                "cotis": 0,
+                "atn": 0,
+                "precompte": 0,
+                "frais": 39000,
+                "deductions": 0
+              },
+              "months": [
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                },
+                {
+                  "brut": 161000,
+                  "cotis": 0,
+                  "atn": 0,
+                  "precompte": 0,
+                  "frais": 39000,
+                  "deductions": 0
+                }
+              ]
+            }
+          }
+        },
+        {
+          "id": "mqqmv0bh6jvi59apczh",
+          "prenom": "Ceban",
+          "nom": "Grigore",
+          "niss": "",
+          "adresse": "",
+          "cp": "",
+          "commune": "",
+          "dnaiss": "",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 2,
+          "valPart": 10,
+          "pctControle": 0,
+          "dateEntree": "2026-04-21",
+          "dateSortie": ""
+        },
+        {
+          "id": "mqqmxiz686hepk21g6f",
+          "prenom": "Ruvim",
+          "nom": "Gramada",
+          "niss": "02522031505",
+          "adresse": "Avenue de Messidor 3",
+          "cp": "1180",
+          "commune": "Uccle",
+          "dnaiss": "",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 2,
+          "valPart": 10,
+          "pctControle": 0,
+          "dateEntree": "2026-06-01",
+          "dateSortie": ""
+        },
+        {
+          "id": "mqqn0jcnv5q4q0i5q68",
+          "prenom": "Vasile",
+          "nom": "Barbos",
+          "niss": "",
+          "adresse": "",
+          "cp": "",
+          "commune": "",
+          "dnaiss": "",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 0,
+          "valPart": 0,
+          "pctControle": 0,
+          "dateEntree": "2026-06-01",
+          "dateSortie": "2026-06-01"
+        },
+        {
+          "id": "mqqn16mg98rmw1gyhru",
+          "prenom": "Pesterean",
+          "nom": "Spiridon",
+          "niss": "",
+          "adresse": "",
+          "cp": "",
+          "commune": "",
+          "dnaiss": "",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 2,
+          "valPart": 10,
+          "pctControle": 0,
+          "dateEntree": "2026-06-01",
+          "dateSortie": ""
+        },
+        {
+          "id": "mtwtipayfe9gmw5artl",
+          "prenom": "Alexei",
+          "nom": "Cemurtan",
+          "niss": "",
+          "adresse": "Steenhuffelstraat 76",
+          "cp": "1840",
+          "commune": "Londerzeel",
+          "dnaiss": "1999-06-02",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 2,
+          "valPart": 10,
+          "pctControle": 2,
+          "dateEntree": "2026-09-07",
+          "dateSortie": ""
+        },
+        {
+          "id": "mtwtkohask4z09hux4",
+          "prenom": "Vitali",
+          "nom": "GRAMADA",
+          "niss": "",
+          "adresse": "Steenhuffelstraat 76",
+          "cp": "1840",
+          "commune": "Londerzeel",
+          "dnaiss": "1997-12-12",
+          "fonction": "Associé actif",
+          "pays": "0",
+          "parts": 2,
+          "valPart": 10,
+          "pctControle": 2,
+          "dateEntree": "2026-09-07",
+          "dateSortie": ""
+        }
+      ],
+      "tags": [],
+      "checklist": {},
+      "statut": "actif",
+      "kyc": {},
+      "contacts": []
+    }
+  ],
+  "fiches": [],
+  "paies": [],
+  "tasks": [],
+  "exp": {
+    "nom": "Fiscoteam",
+    "bce": "1010565202",
+    "contact": "Fiscoteam",
+    "tel": "+3228800118",
+    "email": "info@fiscoteam.be",
+    "tauxHoraire": 165,
+    "adresse": "Rue Omer Lepreux 9",
+    "cp": "1081",
+    "commune": "Koekelberg",
+    "itaa": "10410101",
+    "fonction": "",
+    "langue": "fr",
+    "ville": "",
+    "message": "",
+    "signature": ""
+  },
+  "attTemplates": [],
+  "timeEntries": [],
+  "activeTimer": null,
+  "echeancesDone": {
+    "mqqfkza78tq0gtw5xs4|TVA|TVA — Trim. 2 2026": true,
+    "mqqmq0gaon3qu3p0tn|TVA|TVA — Trim. 2 2026": true,
+    "mqqfkza78tq0gtw5xs4|ISOC|ISOC — exercice clôturé 31/12/2025": true,
+    "mqqfkza78tq0gtw5xs4|BILAN|Bilan BNB — exercice clôturé 31/12/2025": true,
+    "mqqmq0gaon3qu3p0tn|ISOC|ISOC — exercice clôturé 31/12/2025": true,
+    "mqqmq0gaon3qu3p0tn|BILAN|Bilan BNB — exercice clôturé 31/12/2025": true
+  },
+  "immobilisations": [],
+  "notes": [],
+  "captures": [],
+  "kanbanTasks": [],
+  "invoices": [],
+  "rh": {
+    "maxWeek": 38,
+    "maxDay": 8,
+    "congeAnnuel": 20,
+    "congePris": 0,
+    "contrat": "independant"
+  },
+  "absences": [],
+  "equipe": [],
+  "zones": [],
+  "externalTools": [
+    {
+      "id": "mu2lnhwvgli6d0uy2fa",
+      "key": "horus",
+      "nom": "Horus",
+      "icone": "🧮",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwv1mvhosxgj5b",
+      "key": "falco",
+      "nom": "Falco",
+      "icone": "📊",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwvfz0z90ixu5i",
+      "key": "billit",
+      "nom": "Billit",
+      "icone": "🧾",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwv8808upixdgt",
+      "key": "doccle",
+      "nom": "Doccle (Peppol)",
+      "icone": "📨",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwv72l00txd7af",
+      "key": "twinntax",
+      "nom": "Twinntax (IPP)",
+      "icone": "📋",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwv2mxa5x8crem",
+      "key": "onedrive",
+      "nom": "OneDrive",
+      "icone": "☁️",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwvbtcnrg2zvil",
+      "key": "fidmanager",
+      "nom": "Fid-Manager",
+      "icone": "🗄️",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwv64jms3u876m",
+      "key": "gmail",
+      "nom": "Gmail",
+      "icone": "📧",
+      "url": "",
+      "notes": ""
+    },
+    {
+      "id": "mu2lnhwvwipnfrq1xff",
+      "key": "gagenda",
+      "nom": "Google Agenda",
+      "icone": "📅",
+      "url": "",
+      "notes": ""
+    }
+  ],
+  "docStatus": [],
+  "recurringTasks": [],
+  "contrats": [],
+  "docsManquants": [],
+  "historique": [],
+  "rdv": [],
+  "prestationTemplates": [
+    {
+      "id": "mu2lnhwvpv413pkthv",
+      "titre": "Encodage mensuel",
+      "type": "Comptabilité",
+      "minutes": 30
+    },
+    {
+      "id": "mu2lnhwvopua2zzxkq",
+      "titre": "Appel client",
+      "type": "Conseil / Réunion",
+      "minutes": 15
+    },
+    {
+      "id": "mu2lnhwvd70xjaphv2c",
+      "titre": "Envoi de rappel",
+      "type": "Administratif",
+      "minutes": 10
+    }
+  ],
+  "objectifs": {
+    "tachesJour": {
+      "label": "Tâches à terminer par jour",
+      "value": 5,
+      "active": true
+    },
+    "dossiersSemaine": {
+      "label": "Dossiers à traiter par semaine",
+      "value": 10,
+      "active": false
+    },
+    "documentsControle": {
+      "label": "Documents à contrôler par semaine",
+      "value": 15,
+      "active": false
+    },
+    "relances": {
+      "label": "Relances à effectuer par semaine",
+      "value": 5,
+      "active": false
+    },
+    "heuresFacturables": {
+      "label": "Heures facturables par semaine",
+      "value": 30,
+      "active": true
+    },
+    "caMensuel": {
+      "label": "Chiffre d'affaires mensuel (€)",
+      "value": 8000,
+      "active": true
+    },
+    "clientsContacter": {
+      "label": "Clients à contacter par semaine",
+      "value": 5,
+      "active": false
+    },
+    "delaiTraitement": {
+      "label": "Délai de traitement max (jours)",
+      "value": 5,
+      "active": false
+    },
+    "pctMinTermine": {
+      "label": "% minimum de tâches terminées",
+      "value": 70,
+      "active": true
+    },
+    "maxTachesRetard": {
+      "label": "Maximum de tâches en retard toléré",
+      "value": 3,
+      "active": true
+    }
+  },
+  "categories": [
+    {
+      "id": "mu2lnhwvk424q968bkb",
+      "label": "TVA",
+      "icone": "💶",
+      "couleur": "tag-indigo",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwv1yxloltbxp7",
+      "label": "ISOC",
+      "icone": "🏛️",
+      "couleur": "tag-teal",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwv8joyw1qfs6a",
+      "label": "IPP",
+      "icone": "👤",
+      "couleur": "tag-green",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwv613f15k746j",
+      "label": "Comptabilité",
+      "icone": "📊",
+      "couleur": "tag-amber",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwv2oozoigm6p4",
+      "label": "Documents",
+      "icone": "📄",
+      "couleur": "tag-gray",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwveyziq3ach5e",
+      "label": "Facturation",
+      "icone": "🧾",
+      "couleur": "tag-teal",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwvk8h8x6sc6j",
+      "label": "Relances",
+      "icone": "📞",
+      "couleur": "tag-red",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwvj78mt7vot9k",
+      "label": "Clients",
+      "icone": "🏢",
+      "couleur": "tag-indigo",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwve290zm67vn7",
+      "label": "Secrétariat",
+      "icone": "🗂️",
+      "couleur": "tag-gray",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwvtn7z3jjjnj",
+      "label": "Fiches 281.20",
+      "icone": "📋",
+      "couleur": "tag-green",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwvd6pkxk0emlw",
+      "label": "Rémunérations",
+      "icone": "💰",
+      "couleur": "tag-amber",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwva4ycnz4swt4",
+      "label": "Immobilisations",
+      "icone": "🚗",
+      "couleur": "tag-teal",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwv6lj8oktutzi",
+      "label": "Rendez-vous",
+      "icone": "📅",
+      "couleur": "tag-indigo",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwvvt5odwdgkk",
+      "label": "Administratif",
+      "icone": "🗄️",
+      "couleur": "tag-gray",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwvk52g3x6f9nh",
+      "label": "Urgent",
+      "icone": "🚨",
+      "couleur": "tag-red",
+      "actif": true
+    },
+    {
+      "id": "mu2lnhwvajqy5fr24cb",
+      "label": "Autre",
+      "icone": "📁",
+      "couleur": "tag-gray",
+      "actif": true
+    }
+  ],
+  "appearance": {
+    "theme": "dark",
+    "taille": "grand",
+    "densite": "compact"
+  },
+  "dashboardVisibility": {},
+  "alertes": {
+    "niveau": "toutes"
+  },
+  "appels": []
+}

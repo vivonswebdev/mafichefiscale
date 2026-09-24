@@ -1,0 +1,12 @@
+        <div class="card" id="blk_kanban">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-teal">🗂️</div>Kanban — Tâches</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="showMain('timesheet');switchTimesheetTab('kanban')">Vue Timesheet</button>
+              <button class="btn btn-primary btn-sm" onclick="openNewKanbanTask()">+ Tâche</button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;min-height:160px" id="dash_kanban_board">
+            <!-- Rendered by renderKanbanBoard() -->
+          </div>
+        </div>

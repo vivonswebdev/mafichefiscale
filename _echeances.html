@@ -1,0 +1,23 @@
+        <div class="stats-row">
+          <div class="stat-box glow-rose"><div class="s-lbl">⚠️ En retard</div><div class="s-val" id="ech_late">0</div></div>
+          <div class="stat-box glow-cyan"><div class="s-lbl">🔵 Cette semaine</div><div class="s-val" id="ech_week">0</div></div>
+          <div class="stat-box glow-amber"><div class="s-lbl">🟡 Ce mois-ci</div><div class="s-val" id="ech_month">0</div></div>
+          <div class="stat-box glow-zinc"><div class="s-lbl">⏳ Plus tard (120j)</div><div class="s-val" id="ech_later">0</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-indigo">📅</div>Calendrier des obligations</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <select id="ech_filter_client" onchange="renderEcheancesPage()" style="background:var(--solid);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:12px">
+                <option value="">Tous les clients</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="generateWeeklyRecap()">📧 Récap hebdo</button>
+            </div>
+          </div>
+          <div class="alert alert-info">
+            ℹ️ Échéances calculées automatiquement à partir de la périodicité TVA et de la date de clôture de chaque client (configurables dans la fiche client). TVA : déclaration le 20 du mois suivant. ISOC/Bilan BNB : ~7 mois après la clôture. IPP : 30 juin de l'année suivante (personnes physiques).
+          </div>
+          <div id="ech_list"></div>
+        </div>
+      
