@@ -1895,6 +1895,7 @@ body.density-compact .page{padding:14px}
     <button class="nav-btn" onclick="showMain('formulaires')" id="nav-formulaires" title="Formulaires" aria-label="Formulaires">📋<span class="nb-label">Formulaires</span></button>
     <button class="nav-btn" onclick="showMain('compta')" id="nav-compta" title="Comptabilité simplifiée" aria-label="Comptabilité simplifiée">📒<span class="nb-label">Compta simplifiée</span></button>
     <button class="nav-btn" onclick="showMain('immo')" id="nav-immo" title="Immobilisations" aria-label="Immobilisations">🚗<span class="nb-label">Immobilisations</span></button>
+    <button class="nav-btn" onclick="showMain('flotte')" id="nav-flotte" title="Flotte véhicules" aria-label="Flotte véhicules">🚙<span class="nb-label">Flotte véhicules</span></button>
     <button class="nav-btn" onclick="showMain('optim')" id="nav-optim" title="Optim. fiscale" aria-label="Optim. fiscale">💡<span class="nb-label">Optim. fiscale</span></button>
   </aside>
 
@@ -2095,6 +2096,7 @@ body.density-compact .page{padding:14px}
             <button class="hub-tile" onclick="showMain('timesheet')"><span class="hub-ico">⏱️</span><span class="hub-lbl">Timesheet</span><span class="hub-sub">Temps, factures, RH, IA</span></button>
             <button class="hub-tile" onclick="showMain('taches')"><span class="hub-ico">📅</span><span class="hub-lbl">Échéances</span><span class="hub-sub">Obligations fiscales</span></button>
             <button class="hub-tile" onclick="showMain('immo')"><span class="hub-ico">🚗</span><span class="hub-lbl">Immobilisations</span><span class="hub-sub">Amortissements, ATN</span></button>
+        <button class="hub-tile" onclick="showMain('flotte')"><span class="hub-ico">🚙</span><span class="hub-lbl">Flotte véhicules</span><span class="hub-sub">ATN et DNA, tous clients</span></button>
             <button class="hub-tile" onclick="showMain('notes')"><span class="hub-ico">📝</span><span class="hub-lbl">Notes</span><span class="hub-sub">Mémos par dossier</span></button>
             <button class="hub-tile" onclick="showMain('optim')"><span class="hub-ico">💡</span><span class="hub-lbl">Optim. fiscale</span><span class="hub-sub">Scénarios dirigeant</span></button>
             <button class="hub-tile" onclick="showMain('aide')"><span class="hub-ico">❓</span><span class="hub-lbl">Aide</span><span class="hub-sub">Guide & export</span></button>
@@ -3409,6 +3411,24 @@ body.density-compact .page{padding:14px}
 
       <!-- ─── ONGLET FACTURES ─── -->
       <div id="ts_tab_factures" style="display:none">
+
+        <!-- ─── CATALOGUE : prestation demandée = prestation à facturer ─── -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-amber">🏷️</div>Prestation demandée</div>
+            <span id="cat_fact_info" style="font-size:11px;color:var(--text3)"></span>
+          </div>
+          <div class="alert alert-info" style="margin-bottom:12px">
+            Un client demande un service ? Cliquez-le ici : il part aussitôt dans les prestations
+            à facturer, au prix de votre grille. C'est ce qui évite de l'oublier au moment de facturer.
+          </div>
+          <div class="g2" style="margin-bottom:10px">
+            <div class="fld"><label>Pour quel client</label><select id="cat_fact_client" onchange="renderCatalogueFacturation()"></select></div>
+            <div class="fld"><label>Rechercher une prestation</label><input id="cat_fact_q" placeholder="TVA, UBO, paie, constitution…" oninput="renderCatalogueFacturation()"></div>
+          </div>
+          <div id="cat_fact_liste"></div>
+        </div>
+
         <div class="card">
           <div class="card-header">
             <div class="card-title"><div class="icon icon-green">🧾</div>Factures</div>
@@ -4244,6 +4264,38 @@ body.density-compact .page{padding:14px}
             <div class="acts" style="margin-top:8px"><button class="btn btn-ghost btn-sm" onclick="showMain('notes')">Voir toutes les notes</button></div>
           </div>
 
+    </div>
+
+    <!-- PAGE FLOTTE VÉHICULES -->
+    <div class="page" id="page-flotte">
+      <div class="page-head">
+        <h1 class="page-title">🚙 Flotte véhicules</h1>
+        <div class="acts">
+          <button class="btn btn-ghost btn-sm" onclick="exportFlotteCSV()">📥 CSV</button>
+          <button class="btn btn-teal btn-sm" onclick="downloadFlottePdf()">📄 PDF</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="alert alert-info" style="margin-bottom:12px">
+          Tous les véhicules de société de vos dossiers, avec leur avantage de toute nature et la
+          dépense non admise qui en découle. Les véhicules se saisissent dans
+          <strong>Immobilisations</strong>, catégorie « Véhicule » — cette page les rassemble,
+          elle ne les duplique pas.
+        </div>
+        <div class="g3" style="margin-bottom:12px">
+          <div class="fld"><label>Année de calcul</label><select id="flotte_annee" onchange="renderFlottePage()"></select></div>
+          <div class="fld"><label>Taux ISOC appliqué</label>
+            <select id="flotte_isoc" onchange="renderFlottePage()">
+              <option value="0.25">25 % — taux plein</option>
+              <option value="0.20">20 % — taux réduit PME</option>
+            </select>
+          </div>
+          <div class="fld"><label>Filtrer</label><input id="flotte_q" placeholder="Client, modèle…" oninput="renderFlottePage()"></div>
+        </div>
+        <div class="stats-row" id="flotte_stats" style="margin-bottom:14px"></div>
+        <div id="flotte_contenu"></div>
+      </div>
     </div>
 
     <!-- PAGE OPTIMISATIONS FISCALES -->
@@ -5768,7 +5820,10 @@ function renderPrestationsAFacturer(){
   const unbilled=(DB.timeEntries||[]).filter(e=>!e.invoiced&&e.facturable!==false);
   const cntEl=document.getElementById('prestations_afacturer_count');
   const totalMin=unbilled.reduce((s,e)=>s+e.minutes,0);
-  if(cntEl)cntEl.textContent=unbilled.length?`${unbilled.length} prestation(s) · ${minutesToHM(totalMin)}`:'';
+  const totalForfait=unbilled.reduce((s,e)=>s+(prestationEstForfait(e)?e.montant:0),0);
+  if(cntEl)cntEl.textContent=unbilled.length
+    ?`${unbilled.length} prestation(s)`+(totalMin?` · ${minutesToHM(totalMin)}`:'')+(totalForfait?` · ${eurFmt(totalForfait)} au forfait`:'')
+    :'';
   if(!unbilled.length){box.innerHTML='<tr><td style="padding:14px;color:var(--text3);font-size:12px">Aucune prestation en attente de facturation 🎉</td></tr>';return;}
   const byClient={};
   unbilled.forEach(e=>{const k=e.clientId||'_';(byClient[k]=byClient[k]||[]).push(e);});
@@ -5776,6 +5831,7 @@ function renderPrestationsAFacturer(){
     const entries=byClient[cid];
     const cli=cid!=='_'?DB.clients.find(x=>x.id===cid):null;
     const totalMinC=entries.reduce((s,e)=>s+e.minutes,0);
+    const totalForfaitC=entries.reduce((s,e)=>s+(prestationEstForfait(e)?e.montant:0),0);
     const oldestDate=entries.reduce((min,e)=>e.date<min?e.date:min,entries[0].date);
     const ageDays=Math.floor((today-new Date(oldestDate))/864e5);
     const ageCls=ageDays>30?'tag-red':(ageDays>15?'tag-amber':'tag-teal');
@@ -5783,7 +5839,7 @@ function renderPrestationsAFacturer(){
     return{cid,html:`<tr>
       <td class="fw">${escX(cli?cli.nom:'Interne')}</td>
       <td>${entries.length}</td>
-      <td style="text-align:right;font-weight:700">${minutesToHM(totalMinC)}</td>
+      <td style="text-align:right;font-weight:700">${totalMinC?minutesToHM(totalMinC):''}${totalMinC&&totalForfaitC?'<br>':''}${totalForfaitC?`<span style="color:var(--primary-h)">${eurFmt(totalForfaitC)}</span>`:''}${!totalMinC&&!totalForfaitC?'—':''}</td>
       <td><span class="tag ${ageCls}" style="font-size:9px">${ageLbl} · ${ageDays}j</span></td>
       <td><button class="btn btn-primary btn-xs" onclick="quickInvoiceFromDash('${cid==='_'?'':cid}')">🧾 Facturer</button></td>
     </tr>`,ageDays};
@@ -8577,11 +8633,17 @@ function calculerDeductibiliteVehicule(){
     else{taux=0;regime="Véhicule thermique commandé à partir du 01/01/2026 — non déductible (0%)";}
     if(motor==='hybride')note="Hybride rechargeable : frais de carburant fossile plafonnés à 50% max — l'électricité suit le régime global du véhicule.";
   }
-  // ATN indicatif (formule standard, seuils CO2 de référence à indexer selon l'année exacte)
-  const seuilRef=motor==='diesel'?65:82; // valeurs indicatives, à réindexer chaque année
-  let pctAtn=5.5+(co2-seuilRef)*0.1;
-  pctAtn=Math.max(4,Math.min(18,Math.round(pctAtn*10)/10));
-  const atnAnnuel=Math.max(1690,Math.round(valeur*(pctAtn/100)*6/7));
+  // ATN : on passe par calculerATNVehicule(), le même moteur que les
+  // Immobilisations et la Flotte. Cette fonction avait sa propre formule —
+  // seuils CO2 65/82 au lieu de 58/70, et sans coefficient d'ancienneté —
+  // si bien que la même voiture donnait deux ATN différents selon l'écran.
+  const atnCalc=calculerATNVehicule({
+    categorie:'Véhicule',typeVehicule:motor,
+    co2Emissions:co2,valeurCatalogueTVAC:valeur,
+    dateAchat:dateStr,
+  },new Date().getFullYear())||{annuel:ATN_MIN_2026,pctCO2:0};
+  const atnAnnuel=atnCalc.annuel;
+  const pctAtn=atnCalc.pctCO2;
   box.innerHTML=`
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
       <div style="flex:1;min-width:180px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:12px;text-align:center">
@@ -12808,6 +12870,7 @@ const ROUTES={
   formulaires: {render:renderFormulairesPage},
   compta:      {render:renderComptaPage},
   immo:       {render:renderImmoPage},
+  flotte:     {render:renderFlottePage},
   optim:      {render:renderOptimPage},
   parametres: {render:renderParametresPage},
   aide:       {render:null},
@@ -16459,7 +16522,8 @@ function entryRow(e){
     <span class="tag tag-teal" style="min-width:110px;justify-content:center">${escX(e.task)}</span>
     <span class="fw" style="flex:1">${escX(getClientName(e.clientId))}${e.note?` <span style="color:var(--text3);font-weight:400">— ${escX(e.note)}</span>`:''}</span>
     ${aberrante?'<span class="tag tag-amber" style="font-size:9px" title="Plus de 24 h sur une journée — écartée des calculs de rentabilité tant qu\'elle n\'est pas corrigée">⚠️ invraisemblable</span>':''}
-    <span class="mn"${aberrante?' style="color:var(--amber)"':''}>${minutesToHM(e.minutes)}</span>
+    ${prestationEstForfait(e)?'<span class="tag tag-teal" style="font-size:9px">forfait</span>':''}
+    <span class="mn"${aberrante?' style="color:var(--amber)"':(prestationEstForfait(e)?' style="color:var(--primary-h)"':'')}>${prestationEstForfait(e)?eurFmt(e.montant):minutesToHM(e.minutes)}</span>
     <button class="btn btn-ghost btn-xs" onclick="deleteTimeEntry('${e.id}')">🗑</button>
   </div>`;
 }
@@ -17352,6 +17416,211 @@ function calculerImpactFiscalISOC(imm,montantAnnuite,tauxISOC){
   return{deductible,dna,surcoutISOC,tauxDeductibilite};
 }
 
+// ══════════════════════════════════════════════
+// FLOTTE VÉHICULES — vue cabinet
+//
+// Les véhicules vivent dans DB.immobilisations (categorie 'Véhicule'), saisis
+// dossier par dossier. Aucune structure nouvelle ici : cette page les
+// rassemble et applique les fonctions de calcul existantes —
+// calculerATNVehicule(), calculerPlanAmortissement(), calculerImpactFiscalISOC().
+//
+// C'est la seule vue transversale du fichier : l'ATN de chaque dirigeant doit
+// être connu avant la fiche 281.20, et la DNA avant la déclaration ISOC.
+// ══════════════════════════════════════════════
+
+function vehiculesDuCabinet(){
+  return (DB.immobilisations||[])
+    .filter(i=>i.categorie==='Véhicule')
+    .map(imm=>({imm,client:DB.clients.find(c=>c.id===imm.clientId)||null}))
+    .filter(v=>v.client);
+}
+
+// Toutes les données d'une ligne de flotte, pour une année donnée.
+// Ne rend rien : le tableau, les totaux, le CSV et le PDF la consomment.
+function ligneFlotte(v,annee,tauxISOC){
+  const{imm,client}=v;
+  const atn=calculerATNVehicule(imm,annee)||{annuel:0,mensuel:0,pctCO2:0,coefAge:1};
+  const plan=calculerPlanAmortissement(imm,parseCloture(client));
+  const ligneAnnee=plan.find(p=>p.annee===annee);
+  const annuite=ligneAnnee?ligneAnnee.montant:0;
+  const isoc=calculerImpactFiscalISOC(imm,annuite,tauxISOC);
+  const age=annee-new Date(imm.dateAchat+'T00:00:00').getFullYear();
+  return{
+    client,imm,atn,annuite,isoc,age,
+    amorti:!!ligneAnnee,
+    vnc:ligneAnnee?ligneAnnee.vnc:0,
+  };
+}
+
+function renderFlottePage(){
+  const selAnnee=document.getElementById('flotte_annee');
+  if(selAnnee&&!selAnnee.options.length){
+    const cette=new Date().getFullYear();
+    selAnnee.innerHTML=[cette-2,cette-1,cette,cette+1]
+      .map(a=>`<option value="${a}"${a===cette?' selected':''}>${a}</option>`).join('');
+  }
+  const annee=parseInt(selAnnee?selAnnee.value:0)||new Date().getFullYear();
+  const tauxISOC=parseFloat(document.getElementById('flotte_isoc')?.value)||0.25;
+  const q=(document.getElementById('flotte_q')?.value||'').trim().toLowerCase();
+
+  let lignes=vehiculesDuCabinet().map(v=>ligneFlotte(v,annee,tauxISOC));
+  if(q)lignes=lignes.filter(l=>
+    (l.client.nom||'').toLowerCase().includes(q)||
+    (l.imm.designation||'').toLowerCase().includes(q));
+  lignes.sort((a,b)=>b.atn.annuel-a.atn.annuel);
+
+  const box=document.getElementById('flotte_contenu');
+  const stats=document.getElementById('flotte_stats');
+  if(!box)return;
+
+  if(!lignes.length){
+    if(stats)stats.innerHTML='';
+    box.innerHTML=etatVide('🚙','Aucun véhicule de société',
+      vehiculesDuCabinet().length
+        ?'Aucun véhicule ne correspond au filtre.'
+        :'Ajoutez-en depuis Immobilisations, en choisissant la catégorie « Véhicule ».',
+      vehiculesDuCabinet().length?null:{label:'Ouvrir Immobilisations',appel:"showMain('immo')"});
+    return;
+  }
+
+  const totAtn=lignes.reduce((s,l)=>s+l.atn.annuel,0);
+  const totDna=lignes.reduce((s,l)=>s+l.isoc.dna,0);
+  const totSurcout=lignes.reduce((s,l)=>s+l.isoc.surcoutISOC,0);
+  const sansCatalogue=lignes.filter(l=>!(l.imm.valeurCatalogueTVAC>0)).length;
+
+  if(stats)stats.innerHTML=`
+    <div class="stat-box glow-cyan"><div class="s-lbl">🚙 Véhicules</div><div class="s-val">${lignes.length}</div>
+      <div class="s-sub">${new Set(lignes.map(l=>l.client.id)).size} dossier(s)</div></div>
+    <div class="stat-box glow-amber"><div class="s-lbl">ATN total ${annee}</div><div class="s-val">${eurFmt(totAtn)}</div>
+      <div class="s-sub">à porter sur les fiches 281.20</div></div>
+    <div class="stat-box glow-rose"><div class="s-lbl">DNA réintégrée</div><div class="s-val">${eurFmt(totDna)}</div>
+      <div class="s-sub">sur amortissements ${annee}</div></div>
+    <div class="stat-box glow-zinc"><div class="s-lbl">Surcoût ISOC</div><div class="s-val">${eurFmt(totSurcout)}</div>
+      <div class="s-sub">au taux de ${Math.round(tauxISOC*100)} %</div></div>`;
+
+  const motorLbl={electrique:'⚡ Électrique',diesel:'⛽ Diesel',essence:'⛽ Essence',hybride:'🔋 Hybride',gaz:'💨 Gaz'};
+
+  box.innerHTML=`
+    ${sansCatalogue?`<div class="alert alert-warn" style="margin-bottom:10px">
+      ${sansCatalogue} véhicule(s) sans valeur catalogue TVAC : leur ATN retombe sur le minimum légal
+      de ${eurFmt(ATN_MIN_2026)}, ce qui est presque sûrement faux. Complétez la fiche dans Immobilisations.
+    </div>`:''}
+    <div class="tbl-wrap"><table class="tbl"><thead><tr>
+      <th>Client</th><th>Véhicule</th><th>Motorisation</th>
+      <th class="num">CO2</th><th class="num">Valeur cat.</th><th class="num">Âge</th>
+      <th class="num">% ATN</th><th class="num">ATN / an</th><th class="num">ATN / mois</th>
+      <th class="num">Amort. ${annee}</th><th class="num">Déduct.</th><th class="num">DNA</th><th class="num">Surcoût ISOC</th>
+    </tr></thead><tbody>
+    ${lignes.map(l=>`<tr style="cursor:pointer" onclick="ouvrirVehicule('${escX(l.client.id)}')" title="Ouvrir le dossier">
+      <td class="fw">${escX(l.client.nom)}</td>
+      <td>${escX(l.imm.designation||'—')}</td>
+      <td><span class="tag ${l.imm.typeVehicule==='electrique'?'tag-green':'tag-gray'}" style="font-size:9px">${escX(motorLbl[l.imm.typeVehicule]||l.imm.typeVehicule||'—')}</span></td>
+      <td class="mn">${l.imm.co2Emissions||0} g</td>
+      <td class="mn">${l.imm.valeurCatalogueTVAC?eurFmt(l.imm.valeurCatalogueTVAC):'<span style="color:var(--amber)">manquante</span>'}</td>
+      <td class="mn">${l.age} an${l.age>1?'s':''}</td>
+      <td class="mn">${l.atn.pctCO2} %</td>
+      <td class="mn fw">${eurFmt(l.atn.annuel)}</td>
+      <td class="mn">${eurFmt(l.atn.mensuel)}</td>
+      <td class="mn">${l.amorti?eurFmt(l.annuite):'<span style="color:var(--text3)">amorti</span>'}</td>
+      <td class="mn">${Math.round(l.isoc.tauxDeductibilite*100)} %</td>
+      <td class="mn" style="color:var(--red)">${l.isoc.dna?eurFmt(l.isoc.dna):'—'}</td>
+      <td class="mn" style="color:var(--red)">${l.isoc.surcoutISOC?eurFmt(l.isoc.surcoutISOC):'—'}</td>
+    </tr>`).join('')}
+    </tbody><tfoot><tr style="font-weight:700;border-top:2px solid var(--border2)">
+      <td colspan="7">TOTAL — ${lignes.length} véhicule(s)</td>
+      <td class="mn">${eurFmt(totAtn)}</td>
+      <td class="mn">${eurFmt(totAtn/12)}</td>
+      <td colspan="2"></td>
+      <td class="mn" style="color:var(--red)">${eurFmt(totDna)}</td>
+      <td class="mn" style="color:var(--red)">${eurFmt(totSurcout)}</td>
+    </tr></tfoot></table></div>
+    <div class="hint" style="margin-top:10px">
+      ATN calculé au barème ${annee} (référence CO2 : essence ${ATN_REF_CO2_2026.essence} g, diesel
+      ${ATN_REF_CO2_2026.diesel} g, minimum légal ${eurFmt(ATN_MIN_2026)}). Ces références sont
+      indexées chaque année : contrôlez-les avant dépôt.
+    </div>`;
+}
+
+function ouvrirVehicule(clientId){selectClient(clientId);showMain('immo');}
+
+function lignesFlotteCourantes(){
+  const annee=parseInt(document.getElementById('flotte_annee')?.value)||new Date().getFullYear();
+  const tauxISOC=parseFloat(document.getElementById('flotte_isoc')?.value)||0.25;
+  const q=(document.getElementById('flotte_q')?.value||'').trim().toLowerCase();
+  let l=vehiculesDuCabinet().map(v=>ligneFlotte(v,annee,tauxISOC));
+  if(q)l=l.filter(x=>(x.client.nom||'').toLowerCase().includes(q)||(x.imm.designation||'').toLowerCase().includes(q));
+  return{lignes:l.sort((a,b)=>b.atn.annuel-a.atn.annuel),annee,tauxISOC};
+}
+
+function exportFlotteCSV(){
+  const{lignes,annee}=lignesFlotteCourantes();
+  if(!lignes.length){notif('i','Aucun véhicule à exporter');return;}
+  const rows=[['Client','Véhicule','Motorisation','CO2 (g/km)','Valeur catalogue TVAC','Âge',
+               '% ATN','ATN annuel','ATN mensuel','Amortissement '+annee,'Déductibilité','DNA','Surcoût ISOC']];
+  lignes.forEach(l=>rows.push([
+    l.client.nom,l.imm.designation||'',l.imm.typeVehicule||'',l.imm.co2Emissions||0,
+    l.imm.valeurCatalogueTVAC||0,l.age,l.atn.pctCO2,l.atn.annuel,l.atn.mensuel,
+    Math.round(l.annuite*100)/100,Math.round(l.isoc.tauxDeductibilite*100),l.isoc.dna,l.isoc.surcoutISOC]));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+  download('﻿'+csv,`flotte-vehicules-${annee}.csv`,'text/csv;charset=utf-8');
+  notif('s','📥 Flotte exportée en CSV');
+}
+
+function downloadFlottePdf(){
+  const{lignes,annee,tauxISOC}=lignesFlotteCourantes();
+  if(!lignes.length){notif('i','Aucun véhicule à exporter');return;}
+  const exp=DB.exp||{};
+  const totAtn=lignes.reduce((s,l)=>s+l.atn.annuel,0);
+  const totDna=lignes.reduce((s,l)=>s+l.isoc.dna,0);
+  const totSurcout=lignes.reduce((s,l)=>s+l.isoc.surcoutISOC,0);
+
+  const contenu=`<style>
+.pdf-flotte *{box-sizing:border-box;margin:0;padding:0}
+.pdf-flotte{font-family:'Segoe UI',Arial,sans-serif;font-size:10px;color:#1a1a1a;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+.pdf-flotte h1{font-size:16px;font-weight:700;color:#0d9488;margin-bottom:4px}
+.pdf-flotte table{width:100%;border-collapse:collapse;font-size:9.5px}
+.pdf-flotte th{background:#0d9488;color:#fff;padding:5px 7px;text-align:left;font-size:8.5px;text-transform:uppercase;letter-spacing:.04em}
+.pdf-flotte td{padding:5px 7px;border-bottom:1px solid #e4e6ea}
+.pdf-flotte tr{page-break-inside:avoid}
+.pdf-flotte tr:nth-child(even) td{background:#f0fdfa}
+.pdf-flotte .num{text-align:right;font-family:Consolas,monospace}
+.pdf-flotte .tot td{font-weight:700;border-top:2px solid #0d9488;background:#f0fdfa}</style>
+<div class="pdf-flotte">
+  <div style="display:flex;justify-content:space-between;border-bottom:2px solid #0d9488;padding-bottom:8px;margin-bottom:12px">
+    <div><h1>Flotte véhicules — ATN et DNA ${annee}</h1>
+      <div style="font-size:10px;color:#666">${lignes.length} véhicule(s) · ${new Set(lignes.map(l=>l.client.id)).size} dossier(s) · ISOC ${Math.round(tauxISOC*100)} %</div></div>
+    <div style="text-align:right;font-size:9px;color:#888">${escX(exp.nom||'')}<br>${new Date().toLocaleDateString('fr-BE')}</div>
+  </div>
+  <table><thead><tr>
+    <th>Client</th><th>Véhicule</th><th>Motor.</th><th class="num">CO2</th><th class="num">Val. cat.</th>
+    <th class="num">% ATN</th><th class="num">ATN/an</th><th class="num">ATN/mois</th>
+    <th class="num">Déduct.</th><th class="num">DNA</th><th class="num">Surcoût</th>
+  </tr></thead><tbody>
+  ${lignes.map(l=>`<tr>
+    <td>${escX(l.client.nom)}</td><td>${escX(l.imm.designation||'—')}</td>
+    <td>${escX(l.imm.typeVehicule||'—')}</td>
+    <td class="num">${l.imm.co2Emissions||0}</td>
+    <td class="num">${l.imm.valeurCatalogueTVAC?eurFmt(l.imm.valeurCatalogueTVAC):'—'}</td>
+    <td class="num">${l.atn.pctCO2} %</td>
+    <td class="num">${eurFmt(l.atn.annuel)}</td>
+    <td class="num">${eurFmt(l.atn.mensuel)}</td>
+    <td class="num">${Math.round(l.isoc.tauxDeductibilite*100)} %</td>
+    <td class="num">${l.isoc.dna?eurFmt(l.isoc.dna):'—'}</td>
+    <td class="num">${l.isoc.surcoutISOC?eurFmt(l.isoc.surcoutISOC):'—'}</td>
+  </tr>`).join('')}
+  </tbody><tfoot><tr class="tot">
+    <td colspan="6">TOTAL</td><td class="num">${eurFmt(totAtn)}</td><td class="num">${eurFmt(totAtn/12)}</td>
+    <td></td><td class="num">${eurFmt(totDna)}</td><td class="num">${eurFmt(totSurcout)}</td>
+  </tr></tfoot></table>
+  <div style="margin-top:12px;font-size:8.5px;color:#666">
+    ATN au barème ${annee} — référence CO2 essence ${ATN_REF_CO2_2026.essence} g, diesel
+    ${ATN_REF_CO2_2026.diesel} g, minimum légal ${eurFmt(ATN_MIN_2026)}. Ces références sont indexées
+    chaque année et restent à contrôler avant dépôt. Document de travail interne.
+  </div>
+</div>`;
+  return genererPdf(contenu,`flotte-vehicules-${annee}`,{sansEntete:true,sansPied:true,paysage:true,marges:10});
+}
+
 function renderImmoPage(){
   renderClientContextSelector('immoClientSelector',{onChange:()=>renderImmoPage()});
   const noSel=document.getElementById('immoNoSel');
@@ -17789,6 +18058,108 @@ function copierEstimationTarifs(){
   }else notif('e','❌ Le presse-papiers n\'est pas accessible');
 }
 
+// ══════════════════════════════════════════════
+// CATALOGUE DE FACTURATION
+//
+// « Un client me demande un service, je clique dessus pour ne pas oublier
+// de le facturer. »
+//
+// La liste de prix existe déjà : c'est DB.tarifs, la grille de l'onglet
+// Tarifs. On la lit, on n'en crée pas une seconde — un prix modifié là se
+// répercute ici le jour même.
+//
+// La prestation retenue rejoint DB.timeEntries, qui est déjà la file
+// d'attente de la facturation (widget « à facturer », import dans une
+// facture). Une prestation au forfait y porte `montant` et `minutes:0` :
+// elle se facture au prix, pas au temps.
+// ══════════════════════════════════════════════
+
+// Les taux horaires et les règles de tarification ne sont pas des
+// prestations que l'on facture d'un clic : on ne garde que les forfaits.
+const FAMILLES_FACTURABLES=['compta','paie','affiliation','societe','admin'];
+
+function prestationEstForfait(e){return !!e&&typeof e.montant==='number'&&e.montant>0;}
+
+// Libellé court : « Prix déclaration TVA/trimestre (€) » → « Déclaration TVA/trimestre »
+function libelleTarif(cle){
+  let l=(TARIF_LABELS[cle]||cle).replace(/\s*\(€\)\s*$/,'').trim();
+  l=l.replace(/^Prix\s+/i,'');
+  return l.charAt(0).toUpperCase()+l.slice(1);
+}
+
+function renderCatalogueFacturation(){
+  const box=document.getElementById('cat_fact_liste');if(!box)return;
+
+  const sel=document.getElementById('cat_fact_client');
+  if(sel&&!sel.options.length){
+    sel.innerHTML='<option value="">— Choisir un client —</option>'+
+      DB.clients.slice().sort((a,b)=>(a.nom||'').localeCompare(b.nom||''))
+        .map(c=>`<option value="${escX(c.id)}">${escX(c.nom)}</option>`).join('');
+    if(currentClientId)sel.value=currentClientId;
+  }
+  const clientId=sel?sel.value:'';
+
+  const q=(document.getElementById('cat_fact_q')?.value||'').trim().toLowerCase();
+  const info=document.getElementById('cat_fact_info');
+  if(info){
+    const enAttente=(DB.timeEntries||[]).filter(e=>!e.invoiced&&prestationEstForfait(e)&&(!clientId||e.clientId===clientId));
+    const total=enAttente.reduce((s,e)=>s+e.montant,0);
+    info.textContent=enAttente.length?`${enAttente.length} prestation(s) en attente · ${eurFmt(total)}`:'';
+  }
+
+  const familles=TARIF_FAMILLES.filter(f=>FAMILLES_FACTURABLES.includes(f.cle));
+  const html=familles.map(f=>{
+    const champs=f.champs.filter(k=>{
+      const prix=(DB.tarifs||{})[k];
+      if(!prix||prix<=0)return false;
+      return !q||libelleTarif(k).toLowerCase().includes(q)||f.nom.toLowerCase().includes(q);
+    });
+    if(!champs.length)return '';
+    return`<div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${f.icone} ${escX(f.nom)}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${champs.map(k=>`<button class="btn btn-ghost btn-xs" style="border:1px solid var(--border2)"
+            onclick="ajouterPrestationTarifee('${escX(k)}')"
+            title="Ajouter aux prestations à facturer">
+            ${escX(libelleTarif(k))} <strong style="color:var(--primary-h)">${eurFmt(DB.tarifs[k])}</strong>
+          </button>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+
+  box.innerHTML=html||etatVide('🔍','Aucune prestation ne correspond',
+    q?'Essayez un autre mot, ou vérifiez la grille dans l\'onglet Tarifs.'
+     :'Renseignez vos prix dans l\'onglet Tarifs pour les retrouver ici.');
+}
+
+function ajouterPrestationTarifee(cle){
+  const clientId=document.getElementById('cat_fact_client')?.value||'';
+  if(!clientId){notif('e','❌ Choisissez d\'abord le client qui demande la prestation');return;}
+  const prix=(DB.tarifs||{})[cle];
+  if(!prix||prix<=0){notif('e','❌ Aucun prix défini pour cette prestation — voir l\'onglet Tarifs');return;}
+
+  DB.timeEntries=DB.timeEntries||[];
+  DB.timeEntries.push({
+    id:uid(),clientId,
+    task:'Prestation',
+    minutes:0,                 // facturée au forfait, pas au temps
+    montant:prix,tarifCle:cle,
+    date:toISO(new Date()),
+    note:libelleTarif(cle),
+    facturable:true,
+    userId:getActiveMembre()||null,
+    createdAt:Date.now(),
+  });
+  save();
+  logHistorique(clientId,'facture',`Prestation à facturer : ${libelleTarif(cle)} — ${eurFmt(prix)}`);
+  notif('s',`✅ ${libelleTarif(cle)} — ${eurFmt(prix)} ajouté pour ${getClientName(clientId)}`);
+
+  renderCatalogueFacturation();
+  if(typeof renderPrestationsAFacturer==='function')renderPrestationsAFacturer();
+  if(typeof renderTimesheetEntries==='function')renderTimesheetEntries();
+  if(typeof renderTimesheetStats==='function')renderTimesheetStats();
+}
+
 function switchTimesheetTab(tab){
   ['temps','captures','kanban','rapports','factures','rh','ia','renta','equipe','auto','tarifs'].forEach(t=>{
     const el=document.getElementById('ts_tab_'+t);if(el)el.style.display=t===tab?'block':'none';
@@ -17798,7 +18169,7 @@ function switchTimesheetTab(tab){
   if(tab==='captures')renderCapturesList();
   if(tab==='kanban')renderAllKanbanBoards();
   if(tab==='rapports')renderRapport();
-  if(tab==='factures')renderInvoices();
+  if(tab==='factures'){renderInvoices();renderCatalogueFacturation();}
   if(tab==='rh')renderRH();
   if(tab==='ia')initIAChat();
   if(tab==='equipe')renderEquipe();
@@ -18079,7 +18450,7 @@ function renderUnbilledTime(){
   if(!unbilled.length){box.innerHTML='<div style="color:var(--text3);font-size:12px;padding:8px">Aucun temps non facturé pour ce client.</div>';return;}
   box.innerHTML=unbilled.map(e=>`<label style="display:flex;align-items:center;gap:8px;padding:4px 4px;font-size:13px;cursor:pointer;border-radius:6px;transition:background .12s;margin-bottom:2px" onmouseover="this.style.background='rgba(255,255,255,.05)'" onmouseout="this.style.background=''">
     <input type="checkbox" data-entry="${e.id}" style="width:14px;height:14px">
-    <span class="fw" style="min-width:50px">${minutesToHM(e.minutes)}</span>
+    <span class="fw" style="min-width:62px${prestationEstForfait(e)?';color:var(--primary-h)':''}">${prestationEstForfait(e)?eurFmt(e.montant):minutesToHM(e.minutes)}</span>
     <span>${escX(getClientName(e.clientId))}</span>
     <span style="color:var(--text3);font-size:11px">${e.date?e.date.split('-').reverse().join('/'):''}  ${escX(e.note||e.type||'')}</span>
   </label>`).join('');
@@ -18088,8 +18459,15 @@ function importUnbilledToInvoice(){
   const checked=[...document.querySelectorAll('#inv_unbilled_list input[data-entry]:checked')];
   checked.forEach(cb=>{
     const e=DB.timeEntries.find(x=>x.id===cb.dataset.entry);if(!e)return;
+    const dateFr=e.date?e.date.split('-').reverse().join('/'):'';
+    // Une prestation au forfait se facture à son prix, en une unité.
+    // Le temps presté, lui, se valorise au taux horaire.
+    if(prestationEstForfait(e)){
+      invoiceLines.push({id:uid(),desc:`${e.note||'Prestation'} (${dateFr})`,qty:1,pu:e.montant,entryId:e.id});
+      return;
+    }
     const taux=(DB.exp&&DB.exp.tauxHoraire)||0;
-    invoiceLines.push({id:uid(),desc:`${e.type||'Prestation'} — ${getClientName(e.clientId)} (${e.date?e.date.split('-').reverse().join('/'):''})${e.note?' — '+e.note:''}`,qty:Math.round(e.minutes/60*100)/100,pu:taux,entryId:e.id});
+    invoiceLines.push({id:uid(),desc:`${e.type||'Prestation'} — ${getClientName(e.clientId)} (${dateFr})${e.note?' — '+e.note:''}`,qty:Math.round(e.minutes/60*100)/100,pu:taux,entryId:e.id});
   });
   renderInvoiceLines();notif('s',`${checked.length} entrée(s) importée(s) en lignes`);
 }
