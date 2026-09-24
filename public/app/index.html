@@ -1980,6 +1980,15 @@ body.density-compact .page{padding:14px}
         <!-- KPI PRINCIPAUX -->
         <div id="dash_kpi_row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:16px"></div>
 
+        <!-- CE QUI VOUS ATTEND — triage unique, bâti sur la couche de détection -->
+        <div class="card" id="blk_triage" style="border-left:3px solid var(--red);margin-bottom:16px">
+          <div class="card-header">
+            <div class="card-title"><div class="icon icon-red">🎯</div>Ce qui vous attend</div>
+            <span id="triage_resume" style="font-size:11px;color:var(--text3)"></span>
+          </div>
+          <div id="triage_liste"></div>
+        </div>
+
         <!-- GRAPHIQUES REVENUS & NOUVEAUX CLIENTS -->
         <!-- ROUTINE DU JOUR -->
         <div id="blk_routine" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:16px">
@@ -2160,6 +2169,20 @@ body.density-compact .page{padding:14px}
               <div><div style="font-size:10px;color:var(--text3)">Capital</div><div style="font-size:13px;font-weight:600;margin-top:4px;font-family:Consolas" id="dc_capital">—</div></div>
               <div><div style="font-size:10px;color:var(--text3)">Actionnaires</div><div style="font-size:22px;font-weight:700;margin-top:4px" id="dc_count_act">0</div></div>
             </div>
+          </div>
+
+          <!-- Prestation demandée par ce client -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><div class="icon icon-amber">🏷️</div>Ce client demande un service</div>
+              <span id="dc_fact_info" style="font-size:11px;color:var(--text3)"></span>
+            </div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:8px">
+              Un clic et la prestation part dans les prestations à facturer, au prix de votre grille.
+            </div>
+            <input id="dc_fact_q" placeholder="Chercher : TVA, UBO, paie, constitution…" oninput="renderCatalogueClient()"
+              style="width:100%;background:var(--solid);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 10px;color:var(--text);font-size:12px;margin-bottom:8px">
+            <div id="dc_fact_liste"></div>
           </div>
 
           <!-- Tâches du client -->
@@ -6857,6 +6880,26 @@ function resetSettingsToDefault(){
 // ══════════════════════════════════════════════
 
 const NOUVEAUTES=[
+  {v:'v53',date:'2026-09-24',icone:'🧾',titre:'Fiche de paie redessinée',
+   ou:'Paie & OD → un mois → PDF',
+   quoi:"Nouvelle mise en page : bandeau d'en-tête, identité sur une ligne, puis le décompte qui descend du brut au net dans cet ordre. Une seule couleur porte un sens — le rouge retire, le vert ajoute. Le net à payer est le seul élément en gros. Aucun calcul n'a été modifié.",
+   pas:"Elle a fait apparaître un problème antérieur : l'écriture comptable ne s'équilibre pas, de l'exact montant de l'ATN. Un avertissement le signale désormais sur la fiche. Le correctif de fond demande votre arbitrage — voir ci-dessous."},
+
+  {v:'v52',date:'2026-09-24',icone:'📄',titre:'Fini le « PDF page blanche »',
+   ou:'Tous les boutons PDF',
+   quoi:"Quand le générateur PDF ne peut pas se charger — hors ligne, bloqueur, ou dans la fenêtre de l'application en ligne — l'app ouvrait une fenêtre vide et écrivait dedans. Souvent bloquée, elle restait blanche. Elle télécharge maintenant un document complet, à imprimer en PDF par Ctrl+P.",
+   pas:"Ce n'est pas un vrai PDF dans ce cas de repli, mais un document prêt à imprimer. Le message vous dit lequel des deux vous avez obtenu."},
+
+  {v:'v51',date:'2026-09-24',icone:'🎯',titre:'« Ce qui vous attend » sur le tableau de bord',
+   ou:'Tableau de bord, juste sous les compteurs',
+   quoi:"Le tableau de bord comptait 29 blocs : un mur où rien ne ressortait. Un bloc unique rassemble désormais ce qui réclame une action — retards, échéances, impayés, pièces non reçues, prestations à facturer, forfaits dépassés — trié par gravité, avec le nombre et le bouton pour y aller.",
+   pas:"Il ne recalcule rien : il lit la même analyse que la page Agents. Les 29 blocs sont toujours là en dessous, masquables un par un."},
+
+  {v:'v51',date:'2026-09-24',icone:'🏷️',titre:'La liste de prix sur la fiche du client',
+   ou:'Fiche client, bloc « Ce client demande un service »',
+   quoi:"Le catalogue de facturation était dans Timesheet → Factures. Mais quand un client appelle, vous êtes sur SA fiche. Il y est désormais aussi : 12 prestations courantes affichées, les 45 accessibles à la recherche, et le client vient du contexte.",
+   pas:"C'est le même catalogue et la même grille de prix — pas une copie. Un tarif se modifie toujours au même endroit, dans l'onglet Tarifs."},
+
   {v:'v50',date:'2026-09-24',icone:'👥',titre:'Le cabinet devient une équipe',
    ou:'En-tête (votre nom) · Timesheet → Équipe · partout où l\'on crée quelque chose',
    quoi:"Tâches, prestations et notes portent désormais l'auteur qui les a créées, affiché par une pastille aux initiales. Un filtre « Qui » apparaît dans le Timesheet. Cinq rôles existent — administrateur, comptable, collaborateur, secrétariat, intervenant externe — et chacun décrit ce qu'il autorise au moment où on le choisit.",
@@ -9076,6 +9119,106 @@ function updateDashClock(){
 }
 
 // ══════════════════════════════════════════════
+// CE QUI VOUS ATTEND — le triage du matin
+//
+// Le tableau de bord comptait 29 blocs : un mur, dans lequel rien ne
+// ressort. Or la couche de détection des agents sait déjà tout ce qu'il
+// faut. Elle est donc lue ici aussi : une seule source de vérité, deux
+// présentations — le triage pour agir, la page Agents pour le détail.
+//
+// Chaque ligne dit : ce qui ne va pas, combien, et où cliquer. Rien d'autre.
+// ══════════════════════════════════════════════
+
+function signauxTriage(){
+  const s=[];
+  const pousser=(gravite,icone,titre,n,detail,appel)=>{
+    if(n>0)s.push({gravite,icone,titre,n,detail,appel});
+  };
+
+  const retard=tachesEnRetard('');
+  pousser('urgent','⏰','Tâches en retard',retard.length,
+    retard.length===1?'1 tâche a dépassé son échéance':'échéances dépassées',
+    "navigateToTaskView('late')");
+
+  const ech=(typeof detecterEcheances==='function')?detecterEcheances():{enRetard:[],semaine:[]};
+  pousser('urgent','📅','Échéances cette semaine',ech.semaine.length,
+    'à traiter dans les 7 jours',"showMain('taches')");
+  pousser('attention','📌','Échéances passées non pointées',ech.enRetard.length,
+    'traitées ou oubliées ? tant qu\'elles ne sont pas pointées, elles reviennent',
+    "showMain('taches')");
+
+  const impayes=(typeof detecterImpayes==='function')?detecterImpayes().filter(x=>x.enRetard):[];
+  const montantImpaye=impayes.reduce((t,x)=>t+(x.inv.montantHT||0),0);
+  pousser('urgent','💸','Factures impayées',impayes.length,
+    montantImpaye?eurFmt(montantImpaye)+' en souffrance':'échéance dépassée',
+    "showMain('timesheet');switchTimesheetTab('factures')");
+
+  const docs=(typeof detecterDocsManquants==='function')?detecterDocsManquants().filter(d=>d.enRetard):[];
+  pousser('attention','📎','Pièces réclamées non reçues',docs.length,
+    'date limite dépassée',"showMain('dashboard')");
+
+  const aFacturer=(DB.timeEntries||[]).filter(e=>!e.invoiced&&e.facturable!==false);
+  const forfaitDu=aFacturer.reduce((t,e)=>t+(prestationEstForfait(e)?e.montant:0),0);
+  pousser('attention','🧾','Prestations à facturer',aFacturer.length,
+    forfaitDu?eurFmt(forfaitDu)+' au forfait, plus le temps presté':'temps presté non facturé',
+    "showMain('timesheet');switchTimesheetTab('factures')");
+
+  const forfaits=(typeof detecterForfaitsDepasses==='function')?detecterForfaitsDepasses():[];
+  pousser('attention','⚖️','Forfaits dépassés',forfaits.length,
+    'le temps presté dépasse l\'abonnement ce mois-ci',
+    "showMain('timesheet');switchTimesheetTab('renta')");
+
+  const aberrantes=entreesTempsAberrantes();
+  pousser('attention','⚠️','Saisies de temps invraisemblables',aberrantes.length,
+    'plus de 24 h sur une journée — écartées des calculs tant qu\'elles ne sont pas corrigées',
+    "showMain('timesheet')");
+
+  const fragiles=(typeof detecterDossiersFragiles==='function')?detecterDossiersFragiles(50):[];
+  pousser('info','🩺','Dossiers au score dégradé',fragiles.length,
+    'KYC, pièces, impayés ou contact',"showMain('agents')");
+
+  const ordre={urgent:0,attention:1,info:2};
+  return s.sort((a,b)=>ordre[a.gravite]-ordre[b.gravite]||b.n-a.n);
+}
+
+function renderTriage(){
+  const box=document.getElementById('triage_liste');if(!box)return;
+  const signaux=signauxTriage();
+  const resume=document.getElementById('triage_resume');
+
+  if(!signaux.length){
+    if(resume)resume.textContent='';
+    box.innerHTML=etatVide('✅','Rien ne réclame votre attention',
+      'Aucune tâche en retard, aucune échéance proche, aucun impayé.',null,true);
+    return;
+  }
+
+  const urgents=signaux.filter(s=>s.gravite==='urgent').length;
+  if(resume)resume.textContent=urgents?`${urgents} point(s) urgent(s) sur ${signaux.length}`:`${signaux.length} point(s) à traiter`;
+
+  const style={
+    urgent:{bord:'var(--red)',tag:'tag-red',lbl:'Urgent'},
+    attention:{bord:'var(--amber)',tag:'tag-amber',lbl:'À traiter'},
+    info:{bord:'var(--border2)',tag:'tag-gray',lbl:'Pour information'},
+  };
+
+  box.innerHTML=signaux.map(s=>{
+    const st=style[s.gravite];
+    return`<div style="display:flex;align-items:center;gap:12px;padding:10px 12px;margin-bottom:6px;
+        border:1px solid var(--border2);border-left:3px solid ${st.bord};border-radius:9px;background:var(--surface2)">
+      <span style="font-size:18px;flex-shrink:0">${s.icone}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:600">${escX(s.titre)}
+          <span class="tag ${st.tag}" style="font-size:9px;margin-left:6px">${st.lbl}</span></div>
+        <div style="font-size:11px;color:var(--text3);margin-top:2px">${escX(s.detail)}</div>
+      </div>
+      <div style="font-size:22px;font-weight:700;font-family:var(--mono);color:${st.bord};flex-shrink:0">${s.n}</div>
+      <button class="btn btn-ghost btn-xs" onclick="${s.appel}" style="flex-shrink:0">Ouvrir →</button>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
 // KPI PRINCIPAUX
 // ══════════════════════════════════════════════
 function renderDashboardKpis(){
@@ -10782,21 +10925,39 @@ function enveloppePdf(contenu,opts){
   </div>`;
 }
 
-// Repli : ouvre une fenêtre d'impression avec le même contenu.
-function pdfParImpression(contenu,nomFichier,opts){
+// Repli quand le générateur PDF n'est pas disponible.
+//
+// L'ancien repli ouvrait une fenêtre vierge (`window.open('','_blank')`) et
+// écrivait dedans. Trois situations la laissent blanche : un bloqueur de
+// pop-ups, l'exécution dans l'iframe de la coquille, et une politique de
+// sécurité qui interdit d'écrire dans une fenêtre ouverte par script.
+// C'est la cause du « PDF page blanche ».
+//
+// On télécharge désormais un document HTML complet et autonome, qui
+// s'imprime en PDF d'un Ctrl+P. Aucun pop-up, rien à autoriser.
+function pdfParFichier(contenu,nomFichier,opts){
   const o=opts||{};
-  const w=window.open('','_blank');
-  if(!w){notif('e','❌ Le navigateur a bloqué la fenêtre — autorisez les pop-ups pour ce site');return false;}
-  w.document.write(`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
-    <title>${escX(nomFichier)}</title><style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    @page{size:A4 ${o.paysage?'landscape':'portrait'};margin:10mm}
-    body{background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
-    @media screen{body{padding:24px;max-width:820px;margin:0 auto;background:#f4f6f8}}
-    </style></head><body>${enveloppePdf(contenu,o)}</body></html>`);
-  w.document.close();
-  setTimeout(()=>{try{w.print();}catch(e){}},400);
-  return true;
+  const doc=`<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<title>${escX(nomFichier)}</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+@page{size:A4 ${o.paysage?'landscape':'portrait'};margin:10mm}
+body{background:#fff;print-color-adjust:exact;-webkit-print-color-adjust:exact}
+@media screen{body{padding:24px;max-width:${o.paysage?'1100px':'820px'};margin:0 auto;background:#f4f6f8}}
+.rappel{max-width:${o.paysage?'1100px':'820px'};margin:0 auto 16px;padding:10px 14px;background:#fff8e1;
+  border:1px solid #ffd54f;border-radius:8px;font:13px/1.5 'Segoe UI',Arial,sans-serif;color:#6d4c00}
+@media print{.rappel{display:none}}
+</style></head><body>
+<div class="rappel">Pour obtenir le PDF : <strong>Ctrl+P</strong> (ou ⌘+P), puis « Enregistrer au format PDF ».</div>
+${enveloppePdf(contenu,o)}
+</body></html>`;
+  try{
+    download(doc,slugFichier(nomFichier)+'.html','text/html;charset=utf-8');
+    return true;
+  }catch(e){
+    console.error('Repli PDF :',e);
+    notif('e','❌ Impossible de produire le document — réessayez en étant connecté');
+    return false;
+  }
 }
 
 // Point d'entrée unique. Renvoie true si un PDF a bien été produit.
@@ -10805,8 +10966,10 @@ async function genererPdf(contenu,nomFichier,opts){
   const nom=slugFichier(nomFichier)+'.pdf';
 
   if(!pdfDisponible()){
-    notif('i','ℹ️ Générateur PDF indisponible (hors ligne) — passage par l\'impression',6000);
-    return pdfParImpression(contenu,nomFichier,o);
+    // Dire ce qui se passe, plutôt que de laisser croire à un PDF raté :
+    // la bibliothèque vient d'un CDN et n'a pas pu être chargée.
+    notif('w','⚠️ Générateur PDF indisponible (hors ligne ou bloqué) — document HTML téléchargé, imprimez-le en PDF avec Ctrl+P',8000);
+    return pdfParFichier(contenu,nomFichier,o);
   }
 
   // Le rendu doit rester DANS LE FLUX du document : html2canvas ne capture
@@ -10835,8 +10998,8 @@ async function genererPdf(contenu,nomFichier,opts){
     return true;
   }catch(e){
     console.error('Génération PDF :',e);
-    notif('w','⚠️ Génération PDF impossible — passage par l\'impression',6000);
-    return pdfParImpression(contenu,nomFichier,o);
+    notif('w','⚠️ Génération PDF impossible — document HTML téléchargé, imprimez-le en PDF avec Ctrl+P',8000);
+    return pdfParFichier(contenu,nomFichier,o);
   }finally{
     enveloppe.remove();
   }
@@ -13644,7 +13807,7 @@ function renderTasks(){
   if(viewFilter==='unassigned')visibleTasks=visibleTasks.filter(t=>!t.assignedTo&&!t.done);
   else if(viewFilter==='late')visibleTasks=visibleTasks.filter(t=>!t.done&&t.due&&t.due<today);
   else if(viewFilter==='week')visibleTasks=visibleTasks.filter(t=>!t.done&&t.due&&t.due>=today&&t.due<=weekEnd);
-  if(!visibleTasks.length){box.innerHTML=`<div style="font-size:11px;color:var(--text3);padding:8px 0">${viewFilter!=='all'?'Aucune tâche pour ce filtre.':(activeMembre?'Aucune tâche assignée à cette personne.':'Aucune tâche — ajoutez-en une ci-dessous')}</div>`;return;}
+  if(!visibleTasks.length){box.innerHTML=`<div style="font-size:11px;color:var(--text3);padding:8px 0">${viewFilter!=='all'?'Aucune tâche pour ce filtre.':(membreVue?'Aucune tâche assignée à cette personne.':'Aucune tâche — ajoutez-en une ci-dessous')}</div>`;return;}
   box.innerHTML=sortTasks(visibleTasks).map(t=>taskRowHtml(t,null)).join('');
 }
 
@@ -13766,6 +13929,7 @@ function renderDashboardHome(){
   rendre(
     renderDashHeader,          // bonjour + date
     renderDashboardKpis,       // bandeau de KPI
+    renderTriage,              // ce qui reclame une action, par gravite
     renderTodayView,           // ce qui tombe aujourd'hui
     renderRoutineDuJour,       // routine du jour
     renderAgendaSummary,       // prochains rendez-vous
@@ -13788,6 +13952,8 @@ function renderDashboardHome(){
 function renderClientPage(){
   const c=DB.clients.find(x=>x.id===currentClientId);
   if(!c)return;
+
+  renderCatalogueClient();   // prestations facturables de ce client
 
   // Infos
   document.getElementById('dc_nom').textContent=c.nom;
@@ -15773,150 +15939,203 @@ function openFicheDePaie(idx){
     cumImposable+=(r.brut+r.atn);cumNet+=r.salairePoche;
   }
 
-  const ROW=(label,montant,opts={})=>`
-    <tr style="${opts.bold?'font-weight:700;':''}${opts.bg?'background:#f0fdfa;':''}">
-      <td style="padding:4px 10px;${opts.section?'font-weight:700;text-transform:uppercase;font-size:10px;letter-spacing:.04em;color:#0f766e;padding-top:14px;':''}">${label}</td>
-      <td style="padding:4px 10px;text-align:right;font-family:Consolas,monospace;${opts.color?'color:'+opts.color+';':''}">${montant!==undefined?eur(montant):''}</td>
+  // ── Grammaire visuelle de la fiche ──
+  // Une seule couleur porte un sens : le rouge retire, le vert ajoute, le
+  // reste est de l'encre. Le net à payer est le seul élément en gros, seul
+  // sur sa ligne — c'est ce que le dirigeant cherche en premier.
+  const ENCRE='#14161a', GRIS='#6b7280', TRAIT='#e5e7eb',
+        ACCENT='#0d9488', RETENUE='#b91c1c', AJOUT='#047857', DOUX='#f8fafc';
+
+  const MONO="font-family:Consolas,'SF Mono',monospace;font-variant-numeric:tabular-nums";
+
+  // Ligne de décompte. `type` : 'section' | 'retenue' | 'ajout' | 'total' | undefined
+  const LIGNE=(label,montant,type,note)=>{
+    if(type==='section')return`<tr><td colspan="2" style="padding:13px 0 3px;font-size:8.5px;font-weight:700;
+      text-transform:uppercase;letter-spacing:.1em;color:${GRIS}">${label}</td></tr>`;
+    const signe=type==='retenue'?'−':(type==='ajout'?'+':'');
+    const couleur=type==='retenue'?RETENUE:(type==='ajout'?AJOUT:ENCRE);
+    const gras=type==='total'?'font-weight:700;':'';
+    const bord=type==='total'?`border-top:1px solid ${TRAIT};`:'';
+    return`<tr>
+      <td style="padding:5px 0;${bord}${gras}font-size:11px;color:${ENCRE}">${label}${
+        note?`<span style="display:block;font-size:9px;color:${GRIS};font-weight:400">${note}</span>`:''}</td>
+      <td style="padding:5px 0;${bord}${gras}text-align:right;${MONO};font-size:11.5px;color:${couleur};white-space:nowrap">${
+        signe}${eur(montant)}</td>
     </tr>`;
+  };
+
+  const INFO=(label,valeur)=>`<div style="margin-bottom:5px">
+      <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">${label}</div>
+      <div style="font-size:11px;color:${ENCRE};font-weight:600;margin-top:1px">${valeur}</div>
+    </div>`;
 
   const baseImposable=m.brut+m.atn;
   const totalRetenues=cotisations+precompte;
   const initialesA=initials(a.prenom,a.nom);
 
+  // Contrôle d'équilibre de l'écriture, dans l'esprit du module Compta :
+  // une partie double qui ne tombe pas juste doit se voir, pas se deviner.
+  const debitOD=m.brut+m.frais;
+  const creditOD=m.cotis+precompte+m.salairePoche;
+  const ecartOD=creditOD-debitOD;
+
   document.title=`Fiche de paie - ${a.prenom} ${a.nom} - ${moisLabel(idx)} ${annee}`;
   currentPdfFilename=`fiche-paie-${a.prenom}-${a.nom}-${moisLabel(idx)}-${annee}`;
 
   const html=`
-  <div style="font-family:'Segoe UI',system-ui,sans-serif;font-size:11px;line-height:1.45;color:#1a1a1a;background:#fff;padding:14px 20px">
+  <div style="font-family:'Segoe UI',system-ui,sans-serif;color:${ENCRE};background:#fff;padding:0">
 
-    <!-- EN-TÊTE CABINET + TITRE -->
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;border-bottom:2px solid #0d9488;padding-bottom:8px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:40px;border-radius:8px;background:${exp.logo?'#fff':'#0d9488'};border:${exp.logo?'1px solid #e4e6ea':'none'};display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;overflow:hidden;flex-shrink:0">${exp.logo?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`:escX((exp.nom||'?')[0]||'?')}</div>
+    <!-- BANDEAU — cabinet à gauche, nature du document à droite -->
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;
+        background:${ENCRE};color:#fff;padding:14px 22px;border-radius:10px 10px 0 0">
+      <div style="display:flex;align-items:center;gap:11px;min-width:0">
+        <div style="width:34px;height:34px;border-radius:8px;background:${exp.logo?'#fff':ACCENT};
+            display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;
+            overflow:hidden;flex-shrink:0">${exp.logo
+              ?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`
+              :escX((exp.nom||'?')[0]||'?')}</div>
+        <div style="min-width:0">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.02em">${escX(exp.nom||'Mon Cabinet')}</div>
+          <div style="font-size:9px;color:rgba(255,255,255,.55);margin-top:1px">${escX(
+            [exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(' · '))}</div>
+        </div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:8.5px;text-transform:uppercase;letter-spacing:.16em;color:rgba(255,255,255,.55)">Fiche de paie</div>
+        <div style="font-size:17px;font-weight:700;margin-top:2px;text-transform:capitalize">${moisLabel(idx)} ${annee}</div>
+      </div>
+    </div>
+
+    <div style="border:1px solid ${TRAIT};border-top:none;border-radius:0 0 10px 10px;padding:18px 22px 14px">
+
+      <!-- QUI, POUR QUI, SUR QUELLE PÉRIODE -->
+      <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:20px;
+          padding-bottom:14px;border-bottom:1px solid ${TRAIT};margin-bottom:16px">
         <div>
-          <div style="font-size:11px;color:#0f766e;font-weight:700;text-transform:uppercase;letter-spacing:.05em">${escX(exp.nom||'Mon Cabinet')}</div>
-          <div style="font-size:10px;color:#666">${escX([exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(' · '))}</div>
-          ${exp.email?`<div style="font-size:10px;color:#666">${escX(exp.email)}${exp.tel?' · '+escX(exp.tel):''}</div>`:''}
+          <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Bénéficiaire</div>
+          <div style="font-size:15px;font-weight:700;margin-top:3px;line-height:1.25">${escX((a.prenom+' '+a.nom).toUpperCase())}</div>
+          <div style="font-size:10px;color:${GRIS};margin-top:3px;line-height:1.45">${escX(
+            [a.adresse,[a.cp,a.commune].filter(Boolean).join(' ')].filter(Boolean).join(', '))||'—'}</div>
+          <div style="font-size:10px;color:${GRIS};margin-top:4px">
+            NISS <strong style="color:${ENCRE};${MONO}">${a.niss?fmtNiss(a.niss):'—'}</strong>
+            &nbsp;·&nbsp; né(e) le <strong style="color:${ENCRE}">${dnaiss}</strong>
+          </div>
+        </div>
+        <div>
+          ${INFO('Employeur',escX(c.nom))}
+          ${INFO('BCE',c.bce?'BE '+fmtBce(c.bce):'—')}
+          ${INFO('Statut',escX(a.fonction||"Dirigeant d'entreprise"))}
+        </div>
+        <div>
+          ${INFO('Période',periodeDu+' → '+periodeAu)}
+          ${INFO('Paiement le',paiementLe)}
+          ${INFO('En fonction depuis',dentree)}
         </div>
       </div>
-      <div style="text-align:right">
-        <div style="font-size:18px;font-weight:700;color:#1a1a1a">Fiche de paie</div>
-        <div style="font-size:11px;color:#0d9488;font-weight:600">${escX(a.fonction||"Dirigeant d'entreprise")}</div>
-        <div style="font-size:10px;color:#666;margin-top:4px">Employeur : <strong style="color:#1a1a1a">${escX(c.nom)}</strong></div>
-        <div style="font-size:10px;color:#888">${c.bce?'BE '+fmtBce(c.bce):''}${c.adresse?' · '+escX(c.adresse):''}${c.cp||c.commune?' '+escX([c.cp,c.commune].filter(Boolean).join(' ')):''}</div>
-        <div style="font-size:10px;color:#666">Période : ${String(idx+1).padStart(2,'0')}/${annee}</div>
-      </div>
-    </div>
 
-    <!-- BÉNÉFICIAIRE + DONNÉES PRO -->
-    <div style="display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-bottom:8px">
-      <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:7px;padding:8px 12px">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:4px">Bénéficiaire</div>
-        <div style="font-size:13px;font-weight:700">${escX((a.prenom+' '+a.nom).toUpperCase())}</div>
-        <div style="font-size:10px;color:#555;margin-top:2px">${escX([a.adresse,a.cp,a.commune].filter(Boolean).join(', '))||'—'}</div>
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:10px;color:#555;margin-top:4px">
-          <span style="color:#888">NISS</span><strong>${a.niss?fmtNiss(a.niss):'—'}</strong>
-          <span style="color:#888">Naissance</span><strong>${dnaiss}</strong>
-        </div>
-      </div>
-      <div style="background:#f0fdfa;border:1px solid #99f6e4;border-radius:7px;padding:8px 12px">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:4px">Données professionnelles</div>
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:2px 8px;font-size:10px;color:#555">
-          <span style="color:#888">Statut</span><strong>${escX(a.fonction||"Dirigeant")}</strong>
-          <span style="color:#888">Entrée le</span><strong>${dentree}</strong>
-          <span style="color:#888">Période</span><strong>${periodeDu} — ${periodeAu}</strong>
-          <span style="color:#888">Paiement le</span><strong>${paiementLe}</strong>
-        </div>
-      </div>
-    </div>
-
-    <!-- DÉTAIL RÉMUNÉRATION -->
-    <div style="border:1px solid #e4e6ea;border-radius:7px;padding:8px 12px;margin-bottom:8px">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:4px">Détail de la rémunération</div>
-      <table style="width:100%;border-collapse:collapse;font-size:11px">
-        <thead>
-          <tr style="border-bottom:1px solid #ccfbf1;color:#0f766e">
-            <th style="text-align:left;padding:2px 6px;font-size:9px;text-transform:uppercase;letter-spacing:.04em">Libellé</th>
-            <th style="text-align:right;padding:2px 6px;font-size:9px;text-transform:uppercase;letter-spacing:.04em;width:120px">Montant</th>
-          </tr>
-        </thead>
+      <!-- LE DÉCOMPTE — du brut au net, dans cet ordre -->
+      <table style="width:100%;border-collapse:collapse">
         <tbody>
-          ${ROW('Salaire brut',m.brut,{bold:true})}
-          ${ROW('RETENUES SOCIALES & FISCALES',undefined,{section:true})}
-          ${ROW('Cotisations sociales + PLCI',cotisations,{bg:true,color:cotisations?'#dc2626':undefined})}
-          ${ROW('Précompte professionnel',precompte,{color:precompte?'#dc2626':undefined})}
-          ${m.deductions?ROW('Déductions diverses',m.deductions,{bg:true,color:'#dc2626'}):''}
-          ${ROW('Total des retenues',totalRetenues+(m.deductions||0),{bold:true})}
-          ${ROW('AVANTAGES & FRAIS PROPRES',undefined,{section:true})}
-          ${m.atn?ROW('Avantage de toute nature (ATN)',m.atn,{bg:true,color:'#0f766e'}):''}
-          ${ROW("Frais propres à l'employeur (cadre 19)",m.frais,{bg:!m.atn,color:'#0d9488'})}
-          <tr><td colspan="2" style="padding:4px 0"><hr style="border:none;border-top:1px solid #e4e6ea"></td></tr>
-          ${ROW('Revenu imposable (brut + ATN)',baseImposable,{bold:true})}
-          ${ROW('Revenu imposable net (après retenues)',baseImposable-totalRetenues,{bold:true,bg:true})}
+          ${LIGNE('Rémunération brute',m.brut,'total')}
+
+          ${LIGNE('Retenues',null,'section')}
+          ${LIGNE('Cotisations sociales et PLCI',cotisations,'retenue')}
+          ${LIGNE('Précompte professionnel',precompte,'retenue')}
+          ${m.deductions?LIGNE('Déductions diverses',m.deductions,'retenue'):''}
+          ${LIGNE('Total des retenues',totalRetenues+(m.deductions||0),'total')}
+
+          ${(m.atn||m.frais)?LIGNE('Avantages et frais propres',null,'section'):''}
+          ${m.atn?LIGNE('Avantage de toute nature',m.atn,'ajout','imposable, non versé'):''}
+          ${m.frais?LIGNE("Frais propres à l'employeur",m.frais,'ajout','cadre 19 — non imposable'):''}
+
+          ${LIGNE('Base imposable',null,'section')}
+          ${LIGNE('Revenu imposable brut',baseImposable,undefined,'rémunération + ATN')}
+          ${LIGNE('Revenu imposable net',baseImposable-totalRetenues,'total','après retenues')}
         </tbody>
       </table>
-    </div>
 
-    <!-- NET À PAYER — pièce maîtresse -->
-    <div style="background:linear-gradient(135deg,#0d9488,#14b8a6);border-radius:10px;padding:12px 20px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.8);margin-bottom:4px">Rémunération à payer (net) — compte 455</div>
-        <div style="font-size:28px;font-weight:700;color:#fff;letter-spacing:-.01em;font-family:Georgia,serif">${eur(m.salairePoche)}</div>
-      </div>
-      <div style="text-align:right">
-        <div style="font-size:9px;color:rgba(255,255,255,.7)">Versé le</div>
-        <div style="font-size:12px;font-weight:700;color:#fff">${paiementLe}</div>
-        <div style="font-size:9px;color:rgba(255,255,255,.7);margin-top:4px">Brut</div>
-        <div style="font-size:11px;font-weight:600;color:#ccfbf1">${eur(m.brut)}</div>
-      </div>
-    </div>
-
-    <!-- ÉCRITURE COMPTABLE OD -->
-    <div style="border:1px solid #e4e6ea;border-radius:7px;padding:8px 12px;margin-bottom:8px">
-      <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:4px">Écriture comptable (OD) — ${moisLabel(idx)} ${annee}</div>
-      <table style="width:100%;border-collapse:collapse;font-size:11px">
-        <thead>
-          <tr style="border-bottom:1px solid #ccfbf1;color:#0f766e">
-            <th style="text-align:left;padding:2px 6px;font-size:9px;width:52px">Compte</th>
-            <th style="text-align:left;padding:2px 6px;font-size:9px">Libellé</th>
-            <th style="text-align:right;padding:2px 6px;font-size:9px;width:100px">Débit</th>
-            <th style="text-align:right;padding:2px 6px;font-size:9px;width:100px">Crédit</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td style="padding:2px 6px;font-family:Consolas,monospace">620</td><td style="padding:2px 6px">Rémunérations — ${escX(a.prenom+' '+a.nom)}</td><td style="padding:2px 6px;text-align:right;font-family:Consolas,monospace">${eur(m.brut)}</td><td></td></tr>
-          ${m.frais?`<tr style="background:#f0fdfa"><td style="padding:2px 6px;font-family:Consolas,monospace">623</td><td style="padding:2px 6px">Frais propres à l'employeur</td><td style="padding:2px 6px;text-align:right;font-family:Consolas,monospace">${eur(m.frais)}</td><td></td></tr>`:''}
-          ${m.cotis?`<tr><td style="padding:2px 6px;font-family:Consolas,monospace">453</td><td style="padding:2px 6px">Cotisations sociales / PLCI à payer</td><td></td><td style="padding:2px 6px;text-align:right;font-family:Consolas,monospace;color:#dc2626">${eur(m.cotis)}</td></tr>`:''}
-          ${precompte?`<tr style="background:#f0fdfa"><td style="padding:2px 6px;font-family:Consolas,monospace">454</td><td style="padding:2px 6px">Précompte professionnel à payer</td><td></td><td style="padding:2px 6px;text-align:right;font-family:Consolas,monospace;color:#dc2626">${eur(precompte)}</td></tr>`:''}
-          <tr style="border-top:1px solid #ccfbf1;font-weight:700"><td style="padding:2px 6px;font-family:Consolas,monospace">455</td><td style="padding:2px 6px;color:#0d9488">Rémunération à payer (net)</td><td></td><td style="padding:2px 6px;text-align:right;font-family:Consolas,monospace;color:#0d9488">${eur(m.salairePoche)}</td></tr>
-          <tr style="font-weight:700;background:#f0fdfa"><td colspan="2" style="padding:2px 6px;color:#0f766e">Total débit = Total crédit</td><td style="padding:2px 6px;text-align:right;font-family:Consolas,monospace">${eur(m.brut+m.frais)}</td><td style="padding:2px 6px;text-align:right;font-family:Consolas,monospace">${eur(m.cotis+precompte+m.salairePoche)}</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- CUMULS ANNUELS — discrets -->
-    <div style="display:flex;gap:8px;align-items:stretch;margin-bottom:8px">
-      <div style="flex:1;border:1px solid #e4e6ea;border-radius:7px;padding:6px 10px">
-        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#0f766e;margin-bottom:4px">Cumuls annuels — janvier → ${moisLabel(idx)} ${annee}</div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);text-align:center;font-size:10px">
-          <div style="padding:2px 4px;border-right:1px solid #e4e6ea"><div style="color:#888;font-size:8px;text-transform:uppercase">Bruts</div><div style="font-weight:600;font-family:Consolas,monospace;font-size:10px">${eur(cumBrut)}</div></div>
-          <div style="padding:2px 4px;border-right:1px solid #e4e6ea"><div style="color:#888;font-size:8px;text-transform:uppercase">Cotis.</div><div style="font-weight:600;font-family:Consolas,monospace;font-size:10px;color:#dc2626">${eur(cumCotis)}</div></div>
-          <div style="padding:2px 4px;border-right:1px solid #e4e6ea"><div style="color:#888;font-size:8px;text-transform:uppercase">Précompte</div><div style="font-weight:600;font-family:Consolas,monospace;font-size:10px;color:#dc2626">${eur(cumPrec)}</div></div>
-          <div style="padding:2px 4px"><div style="color:#888;font-size:8px;text-transform:uppercase">Frais propres</div><div style="font-weight:600;font-family:Consolas,monospace;font-size:10px;color:#0d9488">${eur(cumFrais)}</div></div>
+      <!-- LE NET — seul élément en gros, c'est ce qu'on cherche en premier -->
+      <div style="margin-top:18px;border:2px solid ${ACCENT};border-radius:10px;overflow:hidden">
+        <div style="display:flex;align-items:stretch">
+          <div style="flex:1;padding:14px 20px">
+            <div style="font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;color:${GRIS}">Net à payer</div>
+            <div style="font-size:32px;font-weight:700;color:${ACCENT};line-height:1.1;margin-top:2px;${MONO}">${eur(m.salairePoche)}</div>
+            <div style="font-size:9.5px;color:${GRIS};margin-top:3px">Versé le ${paiementLe} — compte 455</div>
+          </div>
+          <div style="flex:0 0 150px;background:${DOUX};border-left:1px solid ${TRAIT};padding:14px 18px;
+              display:flex;flex-direction:column;justify-content:center;gap:7px">
+            <div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Brut</div>
+              <div style="font-size:12px;font-weight:600;${MONO}">${eur(m.brut)}</div>
+            </div>
+            <div>
+              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Retenues</div>
+              <div style="font-size:12px;font-weight:600;color:${RETENUE};${MONO}">−${eur(totalRetenues+(m.deductions||0))}</div>
+            </div>
+          </div>
         </div>
       </div>
-      <div style="flex:0 0 140px;background:#0d9488;border-radius:7px;padding:8px 12px;display:flex;flex-direction:column;justify-content:center;text-align:center">
-        <div style="font-size:8px;color:rgba(255,255,255,.8);text-transform:uppercase;letter-spacing:.06em">Net cumulé ${annee}</div>
-        <div style="font-size:16px;font-weight:700;color:#fff;font-family:Consolas,monospace">${eur(cumNet)}</div>
-        <div style="font-size:8px;color:rgba(255,255,255,.65);margin-top:2px">Solde versé depuis janvier</div>
+
+      <!-- ÉCRITURE COMPTABLE — secondaire, donc grise et serrée -->
+      <div style="margin-top:16px">
+        <div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${GRIS};margin-bottom:5px">
+          Écriture comptable · OD ${moisLabel(idx)} ${annee}</div>
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead><tr style="color:${GRIS};border-bottom:1px solid ${TRAIT}">
+            <th style="text-align:left;padding:3px 6px 3px 0;font-size:8px;text-transform:uppercase;letter-spacing:.07em;width:46px">Cpte</th>
+            <th style="text-align:left;padding:3px 6px;font-size:8px;text-transform:uppercase;letter-spacing:.07em">Libellé</th>
+            <th style="text-align:right;padding:3px 6px;font-size:8px;text-transform:uppercase;letter-spacing:.07em;width:92px">Débit</th>
+            <th style="text-align:right;padding:3px 0 3px 6px;font-size:8px;text-transform:uppercase;letter-spacing:.07em;width:92px">Crédit</th>
+          </tr></thead>
+          <tbody>
+            <tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">620</td>
+                <td style="padding:3px 6px">Rémunérations — ${escX(a.prenom+' '+a.nom)}</td>
+                <td style="padding:3px 6px;text-align:right;${MONO}">${eur(m.brut)}</td><td></td></tr>
+            ${m.frais?`<tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">623</td>
+                <td style="padding:3px 6px">Frais propres à l'employeur</td>
+                <td style="padding:3px 6px;text-align:right;${MONO}">${eur(m.frais)}</td><td></td></tr>`:''}
+            ${m.cotis?`<tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">453</td>
+                <td style="padding:3px 6px">Cotisations sociales / PLCI à payer</td><td></td>
+                <td style="padding:3px 0 3px 6px;text-align:right;${MONO};color:${RETENUE}">${eur(m.cotis)}</td></tr>`:''}
+            ${precompte?`<tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">454</td>
+                <td style="padding:3px 6px">Précompte professionnel à payer</td><td></td>
+                <td style="padding:3px 0 3px 6px;text-align:right;${MONO};color:${RETENUE}">${eur(precompte)}</td></tr>`:''}
+            <tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">455</td>
+                <td style="padding:3px 6px;color:${ACCENT};font-weight:600">Rémunération à payer (net)</td><td></td>
+                <td style="padding:3px 0 3px 6px;text-align:right;${MONO};color:${ACCENT};font-weight:700">${eur(m.salairePoche)}</td></tr>
+            <tr style="border-top:1px solid ${TRAIT};font-weight:700">
+                <td colspan="2" style="padding:4px 6px 4px 0;color:${GRIS};font-size:9px;text-transform:uppercase;letter-spacing:.07em">Équilibre</td>
+                <td style="padding:4px 6px;text-align:right;${MONO}">${eur(debitOD)}</td>
+                <td style="padding:4px 0 4px 6px;text-align:right;${MONO};${ecartOD?'color:'+RETENUE:''}">${eur(creditOD)}</td></tr>
+          </tbody>
+        </table>
+        ${ecartOD?`<div style="margin-top:6px;padding:7px 10px;background:#fef2f2;border:1px solid #fecaca;
+            border-radius:6px;font-size:9.5px;color:${RETENUE};line-height:1.45">
+          <strong>Écriture déséquilibrée de ${eur(Math.abs(ecartOD))}.</strong>
+          Le net à payer inclut l'avantage de toute nature, qui est imposable mais n'est pas versé :
+          il gonfle le compte 455 sans contrepartie au débit. À trancher avant comptabilisation.
+        </div>`:''}
+      </div>
+
+      <!-- CUMULS — discrets, une seule ligne -->
+      <div style="margin-top:14px;background:${DOUX};border:1px solid ${TRAIT};border-radius:8px;padding:9px 14px">
+        <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS};margin-bottom:6px">
+          Cumuls ${annee} · janvier → ${moisLabel(idx)}</div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
+          ${[['Brut',cumBrut,ENCRE],['Cotisations',cumCotis,RETENUE],['Précompte',cumPrec,RETENUE],
+             ['Frais propres',cumFrais,AJOUT],['Net versé',cumNet,ACCENT]]
+            .map(([l,v,col],i)=>`<div style="${i<4?'border-right:1px solid '+TRAIT+';':''}padding-right:8px">
+              <div style="font-size:8px;color:${GRIS};text-transform:uppercase;letter-spacing:.05em">${l}</div>
+              <div style="font-size:11.5px;font-weight:700;color:${col};${MONO};margin-top:1px">${eur(v)}</div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <div style="margin-top:12px;padding-top:8px;border-top:1px solid ${TRAIT};font-size:8.5px;color:${GRIS};text-align:center">
+        ${escX(exp.nom||'votre cabinet')}${exp.bce?' · BE '+fmtBce(exp.bce):''}${exp.email?' · '+escX(exp.email):''}${exp.tel?' · '+escX(exp.tel):''}
+        &nbsp;—&nbsp; document établi sur base des données encodées, à vérifier avant versement.
       </div>
     </div>
-
-    <!-- PIED DE PAGE -->
-    <div style="padding-top:6px;border-top:1px solid #ccfbf1;font-size:9px;color:#aaa;text-align:center">
-      Document généré par ${escX(exp.nom||'votre cabinet')}${exp.bce?' — BE '+fmtBce(exp.bce):''}${exp.email?' — '+escX(exp.email):''}${exp.tel?' — '+escX(exp.tel):''}
-    </div>
-
   </div>
   `;
   document.getElementById('fdpDoc').innerHTML=html;
@@ -18330,8 +18549,49 @@ function renderCatalogueFacturation(){
      :'Renseignez vos prix dans l\'onglet Tarifs pour les retrouver ici.');
 }
 
-function ajouterPrestationTarifee(cle){
-  const clientId=document.getElementById('cat_fact_client')?.value||'';
+// Le même catalogue, sur la fiche du client — c'est là qu'on est quand le
+// client appelle, pas dans l'onglet Factures. Même source, même fonction
+// d'ajout : seul le client est pris du contexte au lieu d'un menu.
+function renderCatalogueClient(){
+  const box=document.getElementById('dc_fact_liste');if(!box)return;
+  const c=DB.clients.find(x=>x.id===currentClientId);
+  if(!c){box.innerHTML='';return;}
+
+  const q=(document.getElementById('dc_fact_q')?.value||'').trim().toLowerCase();
+  const info=document.getElementById('dc_fact_info');
+  if(info){
+    const attente=(DB.timeEntries||[]).filter(e=>!e.invoiced&&e.clientId===c.id&&prestationEstForfait(e));
+    const total=attente.reduce((s,e)=>s+e.montant,0);
+    info.textContent=attente.length?`${attente.length} en attente · ${eurFmt(total)}`:'';
+  }
+
+  const champs=TARIF_FAMILLES.filter(f=>FAMILLES_FACTURABLES.includes(f.cle))
+    .flatMap(f=>f.champs)
+    .filter(k=>{
+      const prix=(DB.tarifs||{})[k];
+      if(!prix||prix<=0)return false;
+      return !q||libelleTarif(k).toLowerCase().includes(q);
+    });
+
+  // Sans recherche, on ne déroule pas 45 boutons : les plus courants suffisent.
+  const COURANTS=['prixTVA','prixISOC','prixIPP','prixBNB','prixCloture','prixListing',
+                  'prix281','prixUBO','prixPvAg','prixAttestation','prixRdvSupp','prixFichePaieDirigeant'];
+  const liste=q?champs:champs.filter(k=>COURANTS.includes(k));
+
+  if(!liste.length){
+    box.innerHTML='<div style="font-size:11px;color:var(--text3)">Aucune prestation ne correspond.</div>';
+    return;
+  }
+  box.innerHTML=`<div style="display:flex;flex-wrap:wrap;gap:6px">
+    ${liste.map(k=>`<button class="btn btn-ghost btn-xs" style="border:1px solid var(--border2)"
+        onclick="ajouterPrestationTarifee('${escX(k)}','${escX(c.id)}')">
+        ${escX(libelleTarif(k))} <strong style="color:var(--primary-h)">${eurFmt(DB.tarifs[k])}</strong>
+      </button>`).join('')}
+  </div>${q?'':'<div style="font-size:10px;color:var(--text3);margin-top:6px">Les plus courantes — tapez pour chercher parmi les 45 prestations.</div>'}`;
+}
+
+function ajouterPrestationTarifee(cle,clientIdDirect){
+  const clientId=clientIdDirect||document.getElementById('cat_fact_client')?.value||'';
   if(!clientId){notif('e','❌ Choisissez d\'abord le client qui demande la prestation');return;}
   const prix=(DB.tarifs||{})[cle];
   if(!prix||prix<=0){notif('e','❌ Aucun prix défini pour cette prestation — voir l\'onglet Tarifs');return;}
@@ -18352,7 +18612,8 @@ function ajouterPrestationTarifee(cle){
   logHistorique(clientId,'facture',`Prestation à facturer : ${libelleTarif(cle)} — ${eurFmt(prix)}`);
   notif('s',`✅ ${libelleTarif(cle)} — ${eurFmt(prix)} ajouté pour ${getClientName(clientId)}`);
 
-  renderCatalogueFacturation();
+  try{renderCatalogueFacturation();}catch(e){}
+  try{renderCatalogueClient();}catch(e){}
   if(typeof renderPrestationsAFacturer==='function')renderPrestationsAFacturer();
   if(typeof renderTimesheetEntries==='function')renderTimesheetEntries();
   if(typeof renderTimesheetStats==='function')renderTimesheetStats();
