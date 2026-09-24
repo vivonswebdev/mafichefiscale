@@ -1643,6 +1643,24 @@ body.density-compact .page{padding:14px}
       </div>
     </div>
     <div class="g3" style="margin-bottom:12px">
+      <div class="fld"><label>État civil</label>
+        <select id="ma_etat_civil">
+          <option value="">— Non précisé —</option>
+          <option value="Célibataire">Célibataire</option>
+          <option value="Marié(e)">Marié(e)</option>
+          <option value="Cohabitant(e) légal(e)">Cohabitant(e) légal(e)</option>
+          <option value="Divorcé(e)">Divorcé(e)</option>
+          <option value="Veuf / Veuve">Veuf / Veuve</option>
+        </select>
+      </div>
+      <div class="fld"><label>Enfants à charge</label><input id="ma_enfants" type="number" min="0" placeholder="0"></div>
+      <div class="fld"><label>Dont handicapés</label><input id="ma_enfants_handicap" type="number" min="0" placeholder="0"></div>
+    </div>
+    <div class="hint" style="margin:-6px 0 12px">
+      État civil et personnes à charge figurent sur la fiche de paie à titre informatif.
+      <strong>Ils n'entrent pas dans le calcul du précompte</strong> — celui-ci reste celui que vous encodez.
+    </div>
+    <div class="g3" style="margin-bottom:12px">
       <div class="fld"><label>Adresse</label><input id="ma_adresse" placeholder="Rue Y 5"></div>
       <div class="fld"><label>Code postal</label><input id="ma_cp" placeholder="1000"></div>
       <div class="fld"><label>Commune</label><input id="ma_commune" placeholder="Bruxelles"></div>
@@ -2752,6 +2770,27 @@ body.density-compact .page{padding:14px}
           <button class="btn btn-primary btn-sm" onclick="generateFicheFromPaie()">📄 Générer fiche 281.20</button>
           <input id="p_annee" type="number" value="2025" oninput="onPaieYearChange()" style="width:80px;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:8px 8px;color:var(--text);font-size:13px;text-align:center">
         </div>
+      </div>
+
+      <!-- Règle de versement : l'application ne tranche pas à la place de
+           l'expert-comptable, elle propose et retient le choix. -->
+      <div class="card" style="margin-bottom:12px">
+        <div class="card-title" style="margin-bottom:8px;font-size:12px">
+          <div class="icon icon-teal" style="width:22px;height:22px">🗓️</div>Date de versement
+        </div>
+        <div class="g3" style="margin-bottom:6px">
+          <div class="fld"><label>Règle appliquée</label>
+            <select id="p_regle_versement" onchange="setRegleVersement(this.value)">
+              <option value="fin_mois">Dernier jour du mois presté</option>
+              <option value="jour_ouvrable_4">4ᵉ jour ouvrable du mois suivant</option>
+              <option value="jour_fixe">Un jour fixe du mois suivant</option>
+            </select>
+          </div>
+          <div class="fld" id="p_jour_fixe_box" style="display:none"><label>Jour du mois suivant</label>
+            <input id="p_jour_fixe" type="number" min="1" max="28" value="6" onchange="setJourVersementFixe(this.value)">
+          </div>
+        </div>
+        <div class="hint" id="p_versement_aide"></div>
       </div>
 
       <div id="paieNoSel" class="empty-state">
@@ -6883,6 +6922,11 @@ function resetSettingsToDefault(){
 // ══════════════════════════════════════════════
 
 const NOUVEAUTES=[
+  {v:'v59',date:'2026-09-24',icone:'🗓️',titre:'Date de versement paramétrable, et état civil sur la fiche',
+   ou:'Paie & OD → bloc « Date de versement » · État civil et enfants dans la fiche du dirigeant',
+   quoi:"La date de versement était figée au dernier jour du mois presté. Trois règles au choix désormais : dernier jour du mois, 4ᵉ jour ouvrable du mois suivant, ou un jour fixe que vous choisissez. La fiche affiche aussi l'état civil, les personnes à charge, le sexe, le numéro national, la date d'entrée et l'IBAN.",
+   pas:"L'application ne tranche pas pour vous. Le délai du 4ᵉ jour ouvrable est celui de la loi du 12/04/1965 sur la protection de la rémunération — elle vise les travailleurs sous contrat de travail, pas un dirigeant indépendant, à qui aucun délai légal ne s'impose. Les jours fériés ne sont pas déduits du calcul des jours ouvrables. État civil et personnes à charge sont informatifs : ils n'entrent pas dans le calcul du précompte."},
+
   {v:'v57',date:'2026-09-24',icone:'📐',titre:'Le PDF de paie tient sur une page A4, remplie',
    ou:'Paie & OD → 👁 Fiche → Télécharger le PDF',
    quoi:"Le PDF sortait parfois avec une seconde page vide — c'est ce qui donnait l'impression d'un document blanc. La pagination automatique est coupée pour ce document, et la page est désormais remplie : gains et retenues côte à côte, bloc de coordonnées de versement, zone de signature poussée en bas. Une référence de document figure en en-tête et en pied.",
@@ -14066,7 +14110,7 @@ function renderDashboard(){
 function openNewActionnaire(){
   editActId=null;
   document.getElementById('modalActTitle').textContent='Nouvel actionnaire / dirigeant';
-  ['ma_prenom','ma_nom','ma_niss','ma_iban','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie'].forEach(id=>document.getElementById(id).value='');
+  ['ma_prenom','ma_nom','ma_niss','ma_iban','ma_enfants','ma_enfants_handicap','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ma_fonction').value='Gérant';
   document.getElementById('ma_pays').value='0';
   document.getElementById('ma_parts').value='';
@@ -14089,6 +14133,9 @@ function editActionnaire(id){
   document.getElementById('ma_commune').value=a.commune||'';
   document.getElementById('ma_dnaiss').value=a.dnaiss||'';
   document.getElementById('ma_iban').value=a.iban||'';
+  document.getElementById('ma_etat_civil').value=a.etatCivil||'';
+  document.getElementById('ma_enfants').value=a.enfants||'';
+  document.getElementById('ma_enfants_handicap').value=a.enfantsHandicap||'';
   document.getElementById('ma_fonction').value=a.fonction||'Gérant';
   document.getElementById('ma_pays').value=a.pays||'0';
   document.getElementById('ma_parts').value=a.parts||'';
@@ -14120,6 +14167,9 @@ function saveActionnaire(){
     commune:document.getElementById('ma_commune').value.trim(),
     dnaiss:document.getElementById('ma_dnaiss').value,
     iban:document.getElementById('ma_iban').value.trim(),
+    etatCivil:document.getElementById('ma_etat_civil').value,
+    enfants:parseInt(document.getElementById('ma_enfants').value)||0,
+    enfantsHandicap:parseInt(document.getElementById('ma_enfants_handicap').value)||0,
     fonction:estSorti?'':(document.getElementById('ma_fonction').value),
     pays:document.getElementById('ma_pays').value,
     parts:newParts,
@@ -15694,6 +15744,17 @@ function getPaieYearData(){
 }
 
 function renderPaiePage(){
+  // Réglage de versement : on reflète l'état enregistré avant tout le reste,
+  // il s'applique même sans dirigeant sélectionné.
+  const selRegle=document.getElementById('p_regle_versement');
+  if(selRegle){
+    selRegle.value=regleVersement();
+    const jf=document.getElementById('p_jour_fixe');
+    if(jf)jf.value=jourVersementFixe();
+    const boite=document.getElementById('p_jour_fixe_box');
+    if(boite)boite.style.display=regleVersement()==='jour_fixe'?'block':'none';
+    majAideVersement();
+  }
   const noSel=document.getElementById('paieNoSel');
   const content=document.getElementById('paieContent');
   const ctx=getCurrentDir();
@@ -15969,6 +16030,81 @@ function exportODAnnuel(){
 // Mêmes données, même source (computeMonthRow) : deux destinataires, deux
 // documents, aucun chiffre recalculé.
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// DATE DE VERSEMENT
+//
+// Ce que dit le droit, et ce qu'il ne dit pas :
+//
+// • Travailleurs sous contrat de travail — loi du 12 avril 1965 sur la
+//   protection de la rémunération, art. 9 : la rémunération est payable au
+//   plus tard le QUATRIÈME JOUR OUVRABLE suivant la période de travail.
+//
+// • Dirigeant d'entreprise indépendant — cette loi ne s'applique pas. Le
+//   moment du versement relève de la décision de la société. Aucun délai
+//   légal ne s'impose.
+//
+// L'application ne tranche donc pas à la place de l'expert-comptable :
+// elle propose les trois usages et retient celui qui est choisi.
+// Réglage dans Paie & OD, conservé dans DB.rh — une seule source.
+// ══════════════════════════════════════════════
+
+function regleVersement(){return (DB.rh&&DB.rh.regleVersement)||'fin_mois';}
+function jourVersementFixe(){return Math.min(28,Math.max(1,parseInt((DB.rh||{}).jourVersementFixe)||6));}
+
+// N-ième jour ouvrable d'un mois (samedi et dimanche exclus ; les jours
+// fériés ne sont pas déduits — ils varient par région et par année).
+function niemeJourOuvrable(annee,mois,n){
+  const d=new Date(annee,mois,1);
+  let compte=0;
+  while(true){
+    const j=d.getDay();
+    if(j!==0&&j!==6)compte++;
+    if(compte>=n)return new Date(d);
+    d.setDate(d.getDate()+1);
+  }
+}
+
+function dateVersement(idx,annee){
+  const fmt=d=>`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+  const regle=regleVersement();
+  if(regle==='fin_mois')return fmt(new Date(annee,idx+1,0));
+  // Les deux autres règles tombent sur le mois suivant.
+  const moisSuivant=idx+1;               // Date() gère le passage à l'année suivante
+  if(regle==='jour_fixe')return fmt(new Date(annee,moisSuivant,jourVersementFixe()));
+  return fmt(niemeJourOuvrable(annee,moisSuivant,4));   // 4e jour ouvrable
+}
+
+function libelleRegleVersement(){
+  const r=regleVersement();
+  if(r==='fin_mois')return 'Dernier jour du mois presté';
+  if(r==='jour_fixe')return `Le ${jourVersementFixe()} du mois suivant`;
+  return '4e jour ouvrable du mois suivant';
+}
+
+function setRegleVersement(v){
+  DB.rh=DB.rh||{};
+  DB.rh.regleVersement=v;
+  save();
+  const boite=document.getElementById('p_jour_fixe_box');
+  if(boite)boite.style.display=v==='jour_fixe'?'block':'none';
+  majAideVersement();
+  notif('s','✅ Règle de versement enregistrée');
+}
+function setJourVersementFixe(v){
+  DB.rh=DB.rh||{};
+  DB.rh.jourVersementFixe=Math.min(28,Math.max(1,parseInt(v)||6));
+  save();majAideVersement();
+}
+function majAideVersement(){
+  const el=document.getElementById('p_versement_aide');if(!el)return;
+  const r=regleVersement();
+  el.innerHTML=r==='jour_ouvrable_4'
+    ? "Délai légal des <strong>travailleurs salariés</strong> (loi du 12/04/1965, art. 9). Les jours fériés ne sont pas déduits du calcul."
+    : (r==='fin_mois'
+      ? "Usage courant pour un dirigeant. Aucun délai légal ne s'impose à lui : la loi de 1965 ne vise que les travailleurs sous contrat de travail."
+      : "Date choisie par la société. Aucun délai légal ne s'impose à un dirigeant indépendant.");
+}
+
 function openNoteComptableOD(idx){
   const ctx=getCurrentDir();
   if(!ctx){notif('e','❌ Sélectionnez d\'abord un dirigeant');return;}
@@ -16105,7 +16241,7 @@ function openFicheDePaie(idx){
   const fmt2=(d,mo,y)=>`${String(d).padStart(2,'0')}/${String(mo+1).padStart(2,'0')}/${y}`;
   const periodeDu=fmt2(1,idx,annee);
   const periodeAu=fmt2(lastDay,idx,annee);
-  const paiementLe=periodeAu;
+  const paiementLe=dateVersement(idx,annee);
 
   const cotisations=m.cotis,precompte=m.precompte;
   const eur=c=>(c/100).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
@@ -16185,6 +16321,11 @@ function openFicheDePaie(idx){
   // Référence du document : reconstructible, jamais aléatoire — la même
   // fiche régénérée porte la même référence.
   const refDoc=`FP-${annee}${String(idx+1).padStart(2,'0')}-${slugFichier(a.nom||'x').slice(0,6).toUpperCase()}`;
+
+  // Personnes à charge, dans la forme usuelle des fiches belges.
+  const aCharge=(a.enfants>0)
+    ? `Enfant(s) : ${a.enfants}${a.enfantsHandicap>0?` (${a.enfantsHandicap} handicapé${a.enfantsHandicap>1?'s':''})`:''}`
+    : '';
 
   const CARTE=(titre,couleur,corps,options)=>`
     <div style="border:1px solid ${TRAIT};border-radius:9px;overflow:hidden;${(options||{}).style||''}">
@@ -16276,14 +16417,16 @@ function openFicheDePaie(idx){
             <div>
               ${PAIRE('Statut',escX(a.fonction||"Dirigeant d'entreprise"))}
               ${PAIRE("Date d'entrée",dentree!=='—'?dentree:'')}
-              ${PAIRE('Périodicité','Mensuel')}
+              ${PAIRE('Période',periodeDu+' → '+periodeAu)}
               ${PAIRE('Localité',escX(a.commune||''))}
+              ${PAIRE('Compte en banque (IBAN)',a.iban?escX(a.iban):'')}
             </div>
             <div>
-              ${PAIRE('Numéro national',a.niss?fmtNiss(a.niss):'')}
               ${PAIRE('Sexe',sexe)}
+              ${PAIRE('Numéro national',a.niss?fmtNiss(a.niss):'')}
+              ${PAIRE('État civil',escX(a.etatCivil||''))}
+              ${PAIRE('Personnes à charge',aCharge)}
               ${PAIRE('Date de naissance',dnaiss!=='—'?dnaiss:'')}
-              ${PAIRE('Période couverte',periodeDu+' → '+periodeAu)}
             </div>
           </div>`)}
       </div>
