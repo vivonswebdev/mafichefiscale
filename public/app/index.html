@@ -6880,10 +6880,15 @@ function resetSettingsToDefault(){
 // ══════════════════════════════════════════════
 
 const NOUVEAUTES=[
+  {v:'v54',date:'2026-09-24',icone:'✂️',titre:'Deux documents au lieu d\'un : fiche de paie et note comptable',
+   ou:'Paie & OD → chaque mois a deux boutons : « 👁 Fiche » et « 🧾 OD »',
+   quoi:"L'écriture comptable n'a rien à faire sur une fiche de paie : celle-ci part au dirigeant, qui n'a que faire des comptes 453 et 455. Elle a désormais son propre document, destiné au comptable, avec les comptes, les montants et le contrôle d'équilibre. Mêmes données, même source, aucun chiffre recalculé.",
+   pas:"Les cumuls annuels restent sur la fiche de paie : ils sont d'usage sur un décompte de rémunération et servent au dirigeant pour sa déclaration. Dites-le si vous préférez les déplacer aussi."},
+
   {v:'v53',date:'2026-09-24',icone:'🧾',titre:'Fiche de paie redessinée',
-   ou:'Paie & OD → un mois → PDF',
+   ou:'Paie & OD → un mois → 👁 Fiche',
    quoi:"Nouvelle mise en page : bandeau d'en-tête, identité sur une ligne, puis le décompte qui descend du brut au net dans cet ordre. Une seule couleur porte un sens — le rouge retire, le vert ajoute. Le net à payer est le seul élément en gros. Aucun calcul n'a été modifié.",
-   pas:"Elle a fait apparaître un problème antérieur : l'écriture comptable ne s'équilibre pas, de l'exact montant de l'ATN. Un avertissement le signale désormais sur la fiche. Le correctif de fond demande votre arbitrage — voir ci-dessous."},
+   pas:"Elle a fait apparaître un problème antérieur : l'écriture comptable ne s'équilibre pas, de l'exact montant de l'ATN. L'avertissement est maintenant sur la note comptable. Le correctif de fond demande votre arbitrage."},
 
   {v:'v52',date:'2026-09-24',icone:'📄',titre:'Fini le « PDF page blanche »',
    ou:'Tous les boutons PDF',
@@ -15754,7 +15759,10 @@ function renderPaieMonthRow(idx){
     <td class="mn fw" style="color:#a8cdb5">${fc(m.remNette)}</td>
     <td>${paieCellInput(idx,'deductions',m.deductions)}</td>
     <td class="mn fw" style="color:var(--primary-h)">${fc(m.salairePoche)}</td>
-    <td><button class="btn btn-primary btn-xs" onclick="openFicheDePaie(${idx})">👁 PDF</button></td>
+    <td style="white-space:nowrap">
+      <button class="btn btn-primary btn-xs" onclick="openFicheDePaie(${idx})" title="Document du dirigeant">👁 Fiche</button>
+      <button class="btn btn-ghost btn-xs" onclick="openNoteComptableOD(${idx})" title="Document du comptable — écriture OD">🧾 OD</button>
+    </td>
   `;
 }
 
@@ -15910,6 +15918,138 @@ function exportODAnnuel(){
 // ══════════════════════════════════════════════
 // FICHE DE PAIE — DOCUMENT IMPRIMABLE (style TwinnTax)
 // ══════════════════════════════════════════════
+// ══════════════════════════════════════════════
+// NOTE COMPTABLE (OD) — le document du comptable
+//
+// L'écriture comptable n'a rien à faire sur une fiche de paie : celle-ci
+// part au dirigeant, qui n'a que faire des comptes 453 et 455. Elle part
+// donc dans son propre document, destiné au comptable, avec ce qu'il lui
+// faut pour la passer : les comptes, les montants, et le contrôle
+// d'équilibre.
+//
+// Mêmes données, même source (computeMonthRow) : deux destinataires, deux
+// documents, aucun chiffre recalculé.
+// ══════════════════════════════════════════════
+function openNoteComptableOD(idx){
+  const ctx=getCurrentDir();
+  if(!ctx){notif('e','❌ Sélectionnez d\'abord un dirigeant');return;}
+  const{c,a}=ctx;
+  const yd=getPaieYearData();
+  const m=computeMonthRow(yd.months[idx]);
+  const annee=parseInt(document.getElementById('p_annee').value)||new Date().getFullYear();
+  const exp=DB.exp||{};
+  const eur=v=>(v/100).toLocaleString('fr-BE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+
+  const ENCRE='#14161a', GRIS='#6b7280', TRAIT='#e5e7eb',
+        ACCENT='#0d9488', RETENUE='#b91c1c', DOUX='#f8fafc';
+  const MONO="font-family:Consolas,'SF Mono',monospace;font-variant-numeric:tabular-nums";
+
+  const debit=m.brut+m.frais;
+  const credit=m.cotis+m.precompte+m.salairePoche;
+  const ecart=credit-debit;
+
+  const lastDay=new Date(annee,idx+1,0).getDate();
+  const dateOD=`${String(lastDay).padStart(2,'0')}/${String(idx+1).padStart(2,'0')}/${annee}`;
+
+  const L=(compte,libelle,d,cr)=>`<tr>
+    <td style="padding:6px 8px 6px 0;${MONO};color:${GRIS};font-size:11px">${compte}</td>
+    <td style="padding:6px 8px;font-size:11.5px">${libelle}</td>
+    <td style="padding:6px 8px;text-align:right;${MONO};font-size:11.5px">${d!=null?eur(d):''}</td>
+    <td style="padding:6px 0 6px 8px;text-align:right;${MONO};font-size:11.5px;color:${cr!=null?RETENUE:''}">${cr!=null?eur(cr):''}</td>
+  </tr>`;
+
+  document.title=`Note comptable OD - ${a.prenom} ${a.nom} - ${moisLabel(idx)} ${annee}`;
+  currentPdfFilename=`od-${a.prenom}-${a.nom}-${moisLabel(idx)}-${annee}`;
+
+  const html=`
+  <div style="font-family:'Segoe UI',system-ui,sans-serif;color:${ENCRE};background:#fff;padding:0">
+
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;
+        background:${ENCRE};color:#fff;padding:14px 22px;border-radius:10px 10px 0 0">
+      <div>
+        <div style="font-size:12px;font-weight:700">${escX(exp.nom||'Mon Cabinet')}</div>
+        <div style="font-size:9px;color:rgba(255,255,255,.55);margin-top:1px">Document destiné à la comptabilité</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:8.5px;text-transform:uppercase;letter-spacing:.16em;color:rgba(255,255,255,.55)">Opération diverse</div>
+        <div style="font-size:17px;font-weight:700;margin-top:2px;text-transform:capitalize">${moisLabel(idx)} ${annee}</div>
+      </div>
+    </div>
+
+    <div style="border:1px solid ${TRAIT};border-top:none;border-radius:0 0 10px 10px;padding:18px 22px 14px">
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;
+          padding-bottom:14px;border-bottom:1px solid ${TRAIT};margin-bottom:16px">
+        <div>
+          <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Société</div>
+          <div style="font-size:13px;font-weight:700;margin-top:2px">${escX(c.nom)}</div>
+          <div style="font-size:10px;color:${GRIS};margin-top:2px">${c.bce?'BE '+fmtBce(c.bce):'—'}</div>
+        </div>
+        <div>
+          <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Bénéficiaire</div>
+          <div style="font-size:13px;font-weight:700;margin-top:2px">${escX(a.prenom+' '+a.nom)}</div>
+          <div style="font-size:10px;color:${GRIS};margin-top:2px">${escX(a.fonction||"Dirigeant d'entreprise")}</div>
+        </div>
+        <div>
+          <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Date de l'écriture</div>
+          <div style="font-size:13px;font-weight:700;margin-top:2px">${dateOD}</div>
+          <div style="font-size:10px;color:${GRIS};margin-top:2px">Pièce : paie ${String(idx+1).padStart(2,'0')}/${annee}</div>
+        </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="color:${GRIS};border-bottom:1px solid ${TRAIT}">
+          <th style="text-align:left;padding:4px 8px 4px 0;font-size:8px;text-transform:uppercase;letter-spacing:.09em;width:54px">Compte</th>
+          <th style="text-align:left;padding:4px 8px;font-size:8px;text-transform:uppercase;letter-spacing:.09em">Libellé</th>
+          <th style="text-align:right;padding:4px 8px;font-size:8px;text-transform:uppercase;letter-spacing:.09em;width:110px">Débit</th>
+          <th style="text-align:right;padding:4px 0 4px 8px;font-size:8px;text-transform:uppercase;letter-spacing:.09em;width:110px">Crédit</th>
+        </tr></thead>
+        <tbody>
+          ${L('620',`Rémunérations — ${escX(a.prenom+' '+a.nom)}`,m.brut,null)}
+          ${m.frais?L('623',"Frais propres à l'employeur",m.frais,null):''}
+          ${m.cotis?L('453','Cotisations sociales / PLCI à payer',null,m.cotis):''}
+          ${m.precompte?L('454','Précompte professionnel à payer',null,m.precompte):''}
+          ${L('455','<span style="color:'+ACCENT+';font-weight:600">Rémunération à payer (net)</span>',null,m.salairePoche)}
+          <tr style="border-top:2px solid ${ENCRE};font-weight:700">
+            <td colspan="2" style="padding:7px 8px 7px 0;font-size:9px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Totaux</td>
+            <td style="padding:7px 8px;text-align:right;${MONO};font-size:12.5px">${eur(debit)}</td>
+            <td style="padding:7px 0 7px 8px;text-align:right;${MONO};font-size:12.5px;${ecart?'color:'+RETENUE:''}">${eur(credit)}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      ${ecart
+        ?`<div style="margin-top:12px;padding:10px 14px;background:#fef2f2;border:1px solid #fecaca;
+             border-radius:8px;font-size:11px;color:${RETENUE};line-height:1.5">
+            <strong>Écriture déséquilibrée de ${eur(Math.abs(ecart))}.</strong>
+            Le net à payer inclut l'avantage de toute nature (${eur(m.atn)}), qui est imposable mais
+            n'est pas versé : il gonfle le compte 455 sans contrepartie au débit.
+            <strong>Ne pas comptabiliser en l'état</strong> — soit l'ATN sort du net, soit il faut
+            lui ajouter sa contrepartie.
+          </div>`
+        :`<div style="margin-top:12px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;
+             border-radius:8px;font-size:11px;color:#166534">
+            <strong>Écriture équilibrée.</strong> Débit et crédit correspondent, elle peut être passée telle quelle.
+          </div>`}
+
+      ${m.atn?`<div style="margin-top:12px;padding:9px 14px;background:${DOUX};border:1px solid ${TRAIT};
+          border-radius:8px;font-size:10.5px;color:${GRIS};line-height:1.5">
+        <strong style="color:${ENCRE}">Rappel ATN — ${eur(m.atn)}.</strong>
+        L'avantage de toute nature entre dans la base imposable et sur la fiche 281.20, mais ne
+        donne lieu à aucun mouvement de trésorerie.
+      </div>`:''}
+
+      <div style="margin-top:14px;padding-top:9px;border-top:1px solid ${TRAIT};font-size:8.5px;color:${GRIS};text-align:center">
+        ${escX(exp.nom||'votre cabinet')}${exp.bce?' · BE '+fmtBce(exp.bce):''}${exp.email?' · '+escX(exp.email):''}
+        &nbsp;—&nbsp; établi sur base des données encodées, à contrôler avant comptabilisation.
+      </div>
+    </div>
+  </div>`;
+
+  document.getElementById('fdpDoc').innerHTML=html;
+  openModal('modalFichePaie');
+}
+
 function openFicheDePaie(idx){
   const ctx=getCurrentDir();if(!ctx)return;
   const{c,a}=ctx;
@@ -16074,47 +16214,6 @@ function openFicheDePaie(idx){
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- ÉCRITURE COMPTABLE — secondaire, donc grise et serrée -->
-      <div style="margin-top:16px">
-        <div style="font-size:8.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:${GRIS};margin-bottom:5px">
-          Écriture comptable · OD ${moisLabel(idx)} ${annee}</div>
-        <table style="width:100%;border-collapse:collapse;font-size:10px">
-          <thead><tr style="color:${GRIS};border-bottom:1px solid ${TRAIT}">
-            <th style="text-align:left;padding:3px 6px 3px 0;font-size:8px;text-transform:uppercase;letter-spacing:.07em;width:46px">Cpte</th>
-            <th style="text-align:left;padding:3px 6px;font-size:8px;text-transform:uppercase;letter-spacing:.07em">Libellé</th>
-            <th style="text-align:right;padding:3px 6px;font-size:8px;text-transform:uppercase;letter-spacing:.07em;width:92px">Débit</th>
-            <th style="text-align:right;padding:3px 0 3px 6px;font-size:8px;text-transform:uppercase;letter-spacing:.07em;width:92px">Crédit</th>
-          </tr></thead>
-          <tbody>
-            <tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">620</td>
-                <td style="padding:3px 6px">Rémunérations — ${escX(a.prenom+' '+a.nom)}</td>
-                <td style="padding:3px 6px;text-align:right;${MONO}">${eur(m.brut)}</td><td></td></tr>
-            ${m.frais?`<tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">623</td>
-                <td style="padding:3px 6px">Frais propres à l'employeur</td>
-                <td style="padding:3px 6px;text-align:right;${MONO}">${eur(m.frais)}</td><td></td></tr>`:''}
-            ${m.cotis?`<tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">453</td>
-                <td style="padding:3px 6px">Cotisations sociales / PLCI à payer</td><td></td>
-                <td style="padding:3px 0 3px 6px;text-align:right;${MONO};color:${RETENUE}">${eur(m.cotis)}</td></tr>`:''}
-            ${precompte?`<tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">454</td>
-                <td style="padding:3px 6px">Précompte professionnel à payer</td><td></td>
-                <td style="padding:3px 0 3px 6px;text-align:right;${MONO};color:${RETENUE}">${eur(precompte)}</td></tr>`:''}
-            <tr><td style="padding:3px 6px 3px 0;${MONO};color:${GRIS}">455</td>
-                <td style="padding:3px 6px;color:${ACCENT};font-weight:600">Rémunération à payer (net)</td><td></td>
-                <td style="padding:3px 0 3px 6px;text-align:right;${MONO};color:${ACCENT};font-weight:700">${eur(m.salairePoche)}</td></tr>
-            <tr style="border-top:1px solid ${TRAIT};font-weight:700">
-                <td colspan="2" style="padding:4px 6px 4px 0;color:${GRIS};font-size:9px;text-transform:uppercase;letter-spacing:.07em">Équilibre</td>
-                <td style="padding:4px 6px;text-align:right;${MONO}">${eur(debitOD)}</td>
-                <td style="padding:4px 0 4px 6px;text-align:right;${MONO};${ecartOD?'color:'+RETENUE:''}">${eur(creditOD)}</td></tr>
-          </tbody>
-        </table>
-        ${ecartOD?`<div style="margin-top:6px;padding:7px 10px;background:#fef2f2;border:1px solid #fecaca;
-            border-radius:6px;font-size:9.5px;color:${RETENUE};line-height:1.45">
-          <strong>Écriture déséquilibrée de ${eur(Math.abs(ecartOD))}.</strong>
-          Le net à payer inclut l'avantage de toute nature, qui est imposable mais n'est pas versé :
-          il gonfle le compte 455 sans contrepartie au débit. À trancher avant comptabilisation.
-        </div>`:''}
       </div>
 
       <!-- CUMULS — discrets, une seule ligne -->
