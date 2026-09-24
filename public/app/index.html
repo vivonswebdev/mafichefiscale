@@ -1638,6 +1638,9 @@ body.density-compact .page{padding:14px}
       <div class="fld"><label>NISS</label><input id="ma_niss" placeholder="85.01.15-001.23" oninput="checkNissMA()">
         <div class="hint" id="ma_niss_hint"></div>
       </div>
+      <div class="fld"><label>Compte bancaire (IBAN)</label><input id="ma_iban" placeholder="BE68 5390 0754 7034">
+        <div class="hint">Apparaît sur la fiche de paie — c'est le compte où part le net.</div>
+      </div>
     </div>
     <div class="g3" style="margin-bottom:12px">
       <div class="fld"><label>Adresse</label><input id="ma_adresse" placeholder="Rue Y 5"></div>
@@ -6880,6 +6883,11 @@ function resetSettingsToDefault(){
 // ══════════════════════════════════════════════
 
 const NOUVEAUTES=[
+  {v:'v55',date:'2026-09-24',icone:'🪪',titre:'Fiche de paie restructurée, et IBAN du dirigeant',
+   ou:'Paie & OD → 👁 Fiche · IBAN dans la fiche du dirigeant (Actionnaires)',
+   quoi:"Structure reprise d'une fiche de référence : deux encadrés Entreprise et Bénéficiaire, un bloc « Informations personnelles » en deux colonnes, le décompte avec ses signes, et surtout un bandeau de synthèse en bas — base imposable, cotisations, précompte, frais propres, divers — avec le net à payer en gros à droite. Le sexe se déduit du numéro national. Un champ IBAN a été ajouté au dirigeant : c'est le compte où part le net.",
+   pas:"L'état civil et les personnes à charge ne sont pas repris : ils servent à calculer le précompte, et les afficher sans les brancher au calcul serait décoratif. Une ligne dont la valeur manque ne s'affiche pas du tout."},
+
   {v:'v54',date:'2026-09-24',icone:'✂️',titre:'Deux documents au lieu d\'un : fiche de paie et note comptable',
    ou:'Paie & OD → chaque mois a deux boutons : « 👁 Fiche » et « 🧾 OD »',
    quoi:"L'écriture comptable n'a rien à faire sur une fiche de paie : celle-ci part au dirigeant, qui n'a que faire des comptes 453 et 455. Elle a désormais son propre document, destiné au comptable, avec les comptes, les montants et le contrôle d'équilibre. Mêmes données, même source, aucun chiffre recalculé.",
@@ -14029,7 +14037,7 @@ function renderDashboard(){
 function openNewActionnaire(){
   editActId=null;
   document.getElementById('modalActTitle').textContent='Nouvel actionnaire / dirigeant';
-  ['ma_prenom','ma_nom','ma_niss','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie'].forEach(id=>document.getElementById(id).value='');
+  ['ma_prenom','ma_nom','ma_niss','ma_iban','ma_adresse','ma_cp','ma_commune','ma_dnaiss','ma_date_entree','ma_date_sortie'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('ma_fonction').value='Gérant';
   document.getElementById('ma_pays').value='0';
   document.getElementById('ma_parts').value='';
@@ -14051,6 +14059,7 @@ function editActionnaire(id){
   document.getElementById('ma_cp').value=a.cp||'';
   document.getElementById('ma_commune').value=a.commune||'';
   document.getElementById('ma_dnaiss').value=a.dnaiss||'';
+  document.getElementById('ma_iban').value=a.iban||'';
   document.getElementById('ma_fonction').value=a.fonction||'Gérant';
   document.getElementById('ma_pays').value=a.pays||'0';
   document.getElementById('ma_parts').value=a.parts||'';
@@ -14081,6 +14090,7 @@ function saveActionnaire(){
     cp:document.getElementById('ma_cp').value.trim(),
     commune:document.getElementById('ma_commune').value.trim(),
     dnaiss:document.getElementById('ma_dnaiss').value,
+    iban:document.getElementById('ma_iban').value.trim(),
     fonction:estSorti?'':(document.getElementById('ma_fonction').value),
     pays:document.getElementById('ma_pays').value,
     parts:newParts,
@@ -16122,118 +16132,160 @@ function openFicheDePaie(idx){
   document.title=`Fiche de paie - ${a.prenom} ${a.nom} - ${moisLabel(idx)} ${annee}`;
   currentPdfFilename=`fiche-paie-${a.prenom}-${a.nom}-${moisLabel(idx)}-${annee}`;
 
-  const html=`
-  <div style="font-family:'Segoe UI',system-ui,sans-serif;color:${ENCRE};background:#fff;padding:0">
+  // Sexe déduit du NISS : les trois chiffres du rang (positions 7-9) sont
+  // impairs pour un homme, pairs pour une femme. On ne l'invente pas quand
+  // le NISS manque — une case vide vaut mieux qu'une supposition.
+  const nissChiffres=(a.niss||'').replace(/\D/g,'');
+  const sexe=nissChiffres.length>=9 ? (parseInt(nissChiffres.slice(6,9),10)%2===1?'Masculin':'Féminin') : '';
 
-    <!-- BANDEAU — cabinet à gauche, nature du document à droite -->
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:16px;
-        background:${ENCRE};color:#fff;padding:14px 22px;border-radius:10px 10px 0 0">
+  const CARTE=(titre,corps)=>`
+    <div style="border:1px solid ${TRAIT};border-radius:9px;padding:12px 16px;margin-bottom:10px">
+      <div style="font-size:9.5px;font-weight:600;color:${ACCENT};margin-bottom:9px">${titre}</div>
+      ${corps}
+    </div>`;
+
+  // Paire étiquette / valeur. Une valeur vide n'affiche pas la ligne :
+  // une fiche de paie ne montre pas de champs à remplir.
+  const PAIRE=(label,valeur)=>valeur
+    ? `<div style="display:flex;gap:10px;padding:2.5px 0;font-size:10.5px">
+         <span style="color:${ENCRE};min-width:132px;flex-shrink:0">${label}</span>
+         <span style="color:${GRIS}">${valeur}</span>
+       </div>`
+    : '';
+
+  // Ligne du décompte : le signe dit le sens, la couleur le confirme.
+  const MVT=(libelle,montant,sens,unites)=>{
+    const col=sens==='-'?RETENUE:(sens==='+'?ENCRE:GRIS);
+    return`<tr>
+      <td style="padding:4px 0;font-size:11px;color:${ENCRE}">${libelle}</td>
+      <td style="padding:4px 8px;text-align:center;font-size:10.5px;color:${GRIS};${MONO}">${unites||''}</td>
+      <td style="padding:4px 0;text-align:right;${MONO};font-size:11.5px;color:${col};white-space:nowrap">${sens}${eur(montant)}</td>
+    </tr>`;
+  };
+
+  // Case du bandeau de synthèse.
+  const CASE=(label,montant,couleur)=>`
+    <div style="padding:0 14px;border-right:1px solid ${TRAIT}">
+      <div style="font-size:8.5px;color:${GRIS};white-space:nowrap">${label}</div>
+      <div style="font-size:12.5px;font-weight:600;color:${couleur||ENCRE};${MONO};margin-top:2px">${eur(montant)}</div>
+    </div>`;
+
+  const html=`
+  <div style="font-family:'Segoe UI',system-ui,sans-serif;color:${ENCRE};background:#fff;padding:22px 26px">
+
+    <!-- EN-TÊTE -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:18px">
       <div style="display:flex;align-items:center;gap:11px;min-width:0">
-        <div style="width:34px;height:34px;border-radius:8px;background:${exp.logo?'#fff':ACCENT};
-            display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:15px;
+        <div style="width:38px;height:38px;border-radius:8px;background:${exp.logo?'#fff':ACCENT};
+            display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:16px;
             overflow:hidden;flex-shrink:0">${exp.logo
               ?`<img src="${exp.logo}" style="width:100%;height:100%;object-fit:contain">`
               :escX((exp.nom||'?')[0]||'?')}</div>
         <div style="min-width:0">
-          <div style="font-size:12px;font-weight:700;letter-spacing:.02em">${escX(exp.nom||'Mon Cabinet')}</div>
-          <div style="font-size:9px;color:rgba(255,255,255,.55);margin-top:1px">${escX(
+          <div style="font-size:13px;font-weight:700;letter-spacing:.01em">${escX(exp.nom||'Mon Cabinet')}</div>
+          <div style="font-size:9.5px;color:${GRIS};margin-top:1px">${escX(
             [exp.adresse,[exp.cp,exp.commune].filter(Boolean).join(' ')].filter(Boolean).join(' · '))}</div>
         </div>
       </div>
       <div style="text-align:right;flex-shrink:0">
-        <div style="font-size:8.5px;text-transform:uppercase;letter-spacing:.16em;color:rgba(255,255,255,.55)">Fiche de paie</div>
-        <div style="font-size:17px;font-weight:700;margin-top:2px;text-transform:capitalize">${moisLabel(idx)} ${annee}</div>
+        <div style="font-size:24px;font-weight:700;color:${ACCENT};letter-spacing:-.01em">Fiche de paie</div>
+        <div style="font-size:11px;color:${GRIS};margin-top:2px;text-transform:capitalize">Période : ${moisLabel(idx)} ${annee}</div>
       </div>
     </div>
 
-    <div style="border:1px solid ${TRAIT};border-top:none;border-radius:0 0 10px 10px;padding:18px 22px 14px">
-
-      <!-- QUI, POUR QUI, SUR QUELLE PÉRIODE -->
-      <div style="display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:20px;
-          padding-bottom:14px;border-bottom:1px solid ${TRAIT};margin-bottom:16px">
-        <div>
-          <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Bénéficiaire</div>
-          <div style="font-size:15px;font-weight:700;margin-top:3px;line-height:1.25">${escX((a.prenom+' '+a.nom).toUpperCase())}</div>
-          <div style="font-size:10px;color:${GRIS};margin-top:3px;line-height:1.45">${escX(
-            [a.adresse,[a.cp,a.commune].filter(Boolean).join(' ')].filter(Boolean).join(', '))||'—'}</div>
-          <div style="font-size:10px;color:${GRIS};margin-top:4px">
-            NISS <strong style="color:${ENCRE};${MONO}">${a.niss?fmtNiss(a.niss):'—'}</strong>
-            &nbsp;·&nbsp; né(e) le <strong style="color:${ENCRE}">${dnaiss}</strong>
-          </div>
-        </div>
-        <div>
-          ${INFO('Employeur',escX(c.nom))}
-          ${INFO('BCE',c.bce?'BE '+fmtBce(c.bce):'—')}
-          ${INFO('Statut',escX(a.fonction||"Dirigeant d'entreprise"))}
-        </div>
-        <div>
-          ${INFO('Période',periodeDu+' → '+periodeAu)}
-          ${INFO('Paiement le',paiementLe)}
-          ${INFO('En fonction depuis',dentree)}
+    <!-- ENTREPRISE / BÉNÉFICIAIRE -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+      <div style="background:${DOUX};border:1px solid ${TRAIT};border-radius:9px;padding:12px 16px">
+        <div style="font-size:9.5px;font-weight:600;color:${ACCENT};margin-bottom:6px">Entreprise</div>
+        <div style="font-size:12.5px;font-weight:700">${escX(c.nom)}</div>
+        <div style="font-size:10.5px;color:${GRIS};margin-top:3px;line-height:1.5">
+          ${escX(c.adresse||'')}${c.adresse?'<br>':''}${escX([c.cp,c.commune].filter(Boolean).join(' '))}
+          ${c.bce?'<br>BE '+fmtBce(c.bce):''}
         </div>
       </div>
+      <div style="border:1px solid ${TRAIT};border-radius:9px;padding:12px 16px">
+        <div style="font-size:9.5px;font-weight:600;color:${ACCENT};margin-bottom:6px">Bénéficiaire</div>
+        <div style="font-size:12.5px;font-weight:700">${escX((a.prenom+' '+a.nom).trim())}</div>
+        <div style="font-size:10.5px;color:${GRIS};margin-top:3px;line-height:1.5">
+          ${escX(a.adresse||'')}${a.adresse?'<br>':''}${escX([a.cp,a.commune].filter(Boolean).join(' '))}
+        </div>
+      </div>
+    </div>
 
-      <!-- LE DÉCOMPTE — du brut au net, dans cet ordre -->
+    <!-- INFORMATIONS PERSONNELLES -->
+    ${CARTE('Informations personnelles',`
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 26px">
+        <div>
+          ${PAIRE('Statut',escX(a.fonction||"Dirigeant d'entreprise"))}
+          ${PAIRE("Date d'entrée",dentree!=='—'?dentree:'')}
+          ${PAIRE('Périodicité','Mensuel')}
+          ${PAIRE('Localité',escX(a.commune||''))}
+          ${PAIRE('Compte bancaire',a.iban?escX(a.iban):'')}
+        </div>
+        <div>
+          ${PAIRE('Numéro national',a.niss?fmtNiss(a.niss):'')}
+          ${PAIRE('Sexe',sexe)}
+          ${PAIRE('Date de naissance',dnaiss!=='—'?dnaiss:'')}
+          ${PAIRE('Période couverte',periodeDu+' → '+periodeAu)}
+          ${PAIRE('Paiement le',paiementLe)}
+        </div>
+      </div>`)}
+
+    <!-- RÉMUNÉRATIONS, AVANTAGES ET RETENUES -->
+    ${CARTE('Rémunérations — avantages et retenues',`
       <table style="width:100%;border-collapse:collapse">
+        <thead><tr style="border-bottom:1px solid ${TRAIT}">
+          <th style="text-align:left;padding:0 0 5px;font-size:9px;color:${GRIS};font-weight:600">Libellés</th>
+          <th style="text-align:center;padding:0 8px 5px;font-size:9px;color:${GRIS};font-weight:600;width:70px">Unités</th>
+          <th style="text-align:right;padding:0 0 5px;font-size:9px;color:${GRIS};font-weight:600;width:110px">Montants EUR</th>
+        </tr></thead>
         <tbody>
-          ${LIGNE('Rémunération brute',m.brut,'total')}
-
-          ${LIGNE('Retenues',null,'section')}
-          ${LIGNE('Cotisations sociales et PLCI',cotisations,'retenue')}
-          ${LIGNE('Précompte professionnel',precompte,'retenue')}
-          ${m.deductions?LIGNE('Déductions diverses',m.deductions,'retenue'):''}
-          ${LIGNE('Total des retenues',totalRetenues+(m.deductions||0),'total')}
-
-          ${(m.atn||m.frais)?LIGNE('Avantages et frais propres',null,'section'):''}
-          ${m.atn?LIGNE('Avantage de toute nature',m.atn,'ajout','imposable, non versé'):''}
-          ${m.frais?LIGNE("Frais propres à l'employeur",m.frais,'ajout','cadre 19 — non imposable'):''}
-
-          ${LIGNE('Base imposable',null,'section')}
-          ${LIGNE('Revenu imposable brut',baseImposable,undefined,'rémunération + ATN')}
-          ${LIGNE('Revenu imposable net',baseImposable-totalRetenues,'total','après retenues')}
+          ${MVT('Rémunération brute',m.brut,'+','1,00')}
+          ${m.cotis?MVT('Cotisations sociales et PLCI',m.cotis,'-'):''}
+          ${precompte?MVT('Précompte professionnel',precompte,'-'):''}
+          ${m.deductions?MVT('Déductions diverses',m.deductions,'-'):''}
+          ${m.atn?MVT('Avantage de toute nature (ATN)',m.atn,'+'):''}
+          ${m.frais?MVT("Frais propres à l'employeur",m.frais,'+'):''}
+          <tr><td colspan="3" style="padding:7px 0 0;border-top:1px solid ${TRAIT}"></td></tr>
+          <tr>
+            <td style="padding:5px 0;font-size:11px;font-weight:700">Revenu imposable net</td>
+            <td></td>
+            <td style="padding:5px 0;text-align:right;${MONO};font-size:11.5px;font-weight:700">${eur(baseImposable-totalRetenues)}</td>
+          </tr>
         </tbody>
-      </table>
+      </table>`)}
 
-      <!-- LE NET — seul élément en gros, c'est ce qu'on cherche en premier -->
-      <div style="margin-top:18px;border:2px solid ${ACCENT};border-radius:10px;overflow:hidden">
-        <div style="display:flex;align-items:stretch">
-          <div style="flex:1;padding:14px 20px">
-            <div style="font-size:8.5px;text-transform:uppercase;letter-spacing:.12em;color:${GRIS}">Net à payer</div>
-            <div style="font-size:32px;font-weight:700;color:${ACCENT};line-height:1.1;margin-top:2px;${MONO}">${eur(m.salairePoche)}</div>
-            <div style="font-size:9.5px;color:${GRIS};margin-top:3px">Versé le ${paiementLe} — compte 455</div>
-          </div>
-          <div style="flex:0 0 150px;background:${DOUX};border-left:1px solid ${TRAIT};padding:14px 18px;
-              display:flex;flex-direction:column;justify-content:center;gap:7px">
-            <div>
-              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Brut</div>
-              <div style="font-size:12px;font-weight:600;${MONO}">${eur(m.brut)}</div>
-            </div>
-            <div>
-              <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS}">Retenues</div>
-              <div style="font-size:12px;font-weight:600;color:${RETENUE};${MONO}">−${eur(totalRetenues+(m.deductions||0))}</div>
-            </div>
-          </div>
-        </div>
+    <!-- BANDEAU DE SYNTHÈSE — tous les composants, puis le net -->
+    <div style="display:flex;align-items:center;background:${DOUX};border:1px solid ${TRAIT};
+        border-radius:9px;padding:13px 6px;margin-top:4px">
+      ${CASE('Base imposable (+)',baseImposable)}
+      ${CASE('Cotisations (−)',m.cotis,m.cotis?RETENUE:null)}
+      ${CASE('Précompte (−)',precompte,precompte?RETENUE:null)}
+      ${CASE('Frais propres (+)',m.frais,m.frais?AJOUT:null)}
+      ${CASE('Divers (−)',m.deductions||0,m.deductions?RETENUE:null)}
+      <div style="flex:1;text-align:right;padding:0 12px 0 18px">
+        <div style="font-size:14px;font-weight:600;color:${ENCRE}">Net à payer</div>
+        <div style="font-size:27px;font-weight:700;color:${ACCENT};${MONO};line-height:1.15">${eur(m.salairePoche)}</div>
       </div>
+    </div>
 
-      <!-- CUMULS — discrets, une seule ligne -->
-      <div style="margin-top:14px;background:${DOUX};border:1px solid ${TRAIT};border-radius:8px;padding:9px 14px">
-        <div style="font-size:8px;text-transform:uppercase;letter-spacing:.09em;color:${GRIS};margin-bottom:6px">
-          Cumuls ${annee} · janvier → ${moisLabel(idx)}</div>
-        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px">
-          ${[['Brut',cumBrut,ENCRE],['Cotisations',cumCotis,RETENUE],['Précompte',cumPrec,RETENUE],
-             ['Frais propres',cumFrais,AJOUT],['Net versé',cumNet,ACCENT]]
-            .map(([l,v,col],i)=>`<div style="${i<4?'border-right:1px solid '+TRAIT+';':''}padding-right:8px">
-              <div style="font-size:8px;color:${GRIS};text-transform:uppercase;letter-spacing:.05em">${l}</div>
-              <div style="font-size:11.5px;font-weight:700;color:${col};${MONO};margin-top:1px">${eur(v)}</div>
-            </div>`).join('')}
-        </div>
+    <!-- CUMULS — d'usage sur un décompte, ils servent à la déclaration -->
+    <div style="margin-top:12px;border:1px solid ${TRAIT};border-radius:9px;padding:10px 16px">
+      <div style="font-size:9.5px;font-weight:600;color:${ACCENT};margin-bottom:7px">
+        Cumuls ${annee} — janvier → ${moisLabel(idx)}</div>
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px">
+        ${[['Bruts',cumBrut,ENCRE],['Cotisations',cumCotis,RETENUE],['Précompte',cumPrec,RETENUE],
+           ['Frais propres',cumFrais,AJOUT],['Net versé',cumNet,ACCENT]]
+          .map(([l,v,col],i)=>`<div style="${i<4?'border-right:1px solid '+TRAIT+';':''}padding-right:10px">
+            <div style="font-size:8.5px;color:${GRIS}">${l}</div>
+            <div style="font-size:11.5px;font-weight:600;color:${col};${MONO};margin-top:1px">${eur(v)}</div>
+          </div>`).join('')}
       </div>
+    </div>
 
-      <div style="margin-top:12px;padding-top:8px;border-top:1px solid ${TRAIT};font-size:8.5px;color:${GRIS};text-align:center">
-        ${escX(exp.nom||'votre cabinet')}${exp.bce?' · BE '+fmtBce(exp.bce):''}${exp.email?' · '+escX(exp.email):''}${exp.tel?' · '+escX(exp.tel):''}
-        &nbsp;—&nbsp; document établi sur base des données encodées, à vérifier avant versement.
-      </div>
+    <div style="margin-top:14px;padding-top:9px;border-top:1px solid ${TRAIT};font-size:8.5px;color:${GRIS};text-align:center">
+      ${escX(exp.nom||'votre cabinet')}${exp.bce?' · BE '+fmtBce(exp.bce):''}${exp.email?' · '+escX(exp.email):''}${exp.tel?' · '+escX(exp.tel):''}
+      &nbsp;—&nbsp; document établi sur base des données encodées, à vérifier avant versement.
     </div>
   </div>
   `;
