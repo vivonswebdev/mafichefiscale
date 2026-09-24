@@ -5,11 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogOut, Shield, Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+// Tableau de bord, Factures et Clients ont été retirés : ils réaffichaient,
+// en plus pauvre, ce que l'application fait déjà sur l'ensemble des données.
+// La coquille garde ce qu'elle seule peut faire — la vitrine et les accès.
 const nav = [
   { to: "/", label: "Accueil" },
-  { to: "/dashboard", label: "Tableau de bord" },
   { to: "/app", label: "Application" },
-  { to: "/invoices", label: "Factures" },
+  { to: "/equipe", label: "Équipe" },
   { to: "/pricing", label: "Tarifs" },
   { to: "/about", label: "À propos" },
 ] as const;
@@ -37,7 +39,7 @@ export function SiteHeader() {
     await queryClient.cancelQueries();
     queryClient.clear();
     await supabase.auth.signOut();
-    navigate({ to: "/auth", replace: true });
+    navigate({ to: "/auth", search: { next: "/app" }, replace: true });
   }
 
   return (
@@ -104,11 +106,11 @@ export function SiteHeader() {
             </>
           ) : (
             <>
-              <Link to="/auth" className="hidden sm:inline-flex text-sm text-ink-2 hover:text-ink transition-colors">
+              <Link to="/auth" search={{ next: "/app" }} className="hidden sm:inline-flex text-sm text-ink-2 hover:text-ink transition-colors">
                 Se connecter
               </Link>
               <Link
-                to="/auth"
+                to="/auth" search={{ next: "/app" }}
                 className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-md font-sans font-bold text-sm transition-all hover:brightness-110 hover:-translate-y-px"
                 style={{
                   background: "linear-gradient(160deg, #c9a45c, #a3823f)",
@@ -181,13 +183,13 @@ export function SiteHeader() {
             ) : (
               <>
                 <Link
-                  to="/auth"
+                  to="/auth" search={{ next: "/app" }}
                   className="px-3 py-2.5 rounded-md text-sm text-ink-2 hover:text-ink hover:bg-surface-2"
                 >
                   Se connecter
                 </Link>
                 <Link
-                  to="/auth"
+                  to="/auth" search={{ next: "/app" }}
                   className="mt-1 inline-flex items-center justify-center px-4 py-2.5 rounded-md font-bold text-sm"
                   style={{
                     background: "linear-gradient(160deg, #c9a45c, #a3823f)",

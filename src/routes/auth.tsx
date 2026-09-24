@@ -41,7 +41,7 @@ function AuthPage() {
     if (nextPath) {
       window.location.href = nextPath;
     } else {
-      navigate({ to: "/dashboard" });
+      navigate({ to: "/app" });
     }
   };
 
@@ -51,7 +51,7 @@ function AuthPage() {
         if (nextPath) {
           window.location.href = nextPath;
         } else {
-          navigate({ to: "/dashboard" });
+          navigate({ to: "/app" });
         }
       }
     });

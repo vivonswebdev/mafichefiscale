@@ -94,7 +94,7 @@ function ForgotPasswordPage() {
           )}
 
           <p className="text-sm text-ink-3 text-center mt-6">
-            <Link to="/auth" className="text-primary hover:text-primary-hover font-medium">
+            <Link to="/auth" search={{ next: "/app" }} className="text-primary hover:text-primary-hover font-medium">
               ← Retour à la connexion
             </Link>
           </p>
