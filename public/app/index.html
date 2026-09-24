@@ -16346,7 +16346,7 @@ function openFicheDePaie(idx){
             <tr><td style="padding:4px 0;color:${GRIS};width:170px">Titulaire du compte</td>
                 <td style="padding:4px 0;font-weight:600">${escX((a.prenom+' '+a.nom).trim())}</td></tr>
             <tr><td style="padding:4px 0;color:${GRIS};border-top:1px solid ${TRAIT}">Compte bancaire (IBAN)</td>
-                <td style="padding:4px 0;font-weight:600;${MONO};border-top:1px solid ${TRAIT}">${a.iban?escX(a.iban):'<span style="color:'+RETENUE+';font-family:inherit;font-weight:400">non renseigné — à compléter dans la fiche du dirigeant</span>'}</td></tr>
+                <td style="padding:4px 0;font-weight:600;${MONO};border-top:1px solid ${TRAIT}">${a.iban?escX(a.iban):''}</td></tr>
             <tr><td style="padding:4px 0;color:${GRIS};border-top:1px solid ${TRAIT}">Date de versement</td>
                 <td style="padding:4px 0;font-weight:600;border-top:1px solid ${TRAIT}">${paiementLe}</td></tr>
           </tbody>
@@ -16366,7 +16366,7 @@ function openFicheDePaie(idx){
 
       <div style="margin-top:12px;padding-top:8px;border-top:1px solid ${TRAIT};font-size:8.5px;color:${GRIS};text-align:center">
         ${escX(exp.nom||'votre cabinet')}${exp.bce?' · BE '+fmtBce(exp.bce):''}${exp.email?' · '+escX(exp.email):''}${exp.tel?' · '+escX(exp.tel):''}
-        &nbsp;·&nbsp; Réf. ${refDoc} &nbsp;·&nbsp; édité le ${new Date().toLocaleDateString('fr-BE')}
+        &nbsp;·&nbsp; Réf. ${refDoc}
       </div>
     </div>
   </div>
